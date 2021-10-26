@@ -30,7 +30,7 @@ keep in mind that i'm not doing a UDP scan on this network. from my experience, 
 
 visiting the IP address takes us to a website. 
 
-![landing page](static/landingpage.png)
+![landing page](img/landingpage.png)
 
 the first question of the room is:
 
@@ -41,7 +41,7 @@ i just happen to know the name of this character. if you don't, you can download
 
 let's check back on our nmap scan.
 
-![nmap](static/nmap1.png)
+![nmap](img/nmap1.png)
 
 we have 2 open ports, according to this scan: port 22 (SSH) and port 80 (HTTP). port 80 is obviously the website. let's dig around on the website a bit more.
 
@@ -75,18 +75,18 @@ let's try to login, but let's set the username as "' OR 1=1 -- -"
 
 it worked! the site took us to a page called "portal.php".
 
-![portal](static/portal.png)
+![portal](img/portal.png)
 
 it seems to be a form where you can search for a game review. hitting search with no game in the field shows us a list of the game reviews on the database.
 
-![portal2](static/portal2.png)
+![portal2](img/portal2.png)
 
 
 let's try to search for a game and intercept the request in burp suite. we'll save the request as a text file, then feed it to sqlmap (an automated SQLi attack tool).
 
 the intercepted request:
 
-![burp](static/burp.png)
+![burp](img/burp.png)
 
 i saved the request as burp.txt.
 
@@ -104,7 +104,7 @@ the more stealthy approach is to dump the info in little parts, starting with th
 sqlmap -r burp.txt --dbms=mysql --dbs
 ```
 
-![databases](static/databases.png)
+![databases](img/databases.png)
 
 we can see 5 databases. "information_schema" and "performance_schema" are usually default generated databases, so let's focus on the database "db".
 
@@ -112,7 +112,7 @@ we can see 5 databases. "information_schema" and "performance_schema" are usuall
 sqlmap -r burp.txt --dbms=mysql -D db --tables
 ```
 
-![tables](static/tables.png)
+![tables](img/tables.png)
 
 there are 2 tables: post and users. obviously, you want to dump the contents of the user table to see if there are any hashes or plaintext passwords (rare) stored.
 
@@ -120,7 +120,7 @@ there are 2 tables: post and users. obviously, you want to dump the contents of 
 sqlmap -r burp.txt --dbms=mysql -D db -T users --dump
 ```
 
-![hash](static/hash.png)
+![hash](img/hash.png)
 
 there's a user (agent47), along with their password hash (ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c6218f04122c3efd14).
 
@@ -131,7 +131,7 @@ what can we do with this hash? well, we can crack it! to crack it, you can eithe
 john agent47.txt --wordlist=/usr/share/wordlists/rockyou.txt --format=Raw-SHA256
 ```
 
-![john](static/john.png)
+![john](img/john.png)
 
 since i've already performed this crack, the result has been cached and pops up right away for me. normally, you will have to wait a while as john proceeds through the wordlists provided. hashcat might be a better option in some cases, as it can harness your GPU's CUDA cores and crack the hashes a lot faster.
 
@@ -142,7 +142,7 @@ so we now have the credentials agent47:videogamer124. what can we do with this i
 ssh agent47@10.10.141.141
 ```
 
-![user_flag](static/userflag.png)
+![user_flag](img/userflag.png)
 
 
 we got our first flag! sweet. so, what now? in most cases, an attacker won't simply stop here. the primary goal of an attacker is to gain root/admin access. 
@@ -159,7 +159,7 @@ ss -tulpn
 
 -t displays TCP sockets, -u displays UDP sockets, -l displays listening sockets, -p displays the process using the socket, -n makes sure the hostnames aren't resolved.
 
-![sockets](static/tulpn.png)
+![sockets](img/tulpn.png)
 
 we can see that there's a service running on port 10000. the service is hidden, meaning it's probably behind a firewall rule. since we're not root, we can't modify the iptables list. let's create a reverse SSH tunnel and make the service visible to us. on our local machine, run:
 
@@ -169,25 +169,25 @@ ssh -L 10000:localhost:10000 agent47@10.10.141.141
 
 if you visit localhost:10000 in a browser, you'll now see the webmin login page that was previously hidden.
 
-![webmin](static/webminlogin.png)
+![webmin](img/webminlogin.png)
 
 
 try logging in with agent47:videogamer124. 
 
 it works! and we can see some system information about the service.
 
-![webmin_info](static/webmininfo.png)
+![webmin_info](img/webmininfo.png)
 
 the most important thing here is the webmin version: 1.580. we can use this information to search for an exploit relating to this exact version. i like to use searchsploit, because we're going to use metasploit, but you can use google or any other exploit database to find it.
 
-![searchsploit](static/searchsploit.png)
+![searchsploit](img/searchsploit.png)
 
 
 we're going to use the first result: /file/show.cgi Remote Command Execution. this exploits an arbitrary command execution vulnerability in our version of webmin. the vulnerability exists in /file/show.cgi and will allow an authenticated user (agent47) to execute arbitrary commands with root privileges. 
 
 fire up msfconsole, and search for this exploit.
 
-![msfconsole](static/msfconsole.png)
+![msfconsole](img/msfconsole.png)
 
 now, let's configure our exploit.
 
@@ -204,7 +204,7 @@ run
 
 if the exploit is successful, we'll get a shell. remember, the reverse ssh tunnel needs to be running for this exploit to work. when you get the shell, upgrade to a proper shell by typing ```shell```. we'll be in the /usr/share/webmin/file directory, and the root flag is stored at /root/root.txt.
 
-![root](static/root.png)
+![root](img/root.png)
 
 
 so there it is. we used SQLi to get initial, low privilege access to the network. after some poking around and reverse SSH tunneling, we discovered a CMS called webmin, that had a pretty neat little exploit specific to its version.
