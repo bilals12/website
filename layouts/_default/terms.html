@@ -1,5 +1,24 @@
-<ul>
-    {{ range .Site.Taxonomies.tags }}
-            <li><a href="{{ .Page.Permalink }}">{{ .Page.Title }}</a> {{ .Count }}</li>
-    {{ end }}
-</ul>
+{{ define "main" }}
+	<div class="container">
+	  <h1>All posts for {{ .Type | singularize }} "{{ .Title }}"</h1>
+	  <ul>
+	    {{ range .Data.Pages }}
+	       <li>
+	         <a href="{{ .Permalink }}">{{ .Title }}</a>
+	       </li>
+	    {{ end }}
+	  </ul>
+	</div>
+{{ end}}
+{{ define "main" }}
+	<div class="container">
+	  <h1>All posts for {{ .Type | singularize }} "{{ .Title }}"</h1>
+	  <ul>
+	    {{ range .Data.Pages }}
+	       <li>
+	         <a href="{{ .Permalink }}">{{ .Title }}</a>
+	       </li>
+	    {{ end }}
+	  </ul>
+	</div>
+{{ end}}
