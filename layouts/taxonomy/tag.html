@@ -1,0 +1,7 @@
+<ul>
+    {{ range .Data.Pages }}
+    <li>
+        <a href="{{.RelPermaLink}}">{{ .Title }}</a>
+    </li>
+    {{ end }}
+</ul>
