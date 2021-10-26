@@ -4,8 +4,7 @@ date: 2021-10-24T01:43:33-05:00
 draft: false
 toc: false
 images:
-tags:
-  - cybersec
+tags: ["cybersec"]
 ---
 
 over the past year, i felt something i haven't felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.

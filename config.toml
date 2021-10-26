@@ -32,7 +32,6 @@ disableRSS     = false
 disableSitemap = false
 disable404     = false
 disableHugoGeneratorInject = false
-preserveTaxonomyNames = true
 
 [permalinks]
   posts = "/posts/:year/:month/:title/"
