@@ -167,7 +167,3 @@ disableHugoGeneratorInject = false
     identifier = "posts"
     name       = "posts"
     url        = "posts/"
-  [[menu.main]]
-    identifier = "tags"
-    name       = "tags"
-    url        = "tags/"
