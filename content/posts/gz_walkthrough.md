@@ -30,7 +30,7 @@ keep in mind that i'm not doing a UDP scan on this network. from my experience, 
 
 visiting the IP address takes us to a website. 
 
-![landing page](img/landingpage.png)
+![landing page](/landingpage.png)
 
 the first question of the room is:
 
