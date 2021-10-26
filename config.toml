@@ -142,6 +142,10 @@ disableHugoGeneratorInject = false
     name = "email"
     url  = "mailto:bilal.s12@protonmail.com"
 
+  [[params.social]]
+    name = "linkedin"
+    url = "https://www.linkedin.com/in/bilal-siddiqui-b857601a/"
+
 
 [languages]
   [languages.en]
@@ -157,9 +161,13 @@ disableHugoGeneratorInject = false
 [menu]
   [[menu.main]]
     identifier = "about"
-    name       = "About"
+    name       = "about"
     url        = "about/"
   [[menu.main]]
     identifier = "posts"
-    name       = "Posts"
+    name       = "posts"
     url        = "posts/"
+  [[menu.main]]
+    identifier = "tags"
+    name       = "tags"
+    url        = "tags/"
