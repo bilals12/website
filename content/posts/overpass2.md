@@ -67,9 +67,10 @@ john -w=/usr/share/wordlists/fasttrack.txt --format=crypt systemhashes.txt
 
 we were able to crack 4 users' passwords. 
 
-right after dumping the hashes, the attacker then tries to establish persistence via an SSH backdoor. they cloned a repo from github, known as [ssh-backdoor](https://github.com/NinjaJc01/ssh-backdoor). they then generate a public/private key pair. the attacker modifies the permissions on the backdoor using ```chmod +x backdoor``` and then login to it using 
+right after dumping the hashes, the attacker then tries to establish persistence via an SSH backdoor. they cloned a repo from github, known as [ssh-backdoor](https://github.com/NinjaJc01/ssh-backdoor). they then generate a public/private key pair. the attacker modifies the permissions on the backdoor using ```chmod +x backdoor``` and then login to it using:
 
-```./backdoor -a 6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed
+```
+./backdoor -a 6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed
 ```
 
 the backdoor connects over the port 2222.
