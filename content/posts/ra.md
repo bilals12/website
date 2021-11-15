@@ -708,7 +708,7 @@ python3 /usr/share/doc/python3-impacket/examples/psexec.py bilal@windcorp.thm
 
 hell yeah, *we're in*.
 
-![rootflag](/rootflag.txt)
+![rootflag](/rootflag.png)
 
 
 that was a hell of a ride. from doing a bit of recon on the company's users, sending fake links to IT, getting their hash then password, then injecting our own malicious code into a routine script to get root...i guess WindCorp isn't unhackable after all :)
