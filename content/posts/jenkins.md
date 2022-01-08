@@ -25,7 +25,7 @@ jenkins is an open-source CI/CD automation software, written in java. it's used 
 pipelines automate testing and reporting on isolated changes in a larger code base (in real time) and facilitates integration of disparate branches of code into a main branch. pipelines also rapidly detect defects in a code base, build the software, automate testing of builds, prepare code base for deployment/delivery, and ultimately deploy code to containers and virtual machines (as well as bare metal and cloud servers). 
 
 
-for this experiment, i've spin up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM. 
+for this experiment, i've spun up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM. 
 
 once everything is set up, let's start with a simple nmap scan of the target machine.
 
