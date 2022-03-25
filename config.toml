@@ -150,6 +150,9 @@ disableHugoGeneratorInject = false
     name = "instagram"
     url  = "https://instagram.com/mescalinesun"
 
+  [[params.social]]
+    name = "soundcloud"
+    url = "https://soundcloud.com/snr_1"
 
 [languages]
   [languages.en]
