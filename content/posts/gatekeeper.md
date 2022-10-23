@@ -105,6 +105,7 @@ Host script results:
 |     Anonymous access: <none>
 |_    Current user access: READ
 ```
+
 ![SMB](/gatekeeper_smb.png)
 
 the "users" share looks interesting, so i logged into it:
