@@ -106,7 +106,7 @@ Host script results:
 |_    Current user access: READ
 ```
 
-![SMB](/gatekeeper_smb.png)
+![SMB](/gatekeeper_smb.jpg)
 
 the "users" share looks interesting, so i logged into it:
 
