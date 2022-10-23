@@ -121,7 +121,7 @@ at this point, i fire up a windows VM i'd created for the purposes of reverse en
 before i do anything else with immunity debugger, i need to find the port that gatekeeper is running on. inside the windows command prompt, i first find the process ID (PID) of the program and then use that to find the port.
 
 ```
-tasklist | gatekeeper.exe
+tasklist | findstr gatekeeper.exe
 ```
 ![PID](/gatekeeper_PID.png)
 
@@ -148,7 +148,7 @@ this little piece of code opens a socket to the program running in windows (addr
 
 ![hello](/gatekeeper_hello.png)
 
-the program received our 6 bytes of input. now i'm going to try and crash it! instead of "hello", i'll send a string of As. 200 of them, to be exact.
+the program received our 6 bytes of input. now i'm going to try and crash it. instead of "hello", i'll send a string of As. 200 of them, to be exact.
 
 ```ruby
 pry --simple-prompt
