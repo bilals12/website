@@ -36,7 +36,7 @@ disableHugoGeneratorInject = false
 [permalinks]
   posts = "/posts/:year/:month/:title/"
 
-[author]
+[params.author.name]
   name = "Bilal Siddiqui"
 
 [blackfriday]
@@ -127,17 +127,13 @@ disableHugoGeneratorInject = false
 
   # Uncomment this if you want a portrait on your start page
   #
-   #[params.portrait]
-  #   path     = "images/Stairs-II-970x644.jpg"
-  #   alt      = "Portrait"
-  #   maxWidth = "250px"
+  #[params.portrait]
+   # path     = "/IMG_3736.JPG"
+    #alt      = "Portrait"
+    #maxWidth = "50px"
 
 
   # Social icons
-  [[params.social]]
-    name = "twitter"
-    url  = "https://twitter.com/mescalinesun"
-
   [[params.social]]
     name = "email"
     url  = "mailto:bilal.s12@protonmail.com"
@@ -147,20 +143,16 @@ disableHugoGeneratorInject = false
     url = "https://www.linkedin.com/in/bilal-siddiqui-b857601a/"
 
   [[params.social]]
-    name = "instagram"
-    url  = "https://instagram.com/mescalinesun"
-
-  [[params.social]]
     name = "soundcloud"
     url = "https://soundcloud.com/snr_1"
 
 [languages]
-  [languages.en]
+  [languages.en.params]
     subtitle  = ""
     weight    = 1
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
 
-  [languages.fr]
+  [languages.fr.params]
     subtitle  = "Hello Friend NG Theme"
     weight    = 2
     copyright = '<a href="https://creativecommons.org/licenses/by-nc/4.0/" target="_blank" rel="noopener">CC BY-NC 4.0</a>'
@@ -170,7 +162,14 @@ disableHugoGeneratorInject = false
     identifier = "about"
     name       = "about"
     url        = "about/"
+    weight     = 1
   [[menu.main]]
     identifier = "posts"
     name       = "posts"
     url        = "posts/"
+    weight     = 3
+  [[menu.main]]
+    identifier = "cv"
+    name       = "cv"
+    url        = "cv/"
+    weight     = 2
