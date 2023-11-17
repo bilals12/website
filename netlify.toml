@@ -6,3 +6,8 @@
 [context.production.environment]
   HUGO_VERSION = "0.80.0"
   HUGO_ENV = "production"
+
+[[headers]]
+  for = "/fullCV.pdf"
+  [headers.values]
+    Content-Type = "application/pdf"
