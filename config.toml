@@ -141,6 +141,10 @@ disableHugoGeneratorInject = false
   [[params.social]]
     name = "linkedin"
     url = "https://www.linkedin.com/in/bilal-siddiqui-b857601a/"
+  
+  [[params.social]]
+    name = "github"
+    url = "https://github.com/bilals12"
 
   [[params.social]]
     name = "soundcloud"
