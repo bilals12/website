@@ -8,9 +8,7 @@ over the past few days, i've been writing tools that automate cumbersome manual 
 
 as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating. hackers rely on this fact to conceal a myriad of functions inside binaries that perform unwanted actions, but this tool can help shed some light on them. it's not exactly a replacement for popular and powerful applications like IDA Pro, but it's a quick way to reveal hidden and integral information about binaries. 
 
-# gdbExtract
-
-gdbExtract is, first and foremost, an automation tool. it was created to streamline the tedious process of binary analysis. manually examining binaries using tools like `GDB` requires significant effort and expertise. `gdbExtract` automates the extraction of crucial function information, transforming a potentially labour-intensive task into a quicker and more reliable process.
+**gdbExtract** is, first and foremost, an automation tool. it was created to streamline the tedious process of binary analysis. manually examining binaries using tools like `GDB` requires significant effort and expertise. `gdbExtract` automates the extraction of crucial function information, transforming a potentially labour-intensive task into a quicker and more reliable process.
 
 - efficiency: automating the extraction process saves time but also ensures consistent results (crucial when dealing with multiple or large binaries).
 - structured output: by outputting data in a JSON format, the script turns raw, hard-to-parse information into a structured form, paving the way for more advanced analysis techniques.
