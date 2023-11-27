@@ -8,7 +8,7 @@ over the past few days, i've been writing tools that automate cumbersome manual 
 
 as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating. hackers rely on this fact to conceal a myriad of functions inside binaries that perform unwanted actions, but this tool can help shed some light on them. it's not exactly a replacement for popular and powerful applications like IDA Pro, but it's a quick way to reveal hidden and integral information about binaries. 
 
-## gdbExtract
+# gdbExtract
 
 gdbExtract is, first and foremost, an automation tool. it was created to streamline the tedious process of binary analysis. manually examining binaries using tools like `GDB` requires significant effort and expertise. `gdbExtract` automates the extraction of crucial function information, transforming a potentially labour-intensive task into a quicker and more reliable process.
 
@@ -16,10 +16,10 @@ gdbExtract is, first and foremost, an automation tool. it was created to streaml
 - structured output: by outputting data in a JSON format, the script turns raw, hard-to-parse information into a structured form, paving the way for more advanced analysis techniques.
 - versatility and accessibility: the script is designed to be noob-friendly but can also help seasoned professionals.
 
-## core functionalities
+# core functionalities
 **note**: before running, edit the script to point to your specific binary file and output file. there's also a list of "unsafe" function strings, that you can edit to fit your criteria.
 
-# analysis
+## analysis
 the script is great for quickly sifting through binaries to identify potential vulnerabilities. 
 1. run `python gdbExtract.py search` to extract a comprehensive list of functions from the binary.
 2. running `python gdbExtract.py remove-safe` afterwards will filter out the "known" safe functions, narrowing the focus toward more critical areas.
@@ -40,12 +40,12 @@ extracted data might look something like this.
 ]
 ```
 
-# reverse engineering
+## reverse engineering
 it can also dissect a binary so the user can understand its behavior or uncover hidden functionalities.
 
 after extracting function data, run `python gdbExtract.py combine` to identify duplicate functions, which might indicate areas of complexity or reuse of code worth exploring.
 
-# education
+## education
 it can aid instructors or teachers in explaining the structure and intricacies of binaries in a practical manner.
 1. run `python gdbExtract.py list` to explore the different functions within a binary.
 
@@ -62,10 +62,10 @@ enter a function address or name: main
 found 0x00401350: main
 ```
 
-## corner cases
+# corner cases
 every tool has its limitations. `gdbExtract` might not effectively parse binaries that utilize heavily obfuscated code. also, its reliance on GDB means it inherits any limitations present within GDB, such as handling certain types of binaries or specific configs.
 
-## thought experiment
+# thought experiment
 let's say i'm a security researcher (i am lol), and i want to assess the security of a legacy communications software that my organization has been using for over a decade. i suspect that the software might contain undiscovered vulnerabilities.
 
 1. running the script
