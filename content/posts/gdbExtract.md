@@ -4,7 +4,7 @@ date: 2023-11-27T13:43:26-05:00
 draft: false
 ---
 
-over the past few days, i've been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call **![gdbExtract](https://github.com/bilals12/gdbExtract)**.
+over the past few days, i've been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call **[gdbExtract](https://github.com/bilals12/gdbExtract)**.
 
 as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating. hackers rely on this fact to conceal a myriad of functions inside binaries that perform unwanted actions, but this tool can help shed some light on them. it's not exactly a replacement for popular and powerful applications like IDA Pro, but it's a quick way to reveal hidden and integral information about binaries. 
 
