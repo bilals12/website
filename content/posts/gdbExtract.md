@@ -176,6 +176,16 @@ it can also dissect a binary so the user can understand its behavior or uncover 
 
 after extracting function data, run `python gdbExtract.py combine` to identify duplicate functions, which might indicate areas of complexity or reuse of code worth exploring.
 
+```json
+{
+    "helper_function": {
+        "addresses": ["0x00401390", "0x00401500"],
+        "signature": "void helper_function(int)",
+        "count": 2
+    }
+}
+```
+
 ## education
 it can aid instructors or teachers in explaining the structure and intricacies of binaries in a practical manner.
 1. run `python gdbExtract.py list` to explore the different functions within a binary.
@@ -200,7 +210,7 @@ every tool has its limitations. `gdbExtract` might not effectively parse binarie
 let's say i'm a security researcher (i am lol), and i want to assess the security of a legacy communications software that my organization has been using for over a decade. i suspect that the software might contain undiscovered vulnerabilities.
 
 1. running the script
-- i quickly `python gdbExtract.py search` to analyze the binary (specified in `BINARY_PATH`).
+- i quickly run `python gdbExtract.py search` to analyze the binary (specified in `BINARY_PATH`).
 - it will output a comprehensive list of all functions within the binary, complete with their memory addresses and signatures.
 - i now have a clear and structured overview of the binary's functions + hours of saved time.
 
@@ -229,4 +239,4 @@ diving into the source code of the `processClientRequest` function, i discover t
 - review the code with the help of 1 or more code reviewers, and test it using various packet sizes.
 
 
-hope this tool finds you well! feel free to leave comments on my github and explore some of my other programs as well. 
+hope this tool finds you well! feel free to leave comments on my [github](https://github.com/bilals12) and explore some of my other programs as well. 
