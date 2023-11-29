@@ -32,6 +32,6 @@ wrapping up the month of october. warm, sunny days and the leaves just starting 
 
 ![gold12](/000081000031231026.jpg)
 
-![gold13](000081000032231026.jpg)
+![gold13](/000081000032231026.jpg)
 
-![gold14](000081000033231026.jpg)
+![gold14](/000081000033231026.jpg)
