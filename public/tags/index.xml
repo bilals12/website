@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Tags on </title>
+    <link>/tags/</link>
+    <description>Recent content in Tags on </description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 27 Oct 2021 16:16:04 +0400</lastBuildDate>
+    <atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>cybersec</title>
+      <link>/tags/cybersec/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/tags/cybersec/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>pentesting</title>
+      <link>/tags/pentesting/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/tags/pentesting/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>tryhackme</title>
+      <link>/tags/tryhackme/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/tags/tryhackme/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>walkthrough</title>
+      <link>/tags/walkthrough/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/tags/walkthrough/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>wireshark</title>
+      <link>/tags/wireshark/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/tags/wireshark/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>sql</title>
+      <link>/tags/sql/</link>
+      <pubDate>Tue, 26 Oct 2021 17:21:48 +0400</pubDate>
+      <guid>/tags/sql/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>poem</title>
+      <link>/tags/poem/</link>
+      <pubDate>Mon, 15 Feb 2021 01:43:33 -0500</pubDate>
+      <guid>/tags/poem/</guid>
+      <description></description>
+    </item>
+  </channel>
+</rss>

@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author" content="">
+<meta name="description" content="over the past year, i felt something i haven&amp;rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.
+the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &amp;ldquo;the matrix&amp;rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&amp;rsquo;m not supposed to." />
+<meta name="keywords" content=", cybersec" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="/posts/2021/10/intro-to-hacking/" />
+
+
+    <title>
+        
+            intro to hacking ::  
+        
+    </title>
+
+
+
+
+
+<link rel="stylesheet" href="/main.b78c3be9451dc4ca61ca377f3dc2cf2e6345a44c2bae46216a322ef366daa399.css" integrity="sha256-t4w76UUdxMphyjd/PcLPLmNFpEwrrkYhajIu82bao5k=">
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+<meta itemprop="name" content="intro to hacking">
+<meta itemprop="description" content="over the past year, i felt something i haven&rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.
+the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &ldquo;the matrix&rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&rsquo;m not supposed to."><meta itemprop="datePublished" content="2021-10-24T01:43:33-05:00" />
+<meta itemprop="dateModified" content="2021-10-24T01:43:33-05:00" />
+<meta itemprop="wordCount" content="1103"><meta itemprop="image" content=""/>
+<meta itemprop="keywords" content="cybersec," />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content=""/>
+
+<meta name="twitter:title" content="intro to hacking"/>
+<meta name="twitter:description" content="over the past year, i felt something i haven&rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.
+the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &ldquo;the matrix&rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&rsquo;m not supposed to."/>
+
+
+
+    <meta property="og:title" content="intro to hacking" />
+<meta property="og:description" content="over the past year, i felt something i haven&rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.
+the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &ldquo;the matrix&rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&rsquo;m not supposed to." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/2021/10/intro-to-hacking/" /><meta property="og:image" content=""/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-10-24T01:43:33-05:00" />
+<meta property="article:modified_time" content="2021-10-24T01:43:33-05:00" />
+
+
+
+
+
+
+
+    <meta property="article:published_time" content="2021-10-24 01:43:33 -0500 -0500" />
+
+
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">></span>
+            <span class="logo__text ">
+                # cd /home/</span>
+            <span class="logo__cursor" style=
+                  "
+                   background-color:#fa8072;
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about/">about</a></li><li><a href="/cv/">cv</a></li><li><a href="/posts/">posts</a></li><li><a href="/photography/">photography</a></li>
+    </ul>
+</nav>
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+  <main class="post">
+
+    <div class="post-info">
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        6 minutes
+
+        
+      </p>
+    </div>
+
+    <article>
+      <h1 class="post-title">
+        <a href="/posts/2021/10/intro-to-hacking/">intro to hacking</a>
+      </h1>
+
+      
+
+      
+
+      
+
+      <div class="post-content">
+        <p>over the past year, i felt something i haven&rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.</p>
+<p>the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &ldquo;the matrix&rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&rsquo;m not supposed to.</p>
+<h3 id="before">before</h3>
+<p>i grew up in the uae. the emirate of sharjah, to be precise. my mother was a professor in the university, and as such we had to live in the faculty housing on campus. the campus was connected as an intranet (a really big private network), so the already restricted internet access of the uae was restricted even further. this meant that i had no access to torrenting applications, online gaming, and, of course, other&hellip;<em>sites</em> that i wanted to visit very much but was simply not allowed to. friends of mine, who weren&rsquo;t in the intranet, had access to torrenting apps and online gaming, so it was just another thing i seemed to be left out of. for a long time, we hung out in internet/gaming cafes, gaming for hours and downloading whatever we wanted. my biggest weaknesses at the time, and even now, were music and movies. streaming didn&rsquo;t exist at the time so my options were either a) get it all at a cafe, using blazingly-fast (at the time) DSL or b) have a friend burn me CDs/DVDs with all the stuff i wanted. far from ideal.</p>
+<p>over time, a proxy server and early vpn known as hotspotshield became popular for, y&rsquo;know, <em>stuff</em>, and everyone seemed to be using it. i tried to use it to torrent but in our intranet, it was either throttled to be unusable and eventually blacklisted. so what did i end up doing? why, learning linux of course!</p>
+<p>someday, i&rsquo;ll have to find and thank the person who got me interested in such things. he was, and probably still is, a massive geek with an almost unbelievable memory and penchant for all things computer-related. he taught me how to use linux (ubuntu) and connect via ssh to a host he&rsquo;d set up somewhere (don&rsquo;t know how) outside the country. this was my first experience with virtualization, ssh, and properly configured vpns that would maintain my anonymity (i thought) and provide a usable connection speed that could also be used for gaming and torrenting. i was elated. suddenly, i had broken out of the restrictions that i had halfway accepted and the entire internet was at my fingertips. emphasis on <strong>entire</strong>.</p>
+<p>eventually, the remote host died for good and i lost access to the proxy. bummer. by that point, i had figured out (with the help of another student at my school who also happened to be my neighbour), how to enumerate and access smb shares on the intranet. as you may know, university campuses almost always had some version of a massive file sharing app like dc++ running, where students could freely share movies and music. dc++ didn&rsquo;t exactly work for us, maybe because we weren&rsquo;t connected to the student network, but somehow we could view some public smb shares where some students had set up their shared folders. once we had that, it was almost better than torrenting. of course, the music was never up to my standards but there was always a metalhead somewhere in the mix from whom i&rsquo;d copy (steal) music.</p>
+<p>i ended up leaving the country to study in canada and my access widened, so my early foray into hacking went limp and then died. i majored in electrical engineering, so the hacking was mostly physical. i learned a lot about assembly and memory, on a physical but still somewhat abstract level. learning electronics was also fun, but i didn&rsquo;t really care for it. however, i finished my degree and ended up getting a job as a software and database developer.</p>
+<p>coding was never something i was super into, beyond an aesthetic appreciation. it was kinda cool, and that was about it. it was also the career of choice for many engineers who couldn&rsquo;t stand their original discipline and just wanted a job. i was one of them, and here i was.</p>
+<h3 id="now">now</h3>
+<p>when the pandemic hit, i felt boredom on a metaphysical level. i&rsquo;m the kind of person who already gets easily bored, so being made to stay at home and do something i only halfway enjoyed was not it. i wanted to do something different, something exciting. but what?</p>
+<p>it just so happened that my interest in infosec/cybersec never truly died, that i happened to follow many infosec professionals and pentesters on twitter. i hardly ever knew what they were talking about, but i liked it. in the past year, it hit me. if i like it so much, what&rsquo;s stopping me from actually doing it? not much, in fact. and so i started looking more closely. and learning.</p>
+<p>i quickly identified pentesting as my dream field. i started to consume vast amounts of information on the field: what they do, their certifications, their techniques. i joined online communities like tryhackme, and even signed up for a junior pentesting cert from elearnsecurity. now, i have both the eJPT cert as well as a bunch of completed rooms on tryhackme to my name. it may not be much, but i was hooked.</p>
+<p>in the past year, i&rsquo;ve learned more and more about linux, windows, networking, databases (beyond the scope of my job), shell scripting, web hacking, enumeration, footprinting, scanning, vulnerabilities. i&rsquo;ve learned and practiced a variety of attacks: bruteforce/dictionary attacks using hydra, xss, sql injections, arp poisoning, file inclusions, remote code executions (reverse shells), privilege escalation, and finally, active directory. what&rsquo;s missing here? the other side! and so i started to learn about defense: firewalls, SIEMs, IPS/IDS, hardening&hellip;and there&rsquo;s still so much to learn.</p>
+<h3 id="then">then</h3>
+<p>i learned that when you truly enjoy something, you don&rsquo;t get tired of it. rather, you can&rsquo;t get tired of it. i want to keep going, and keep learning, and keep getting better. i hope to get a job in the field where i can learn from true professionals and real systems. i&rsquo;m also going to use this site to dump whatever i&rsquo;ve learned, whatever room i&rsquo;ve solved, and pretty much anything else i feel like.</p>
+<p>to whoever&rsquo;s reading this: thank you. and i hope that whatever you find yourself naturally gravitating towards, you accept it and lean into it and turn it into a passion.</p>
+
+      </div>
+    </article>
+
+    <hr />
+
+    <div class="post-info">
+      
+    <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+
+        <span class="tag"><a href="tags/cybersec/">cybersec</a></span>
+        
+    </p>
+
+      
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        1103 Words
+      </p>
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        
+          2021-10-24 02:43
+        
+
+         
+          
+        
+      </p>
+    </div>
+
+    
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="/posts/2021/10/tryhackme-game-zone/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">tryhackme: game zone</span>
+                </a>
+            </span>
+            
+
+            
+            <span class="button next">
+                <a href="/posts/2021/02/cracks/">
+                    <span class="button__text">cracks</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+    
+
+    
+
+  </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+
+<script type="text/javascript" src="/bundle.min.0931a358499291afca6f741478e9fc9fa973a9fbd7aeb3390f3b10463966dc8195daf98a0e33685a1fbfb9d7578631c3f31fc8e558eaf6e2c30c4c3e14df4931.js" integrity="sha512-CTGjWEmSka/Kb3QUeOn8n6lzqfvXrrM5DzsQRjlm3IGV2vmKDjNoWh&#43;/uddXhjHD8x/I5Vjq9uLDDEw&#43;FN9JMQ=="></script>
+
+
+
+    </body>
+</html>

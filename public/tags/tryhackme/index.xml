@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>tryhackme on </title>
+    <link>/tags/tryhackme/</link>
+    <description>Recent content in tryhackme on </description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Wed, 27 Oct 2021 16:16:04 +0400</lastBuildDate>
+    <atom:link href="/tags/tryhackme/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>tryhackme: overpass2</title>
+      <link>/posts/2021/10/tryhackme-overpass2/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/posts/2021/10/tryhackme-overpass2/</guid>
+      <description>i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.
+this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</description>
+    </item>
+    <item>
+      <title>tryhackme: game zone</title>
+      <link>/posts/2021/10/tryhackme-game-zone/</link>
+      <pubDate>Tue, 26 Oct 2021 17:21:48 +0400</pubDate>
+      <guid>/posts/2021/10/tryhackme-game-zone/</guid>
+      <description>this is a walkthrough for the room &amp;ldquo;game zone&amp;rdquo; on tryhackme. this was the 4th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, part of the &amp;ldquo;offensive pentesting&amp;rdquo; path.
+i liked this room because i like sql (yes, i know). database security is a very important component of cybersecurity, as databases are used in almost every type of modern organization. at the end of the walkthrough, i&amp;rsquo;ll also include a link to a resource about preventing database attacks.</description>
+    </item>
+  </channel>
+</rss>

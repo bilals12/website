@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title></title>
+    <link>/</link>
+    <description>Recent content on </description>
+    <generator>Hugo -- gohugo.io</generator>
+    <language>en</language>
+    <lastBuildDate>Mon, 27 Nov 2023 13:43:26 -0500</lastBuildDate>
+    <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>gdbExtract</title>
+      <link>/posts/2023/11/gdbextract/</link>
+      <pubDate>Mon, 27 Nov 2023 13:43:26 -0500</pubDate>
+      <guid>/posts/2023/11/gdbextract/</guid>
+      <description>over the past few days, i&amp;rsquo;ve been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call gdbExtract.
+as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating.</description>
+    </item>
+    <item>
+      <title># ```the only way out, is through.```</title>
+      <link>/cv/</link>
+      <pubDate>Thu, 16 Nov 2023 00:00:00 +0000</pubDate>
+      <guid>/cv/</guid>
+      <description>I am a database security researcher and penetration tester, with more than 2 years of professional experience and 2 years of independent self-teaching and pursuit of bleeding-edge tactics, techniques, and procedures (TTPs). Combined with 4 years of former software and database development experience, I possess a total of 8 years of working with, developing, and reverse engineering the latest in database technology. I look forward to expanding my skill set and experience in the cyber and information security space, and bringing my passion and diligence to your organization!</description>
+    </item>
+    <item>
+      <title>tri-x 400</title>
+      <link>/photography/2023/11/tri-x-400/</link>
+      <pubDate>Mon, 13 Nov 2023 00:00:00 +0000</pubDate>
+      <guid>/photography/2023/11/tri-x-400/</guid>
+      <description>this was my first roll of black + white film. i have to say, i had a lot of fun shooting with it because i wasn&amp;rsquo;t preoccupied with colour and got to focus instead on the moods and shadows of the shots.
+people here&amp;rsquo;s my friend sib, writing a message to his friend.
+my girlfriend joey.
+events these next few shots are from a protest in toronto. thousands of people had gathered to speak out against the horrific crimes of the zionist occupation of palestine.</description>
+    </item>
+    <item>
+      <title>portra 800</title>
+      <link>/photography/2023/11/portra-800/</link>
+      <pubDate>Fri, 10 Nov 2023 00:00:00 +0000</pubDate>
+      <guid>/photography/2023/11/portra-800/</guid>
+      <description>portra 800 is probably my favourite film to shoot with. once i&amp;rsquo;d gotten comfortable enough with the gold 200, i wanted to elevate my colour game with a more light sensitive film and this one is definitely up there.
+people some shots of friends: sib + kubba, hyder, nisan, and natasha.
+bonus one of joey. it came out a bit dark, but i kind of like it. also found this one i took of sib having a smoke on a rainy day.</description>
+    </item>
+    <item>
+      <title>gatekeeper (buffer overflows)</title>
+      <link>/posts/2022/10/gatekeeper-buffer-overflows/</link>
+      <pubDate>Sun, 23 Oct 2022 06:59:16 -0400</pubDate>
+      <guid>/posts/2022/10/gatekeeper-buffer-overflows/</guid>
+      <description>lately, i&amp;rsquo;ve been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in &amp;ldquo;microcontrollers and microprocessors&amp;rdquo;, a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it&amp;rsquo;s used to communicate directly with computer architecture and control the usage of memory, on a hardware level.</description>
+    </item>
+    <item>
+      <title>jenkins</title>
+      <link>/posts/2022/01/jenkins/</link>
+      <pubDate>Sat, 08 Jan 2022 14:37:40 -0500</pubDate>
+      <guid>/posts/2022/01/jenkins/</guid>
+      <description>if you&amp;rsquo;ve worked in any sort of SaaS/tech company, odds are you&amp;rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &amp;ldquo;quickly&amp;rdquo; and &amp;ldquo;efficiently&amp;rdquo; (i used scare quotes because&amp;hellip;well, if you&amp;rsquo;ve worked in a software company you&amp;rsquo;ll know why). i&amp;rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</description>
+    </item>
+    <item>
+      <title>update</title>
+      <link>/posts/2022/01/update/</link>
+      <pubDate>Sat, 08 Jan 2022 13:59:22 -0500</pubDate>
+      <guid>/posts/2022/01/update/</guid>
+      <description>hello!
+it&amp;rsquo;s been a while since my last post, but there&amp;rsquo;s a reason (i promise).
+as you may know, this past year i&amp;rsquo;ve been seriously pursuing security as both a passion and possible career. it&amp;rsquo;s been a fun time learning and a not-so-fun time applying for jobs (i believe i might have applied to 300+ jobs &amp;ndash; seriously). the great news is that i&amp;rsquo;ve finally got a job as a security researcher for trustwave&amp;rsquo;s spiderlabs.</description>
+    </item>
+    <item>
+      <title>tryhackme: ra</title>
+      <link>/posts/2021/11/tryhackme-ra/</link>
+      <pubDate>Wed, 10 Nov 2021 16:37:38 -0500</pubDate>
+      <guid>/posts/2021/11/tryhackme-ra/</guid>
+      <description>as i&amp;rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&amp;rsquo;ve had to take time away from it to keep practicing all that i&amp;rsquo;ve learned so far. &amp;ldquo;ra&amp;rdquo; happened to be the most challenging room i&amp;rsquo;ve done until now, but i&amp;rsquo;m sure there are more to come, that take even more skills into account.</description>
+    </item>
+    <item>
+      <title>tryhackme: overpass2</title>
+      <link>/posts/2021/10/tryhackme-overpass2/</link>
+      <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+      <guid>/posts/2021/10/tryhackme-overpass2/</guid>
+      <description>i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.
+this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</description>
+    </item>
+    <item>
+      <title>tryhackme: game zone</title>
+      <link>/posts/2021/10/tryhackme-game-zone/</link>
+      <pubDate>Tue, 26 Oct 2021 17:21:48 +0400</pubDate>
+      <guid>/posts/2021/10/tryhackme-game-zone/</guid>
+      <description>this is a walkthrough for the room &amp;ldquo;game zone&amp;rdquo; on tryhackme. this was the 4th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, part of the &amp;ldquo;offensive pentesting&amp;rdquo; path.
+i liked this room because i like sql (yes, i know). database security is a very important component of cybersecurity, as databases are used in almost every type of modern organization. at the end of the walkthrough, i&amp;rsquo;ll also include a link to a resource about preventing database attacks.</description>
+    </item>
+  </channel>
+</rss>

