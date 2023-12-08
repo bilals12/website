@@ -4,7 +4,7 @@ date: 2023-12-07T15:14:13-05:00
 draft: false
 ---
 
-a number of years ago, i received advice that would change my outlook on engineering and understanding of technology.
+a number of years ago, i received advice that would deeply change my outlook on engineering and understanding of technology.
 
 `if you want to understand how something works, build it.`
 
