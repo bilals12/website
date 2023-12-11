@@ -150,6 +150,10 @@ disableHugoGeneratorInject = false
     name = "soundcloud"
     url = "https://soundcloud.com/snr_1"
 
+  [[params.social]]
+    name = "letterboxd"
+    url = "https://letterboxd.com/mescalinesun/"
+
 [languages]
   [languages.en.params]
     subtitle  = ""
