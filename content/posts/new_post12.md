@@ -34,7 +34,9 @@ the `Cryptodome` module contains the `pycryptodome` library, which is used for s
 
 `cookieJar` is a comprehensive python script for security research and penetration testing, as it allows researchers to analyze the cookies stored by a browser, which can contain sensitive information such as session identifiers and login tokens. 
 
-```<http.cookiejar.Cookie version=0 name='sessionid' value='1234567890abcdef' port=None port_specified=False domain='instagram.com' domain_specified=True domain_initial_dot=False path='/' path_specified=True secure=True expires=1672444800 discard=False comment=None comment_url=None rest={'HttpOnly': None}, rfc2109=False>```
+```http
+<http.cookiejar.Cookie version=0 name='sessionid' value='1234567890abcdef' port=None port_specified=False domain='instagram.com' domain_specified=True domain_initial_dot=False path='/' path_specified=True secure=True expires=1672444800 discard=False comment=None comment_url=None rest={'HttpOnly': None}, rfc2109=False>
+```
 
 this cookie has the following properties:
 - `name`: the name of the cookie (`sessionid`).
