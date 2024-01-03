@@ -1,20 +1,20 @@
 ---
-title: "reading list [updated: december 11th, 2023]"
-date: 2023-12-11T10:08:54-05:00
+title: "reading list [updated: january 3rd, 2024]"
+date: 2024-01-03T10:08:54-05:00
 draft: false
 ---
 
 **currently reading**
 
-- [the three stigmata of palmer eldritch by philip k. dick](https://www.goodreads.com/book/show/14185.The_Three_Stigmata_of_Palmer_Eldritch?from_search=true&from_srp=true&qid=KESIL3bSmK&rank=1)
-
-- [inside deep learning: math, algorithms, models by edward raff](https://www.goodreads.com/book/show/57553039-inside-deep-learning?from_search=true&from_srp=true&qid=4HjWLxAolm&rank=1)
+- [aberration in the heartland of the real](https://www.goodreads.com/en/book/show/23281022)
 
 - [palestine by joe sacco](https://www.goodreads.com/book/show/769712.Palestine?from_search=true&from_srp=true&qid=tz8S3Ow0HM&rank=2)
 
 - [the art of doing science and engineering: learning to learn by richard hamming](https://www.goodreads.com/book/show/530415.The_Art_of_Doing_Science_and_Engineering?from_search=true&from_srp=true&qid=yPVd4Oc3lA&rank=1)
 
 **completed [2023]**
+
+- [inside deep learning: math, algorithms, models by edward raff](https://www.goodreads.com/book/show/57553039-inside-deep-learning?from_search=true&from_srp=true&qid=4HjWLxAolm&rank=1)
 
 - [museum of innocence by orhan pamuk](https://www.goodreads.com/book/show/6282753-the-museum-of-innocence?from_search=true&from_srp=true&qid=lrj8YyZN5L&rank=1)
 
@@ -57,6 +57,8 @@ draft: false
 - [the knot by michael gira](https://www.goodreads.com/book/show/61470388-the-knot?from_search=true&from_srp=true&qid=uiVUytb0hd&rank=1)
 
 - [when we cease to understand the world by benjamin labatut](https://www.goodreads.com/book/show/62069739-when-we-cease-to-understand-the-world?from_search=true&from_srp=true&qid=FyqHyrly9B&rank=1)
+
+- [the three stigmata of palmer eldritch by philip k. dick](https://www.goodreads.com/book/show/14185.The_Three_Stigmata_of_Palmer_Eldritch?from_search=true&from_srp=true&qid=KESIL3bSmK&rank=1)
 
 **queue**
 
