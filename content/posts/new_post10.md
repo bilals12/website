@@ -6,7 +6,7 @@ draft: false
 
 **currently reading**
 
-- [aberration in the heartland of the real](https://www.goodreads.com/en/book/show/23281022)
+- [aberration in the heartland of the real by wendy s. painting](https://www.goodreads.com/en/book/show/23281022)
 
 - [palestine by joe sacco](https://www.goodreads.com/book/show/769712.Palestine?from_search=true&from_srp=true&qid=tz8S3Ow0HM&rank=2)
 
