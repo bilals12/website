@@ -1,12 +1,10 @@
 ---
-title: "reading list [updated: january 19th, 2024]"
+title: "reading list [updated: january 29th, 2024]"
 date: 2024-01-03T10:08:54-05:00
 draft: false
 ---
 
 **currently reading**
-
-- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg)
 
 - [aberration in the heartland of the real by wendy s. painting](https://www.goodreads.com/en/book/show/23281022)
 
@@ -48,6 +46,8 @@ draft: false
 
 
 **completed [2024]**
+
+- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg) 
 
 - [the art of doing science and engineering: learning to learn by richard hamming](https://www.goodreads.com/book/show/530415.The_Art_of_Doing_Science_and_Engineering?from_search=true&from_srp=true&qid=yPVd4Oc3lA&rank=1)
 
