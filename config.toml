@@ -154,6 +154,10 @@ disableHugoGeneratorInject = false
     name = "letterboxd"
     url = "https://letterboxd.com/mescalinesun/"
 
+  [[params.social]]
+    name = "leetcode"
+    url = "https://leetcode.com/0xME/"
+
 [languages]
   [languages.en.params]
     subtitle  = ""
