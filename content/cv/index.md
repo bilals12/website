@@ -3,61 +3,58 @@ title: "# ```the only way out, is through.```"
 date: 2023-11-16
 ---
 
-I am a database security researcher and penetration tester, with more than **2** years of professional experience and **2** years of independent self-teaching and pursuit of bleeding-edge tactics, techniques, and procedures (*TTPs*). Combined with **4** years of former software and database development experience, I possess a total of **8** years of working with, developing, and reverse engineering the latest in database technology. I look forward to expanding my skill set and experience in the cyber and information security space, and bringing my passion and diligence to your organization!
+# **tech + skills**
+- **frontend**: React • Angular • Vue.js • JavaScript • TypeScript
+
+- **backend**: Java • Python • C/C++/C# • Node.js • Ruby • Go• Ruby on Rails • .NET • Express.js • Flask • Django • Spring Boot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
+
+- **databases**: PostgreSQL • MySQL • MS SQL Server Oracle • MongoDB • Cassandra • Redis • Elasticsearch
+
+- **devops + infra**: AWS • Azure • Jenkins • GitLab CI • GitHub Actions • Docker • Kubernetes • OpenShift • Ansible • Terraform • Puppet • Chef
+
+- **AI/ML + data**: TensorFlow • PyTorch • Pandas • NumPy • Matplotlib • Tableau • Deep Learning (RNN/CNN) • ETL
+
+- **insights**: Prometheus • Grafana • Datadog • ELK • Splunk • Git • Jira • Confluence
+
+- **penetration testing**: Metasploit • Burp Suite • nmap • Nessus • ZAP
+
+- **network security**: ASA/Palo Alto • Snort/Suricata• VPN • NAC • SSL/TLS • TCP/IP/UDP • SSH
+
+- **application security**: Snyk • Semgrep • Socket • Burp Suite • OWASP Top 10 • CIS Controls •
+NIST SP 800-53
+
+- **IAM + cryptography**: Okta • Auth0 •AD •AWS IAM • OAuth2.0 • OIDC • SAML • AES • RSA • ECC • SHA-256 • MD5 • OpenSSL
+
+- **reverse engineering**: IDA Pro • Ghidra • Immunity Debugger • Decompilation • GDB • WinDBG • gdbExtract
 
 
-# **core competencies**
-- **operating systems**: windows, macOS, kali linux, ubuntu server 
+# **experience** 
+### *software security engineer + researcher @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)*
 
-- **networking**: TCP/UDP/IP, FTP, SSH/Telnet, NFS, SMTP, Routing, DNS, PKI, SSL/TLS, Wireshark 
+- investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.
 
-- **databases**: MS SQL Server, MySQL/MariaDB/Percona Server, PostgreSQL, MongoDB, Amazon Aurora/RDS, Oracle, CosmosDB, Teradata, Cassandra, DynamoDB, AzureDB 
+- provided Core Engineering with actionable research data to develop **deep protection against threats** based on business needs and **GRC** requirements.
 
-- **cloud + DevOps**: Git, Apache SVN, Kubernetes, Redhat OpenShift, Docker, Terraform, Jenkins, AWS ECS/EC2/S3, Azure DevOps, Jira, SAST/DAST, NUnit 
+- designed test-beds for observing backend and container orchestration architecture, following **SSDLC** and **AppSec** best practices (**RRAs, tech + architecture design reviews, STRIDE threat modeling** [of the app and post-deployment], and **code reviews**).
 
-- **scripting + programming**: Shell (zsh, Bash, Powershell), Python, C++, C#, PHP, XML, SQL, Javascript, Ruby, Go, Groovy
+- developed a vulnerability management engine for continuous identification + discovery, triaging, reporting, remediation, and tracking, (in **C#, .NET, Python**), with **600+** Python check scripts and **96** framework scripts.
 
-- **web**: cookie stealing, session hijacking, Burp Suite (credential stuffing, fuzzing, proxy) 
+- created an **automation tool** to support the vulnerability management program, in **Ruby**, using **Ruby on Rails** for **RESTful APIs**, **OAuth 2.0 + JWTs** for AuthZ, and **OpenID Connect** for AuthC, with data stored in **Amazon RDS (PostgreSQL)** and later **MongoDB**, deployed on **ECS**.
 
-- **information gathering**: subdomain/directory/file enumeration, sublist3r, amass, dirb, dirbuster, netcat 
+- built an **aggregator tool** to parse security advisories and support new platforms with **threat intelligence** and develop new **automation patterns and algorithms** to provide **critical patch updates** to clients.
 
-- **footprinting + scanning**: nmap, enum4linux, smbclient, sqlmap, Shodan, linPEAS 
+- Integrated tooling into **CI/CD pipeline (Jenkins,ECS)**, optimizing workflow by **65%**, calculating **severities**, enforcing **SLAs**, and tracking **vulnerabilities**. Defined **specific KPIs** and reported progress to the C-suite using metrics collected via the above programs.
 
-- **vulnerability assessment**: Nessus, Nexpose, GFI LANGuard, dbProtect
-
-- **attack vectors**: brute-force/dictionary attacks (john, Hydra, hashcat), buffer overflows, active directory, XSS, sql injections, null sessions, ARP poisoning/spoofing, 
-backdoors + reverse shells, local/remote file inclusion, remote code execution, privilege escalation + persistence, Metasploit, shellcodes, reverse engineering + malware analysis, OWASP Top 10 
-
-- **defense**: firewalls, logging, IPS/IDS, SIEM, SOAR, system + device Hardening 
-
-- **frameworks + principles**: MITRE ATT&CK, Cyber KillChain, NIST, SOC2, FISMA, GDPR, ISO 27001/2, DISA-STIG, CIS Benchmark, Zero-Trust (Data Loss Prevention), CIA Triad
-
-
-# **work experience** 
-### *database security researcher @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)*
-
-- responsible for *discovery and investigation* of the latest *attacks and vulnerabilities* pertaining to **17** (and counting) major relational database management systems on behalf of our clients, who occupied key sectors such as *telecommunications*, *energy*, and *national security* & *defense*. 
-
-- provided the engineering team with *hard technical research* and data gleaned from the *vulnerability assessment engine* and other *automation platform*, based on various needs communicated by the product team, to develop *full protection* against *current and future threats*. 
-
-- developed and improved our *vulnerability assessment engine*, by adding over **300** unique check scripts and over **66** framework scripts. the engine is implemented in **C#**, running under the .NET platform, and uses **IronPython** to execute Python scripts (checks) that *look for vulnerabilities* and *report the findings* in an **event-driven** manner. 
-
-- developed and tested our *automation platform* that *parses software vendor security advisories (ETL)* and extends project functionality to better support new platforms, by leveraging *vast amounts of threat intelligence* and telemetry data to *develop new automation patterns* and algorithms and *provide critical patch updates* to clients. 
-
-- closely studied the most current DISA-STIGs and CIS Benchmarks to close any gaps in our clients’ compliance requirements. Personally added detection and support for **MongoDB 4.x/5.x/6.x**, **PostgreSQL 13.x**, **MariaDB 10.x**, **Oracle 12c**, and more. 
-
-- in-depth research of whitepapers, statistics, conference presentations and blog articles to bolster both work-related and individual research efforts. published internal research pertaining to **MongoDB Buffer Overflows**, **Honeypots and Malware Analysis**, **Attacks on the Healthcare Sector**, and more. 
+- **Researched** modern **TTPs**,including **reverse engineering of malwarecollected via honeypot recon**, to bolster Trustwave’s product offerings and its own **security posture**.
 
 
 
 
 ### *lead database developer @ [Veryon](https://veryon.com/)*
-- authored, validated, and maintained high-quality, guided troubleshooting solutions for a reasoning engine based on several maintenance manuals for a variety of equipment and systems. 
 
-- developed entire libraries and databases, Powershell scripts, and Tableau data visualizations to collect analytics and deliver engagement reports to our clients. 
-Worked well with a wide range of personalities and roles, and actively participated in project roadmaps and discussions, providing technical suggestions, including estimates and priorities. 
+- authored, validated, and maintained high-quality, **guided troubleshooting solutions** for a **reasoning engine** based on several maintenance manuals for a variety of equipment and systems.
 
-- gained ability to be flexible to shifting priorities and workloads, and to work on multiple time-sensitive projects. 
+- developed entire **libraries and databases** for dataset ingestion, automated **RFIs** via **Powershell scripts**, and created **Tableau data visualizations** of **usage analytics** for both internal and client-side purposes.
 
 
 
