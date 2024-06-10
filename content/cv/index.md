@@ -43,9 +43,9 @@ NIST SP 800-53
 
 - built an **aggregator tool** to parse security advisories and support new platforms with **threat intelligence** and develop new **automation patterns and algorithms** to provide **critical patch updates** to clients.
 
-- Integrated tooling into **CI/CD pipeline (Jenkins,ECS)**, optimizing workflow by **65%**, calculating **severities**, enforcing **SLAs**, and tracking **vulnerabilities**. Defined **specific KPIs** and reported progress to the C-suite using metrics collected via the above programs.
+- integrated tooling into **CI/CD pipeline (Jenkins,ECS)**, optimizing workflow by **65%**, calculating **severities**, enforcing **SLAs**, and tracking **vulnerabilities**. Defined **specific KPIs** and reported progress to the C-suite using metrics collected via the above programs.
 
-- **Researched** modern **TTPs**,including **reverse engineering of malwarecollected via honeypot recon**, to bolster Trustwave’s product offerings and its own **security posture**.
+- **researched** modern **TTPs**, including **reverse engineering of malware collected via honeypot recon**, to bolster Trustwave’s product offerings and its own **security posture**.
 
 
 
