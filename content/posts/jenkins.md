@@ -2,6 +2,7 @@
 title: "jenkins"
 date: 2022-01-08T14:37:40-05:00
 draft: false
+type: "post"
 ---
 
 if you've worked in any sort of SaaS/tech company, odds are you've used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software "quickly" and "efficiently" (i used scare quotes because...well, if you've worked in a software company you'll know why). i'm going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.

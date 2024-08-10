@@ -2,6 +2,7 @@
 title: "intro + gold 200"
 date: 2023-07-12
 draft: false
+type: "photography"
 ---
 
 my first ever roll of film + my first ever analog camera. during the summer, i became increasingly disillusioned with our (my) over-dependence on technology, especially given both my career and hobbies are steeped in digitalia. i decided to shoot film, and was able to find a great deal for an intermediate analog camera: the Asahi Pentax Spotmatic SPII. with it came 3 lenses: a 35mm Zeiss Zebra, a 55m SMC Takumar (pictured), and a 135mm long. 

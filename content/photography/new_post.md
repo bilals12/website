@@ -2,6 +2,7 @@
 title: "tri-x 400"
 date: 2023-11-13
 draft: false
+type: "photography"
 ---
 this was my first roll of black + white film. i have to say, i had a lot of fun shooting with it because i wasn't preoccupied with colour and got to focus instead on the moods and shadows of the shots. 
 

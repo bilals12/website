@@ -2,6 +2,7 @@
 title: "cookieJar"
 date: 2024-01-02T10:11:43-05:00
 draft: false
+type: "post"
 ---
 
 a fun aspect of pentesting is finding interesting ways to get authenticated sessions running. usually, a session authentication relies on the user entering some kind of key (password) that corresponds to their user ID (username). however, in some cases an attacker can "revive" sessions using just the session cookies. 

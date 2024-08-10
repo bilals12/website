@@ -2,6 +2,7 @@
 title: "gold 200"
 date: 2023-07-25
 draft: false
+type: "photography"
 ---
 
 still practicing. stuck with the gold 200 because it's a low-cost film, and nice for summer days. 

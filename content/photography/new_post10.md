@@ -2,6 +2,7 @@
 title: "cinestill 400d"
 date: 2024-01-03T10:47:30-05:00
 draft: false
+type: "photography"
 ---
 
 first time running with the cinestill 400d. it's quite a finicky film, and i'm not sure i have the skill or patience (yet) to deal with its many quirks. 

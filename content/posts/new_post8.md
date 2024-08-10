@@ -2,6 +2,7 @@
 title: "ddos flood part I"
 date: 2023-12-06
 draft: false
+type: "post"
 ---
 
 ![banned](/12344.png)

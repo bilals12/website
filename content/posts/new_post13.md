@@ -2,6 +2,7 @@
 title: "zynOS rom-0 fetching"
 date: 2024-01-10T11:32:59-05:00
 draft: false
+type: "post"
 ---
 
 i was poking around old vulnerabilities, that specifically affected home networks and i found this (now patched) exploitable vulnerability affecting zynOS routers. the vulnerability allows an attacker to download the router's configuration (ROM-0 file) without any type of authentication. this file could then be later decompressed to expose the router's admin password, wifi password, etc.

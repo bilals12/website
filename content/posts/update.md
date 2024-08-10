@@ -2,6 +2,7 @@
 title: "update"
 date: 2022-01-08T13:59:22-05:00
 draft: false
+type: "post"
 ---
 
 hello!

@@ -2,6 +2,7 @@
 title: "portra 800"
 date: 2023-12-20
 draft: false
+type: "photography"
 ---
 
 i really love this film. 

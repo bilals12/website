@@ -1,0 +1,42 @@
+{{ if eq .Type "about" }}
+    <h2>About Content:</h2>
+    {{ if .Content }}
+        {{ .Content }}
+    {{ else }}
+        <p>No content available for About.</p>
+    {{ end }}
+{{ else if eq .Type "cv" }}
+    <h2>CV Content:</h2>
+    {{ if .Content }}
+        {{ .Content }}
+    {{ else }}
+        <p>No content available for CV.</p>
+    {{ end }}
+{{ else if eq .Type "posts" }}
+    <h2>posts:</h2>
+    {{ if .Pages }}
+        {{ range .Pages }}
+            <article>
+                <h3><a href="{{ .Permalink }}">{{ .Title }}</a></h3>
+                <time>{{ .Date.Format "January 2, 2006" }}</time>
+                {{ .Summary }}
+            </article>
+        {{ end }}
+    {{ else }}
+        <p>No posts available.</p>
+    {{ end }}
+{{ else if eq .Type "photography" }}
+    <h2>photography:</h2>
+    {{ if .Pages }}
+        {{ range .Pages }}
+            <div class="photo-item">
+                <img src="{{ .Params.image }}" alt="{{ .Title }}">
+                <h3>{{ .Title }}</h3>
+            </div>
+        {{ end }}
+    {{ else }}
+        <p>No photos available.</p>
+    {{ end }}
+{{ else }}
+    <p>Unknown content type: {{ .Type }}</p>
+{{ end }}

@@ -2,6 +2,7 @@
 title: "gatekeeper (buffer overflows)"
 date: 2022-10-23T06:59:16-04:00
 draft: false
+type: "post"
 ---
 
 lately, i've been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in "microcontrollers and microprocessors", a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it's used to communicate directly with computer architecture and control the usage of memory, on a hardware level. understanding memory usages and allocations on that level paved the way for utilizing buffer overflows, a very popular attack that is a result of reverse engineering.

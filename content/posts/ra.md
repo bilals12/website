@@ -2,6 +2,7 @@
 title: "tryhackme: ra"
 date: 2021-11-10T16:37:38-05:00
 draft: false
+type: "post"
 ---
 
 as i've been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i've had to take time away from it to keep practicing all that i've learned so far. "ra" happened to be the most challenging room i've done until now, but i'm sure there are more to come, that take even more skills into account.

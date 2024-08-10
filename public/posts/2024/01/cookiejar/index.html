@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>cookieJar</title>
+    
+<head>
+    
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>cookieJar</title>
+<meta name="description" content="">
+
+
+<meta property="og:title" content="cookieJar">
+<meta property="og:description" content="">
+
+    
+    
+
+
+
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="cookieJar">
+<meta name="twitter:description" content="">
+
+    
+    
+
+
+    <base href="http://localhost:1313/">
+    <link rel="stylesheet" href="http://localhost:1313/css/style.css">
+    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+</head>
+    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+</head>
+<body>
+    
+<div id="content-area" data-page-type="single">
+    <article id="post">
+        <header>
+            <h1 id="post-title">cookieJar</h1>
+            <time datetime="2024-01-02T10:11:43-05:00">
+                January 2, 2024
+            </time>
+        </header>
+        <div id="post-content">
+            <p>a fun aspect of pentesting is finding interesting ways to get authenticated sessions running. usually, a session authentication relies on the user entering some kind of key (password) that corresponds to their user ID (username). however, in some cases an attacker can &ldquo;revive&rdquo; sessions using just the session cookies.</p>
+<p>i wrote <code>cookieJar</code> for exactly this purpose: extracting cookies from various browsers (and factor in the OS) and then use them to create authenticated sessions. the script handles different formats and encryption methods (see: <code>Cryptodome</code>) and can extract cookies related to all websites or a specific domain.</p>
+<p>some limitiations of the script:</p>
+<ul>
+<li>if browsers update their cookie storage mechanisms (very likely), the script will stop working.</li>
+<li>accounts with 2FA will stop the script from working.</li>
+<li>sessions are managed server-side, so if specific parameters like user-agent, IP address, etc. don&rsquo;t line up, the script will stop working.</li>
+<li>consent + security risks&hellip;</li>
+</ul>
+<p><code>cookieJar</code> uses several libraries and modules to retrieve, decrypt, and manage browser cookies across multiple browsers and operating systems. arguably, the most important module i&rsquo;ve used is <code>Cryptodome</code>, which is included in the <a href="https://github.com/bilals12/cookieJar">source repo</a>.</p>
+<h1 id="cryptodome">Cryptodome</h1>
+<p>the <code>Cryptodome</code> module contains the <code>pycryptodome</code> library, which is used for secure hashing and encryption services. in the context of <code>cookieJar</code>, it&rsquo;s used for decrypting cookies.</p>
+<ol>
+<li>
+<p><code>AES.py</code>: used for decrypting cookies from browsers like chrome, opera, edge.</p>
+</li>
+<li>
+<p><code>KDF.py</code>: a key derivation function that&rsquo;s used to generate a cryptographic key from a password. used in the <code>PBKDF2</code> function in <code>cookieJar</code>.</p>
+</li>
+<li>
+<p><code>padding.py</code>: used in block cipher algorithms to ensure that the last block of data is the correct size. used in <code>unpad</code> to remove padding from the decrypted data.</p>
+</li>
+<li>
+<p><code>lz4.block</code>: part of the <code>lz4</code> library, which provides bindings for the LZ4 compression algorithm. used specifically for handling cookies from firefox, which uses the compression algorithm to store its cookies.</p>
+</li>
+</ol>
+<h1 id="cookiejar">cookieJar</h1>
+<p><img src="http://localhost:1313/download.png" alt="flowchart"></p>
+<p><code>cookieJar</code> is a comprehensive python script for security research and penetration testing, as it allows researchers to analyze the cookies stored by a browser, which can contain sensitive information such as session identifiers and login tokens.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-http" data-lang="http"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">&lt;http.cookiejar.Cookie version=0 name=&#39;sessionid&#39; value=&#39;1234567890abcdef&#39; port=None port_specified=False domain=&#39;instagram.com&#39; domain_specified=True domain_initial_dot=False path=&#39;/&#39; path_specified=True secure=True expires=1672444800 discard=False comment=None comment_url=None rest={&#39;HttpOnly&#39;: None}, rfc2109=False&gt;
+</span></span></span></code></pre></div><p>this cookie has the following properties:</p>
+<ul>
+<li><code>name</code>: the name of the cookie (<code>sessionid</code>).</li>
+<li><code>value</code>: the value of the cookie, usually a unique identifier that the server uses to recognize the client.</li>
+<li><code>domain</code>: the domain that set the cookie (<code>instagram.com</code>).</li>
+<li><code>path</code>: path on the domain where the cookie is valid. in this case, it&rsquo;s <code>/</code>, meaning the cookie is valid for the entire domain.</li>
+<li><code>secure</code>: a boolean value indicating whether the cookie should only be sent over secure (<code>HTTPS</code>) connections.</li>
+<li><code>expires</code>: expiration date of the cookie as a timestamp (<code>1672444800</code> corresponds to january 1st, 2024).</li>
+<li><code>HttpOnly</code>: a flag indicating whether the cookie is inaccessible to javascript&rsquo;s <code>Document.cookie</code> API to mitigate XSS attacks.</li>
+</ul>
+<p>the actual data stored in a cookie can vary greatly depending on the website and the purpose of the cookie. for example, a session cookie might contain a unique identifier that the server uses to keep track of your session, while a preference cookie might contain information about your preferred language or other settings.</p>
+<p>when <code>cookieJar</code> collects cookies, it stores them in a <code>http.cookiejar.CookieJar</code> object. this object behaves like a list of <code>http.cookiejar.Cookie</code> objects, and you can iterate over it to access individual cookies.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>cookies <span style="color:#f92672">=</span> load()
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">for</span> cookie <span style="color:#f92672">in</span> cookies:
+</span></span><span style="display:flex;"><span>  print(cookie)
+</span></span></code></pre></div><p>this will print out all the cookies stored in the <code>CookieJar</code>, one per line.</p>
+<h2 id="importing-necessary-libraries">importing necessary libraries</h2>
+<p>the script first imports some standard and 3rd-party libraries. they provide the necessary functionalities for file handling, database operations, encryption and more.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> base64
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> configparser
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> contextlib
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> glob
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> http.cookiejar
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> json
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> os
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> struct
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#f92672">import</span> tempfile
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> io <span style="color:#f92672">import</span> BytesIO
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> typing <span style="color:#f92672">import</span> Union
+</span></span></code></pre></div><p>it also imports the <code>sqlite3</code> library, which is used to interact with SQLite databases that many browsers use to store cookies. if the <code>pysqlite2.dbapi2</code> module is available, it&rsquo;s used instead of the standard <code>sqlite3</code> module (improved performance + additional features).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">from</span> pysqlite2 <span style="color:#f92672">import</span> dbapi2 <span style="color:#66d9ef">as</span> sqlite3
+</span></span><span style="display:flex;"><span><span style="color:#66d9ef">except</span> <span style="color:#a6e22e">ImportError</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">import</span> sqlite3
+</span></span></code></pre></div><p>for linux/BSD, the script imports either <code>dbus</code> or <code>jeepney</code>. these are used to interact with the d-bus message system, a mechanism that allows different parts of the system to communicate with each other. in this case, it&rsquo;s used to retrieve the encryption key for cookies from the system&rsquo;s keyring.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">if</span> sys<span style="color:#f92672">.</span>platform<span style="color:#f92672">.</span>startswith(<span style="color:#e6db74">&#39;linux&#39;</span>) <span style="color:#f92672">or</span> <span style="color:#e6db74">&#39;bsd&#39;</span> <span style="color:#f92672">in</span> sys<span style="color:#f92672">.</span>platform<span style="color:#f92672">.</span>lower():
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">import</span> dbus
+</span></span><span style="display:flex;"><span>        USE_DBUS_LINUX <span style="color:#f92672">=</span> <span style="color:#66d9ef">True</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">ImportError</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">import</span> jeepney
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">from</span> jeepney.io.blocking <span style="color:#f92672">import</span> open_dbus_connection
+</span></span><span style="display:flex;"><span>        USE_DBUS_LINUX <span style="color:#f92672">=</span> <span style="color:#66d9ef">False</span>
+</span></span></code></pre></div><p>the <code>lz4.block</code> is imported for handling LZ4-compressed cookies from firefox. LZ4 is a fast, lossless compression algorithm that firefox uses to store its cookies.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">import</span> lz4.block
+</span></span></code></pre></div><p>finally, the script imports the aforementioned modules from the <code>Cryptodome</code> library.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#f92672">from</span> Cryptodome.Cipher <span style="color:#f92672">import</span> AES
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> Cryptodome.Protocol.KDF <span style="color:#f92672">import</span> PBKDF2
+</span></span><span style="display:flex;"><span><span style="color:#f92672">from</span> Cryptodome.Util.Padding <span style="color:#f92672">import</span> unpad
+</span></span></code></pre></div><h2 id="defining-constants--helper-functions">defining constants + helper functions</h2>
+<p>the script defines a constant for the default chromium password, used as the key for encrypting cookies in chromium-based browsers. it also defines a custom exception class for browser cookie errors.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">ChromiumBasedBrowser</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">load</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># decrypt the cookie value</span>
+</span></span><span style="display:flex;"><span>        value <span style="color:#f92672">=</span> self<span style="color:#f92672">.</span>_decrypt(value, enc_value)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_decrypt</span>(self, value, encrypted_value):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>        data <span style="color:#f92672">=</span> aes<span style="color:#f92672">.</span>decrypt_and_verify(encrypted_value[<span style="color:#ae81ff">12</span>:<span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>], tag)
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> data<span style="color:#f92672">.</span>decode()
+</span></span></code></pre></div><p>the firefox class handles cookies from firefox, using the <code>lz4.block</code> module to decompress LZ4-compressed cookies.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Firefox</span>:
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">__add_session_cookies_lz4</span>(self, cj):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>        json_data <span style="color:#f92672">=</span> json<span style="color:#f92672">.</span>loads(lz4<span style="color:#f92672">.</span>block<span style="color:#f92672">.</span>decompress(file_obj<span style="color:#f92672">.</span>read()))
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span></code></pre></div><h2 id="loading-cookies-from-all-browsers">loading cookies from all browsers</h2>
+<p>the <code>load</code> function loads cookies from all supported browsers and returns them in a combined <code>http.cookiejar.CookieJar</code> object. this function iterates over a list of functions that load cookies from each supported browser, and adds all the cookies they return to a single <code>CookieJar</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">load</span>(domain_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># function to load cookies from all supported browsers and return combined cookie jar</span>
+</span></span><span style="display:flex;"><span>    cj <span style="color:#f92672">=</span> http<span style="color:#f92672">.</span>cookiejar<span style="color:#f92672">.</span>CookieJar()
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">for</span> cookie_fn <span style="color:#f92672">in</span> [chrome, chromium, opera, opera_gx, brave, edge, vivaldi, firefox, safari]:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> cookie <span style="color:#f92672">in</span> cookie_fn(domain_name<span style="color:#f92672">=</span>domain_name):
+</span></span><span style="display:flex;"><span>                cj<span style="color:#f92672">.</span>set_cookie(cookie)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> BrowserCookieError:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">pass</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> cj
+</span></span></code></pre></div><p>the script includes a separate class for each browser, as each browser stores its cookies differently. these classes inherit from the <code>Browser</code> base class, which provides common functionality, and override the <code>load</code> method to implement specific cookie extraction and decryption.</p>
+<p>for example, the <code>Chrome</code> class handles cookies from google chrome.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Chrome</span>(ChromiumBasedBrowser):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, cookie_file<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, domain_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>, key_file<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__(cookie_file, domain_name, key_file)
+</span></span></code></pre></div><p>the firefox class handles cookies from firefox, but overrides the <code>load</code> method to handle firefox unique cookie storage format.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">Firefox</span>(Browser):
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> __init__(self, cookie_file<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, domain_name<span style="color:#f92672">=</span><span style="color:#e6db74">&#34;&#34;</span>):
+</span></span><span style="display:flex;"><span>        super()<span style="color:#f92672">.</span>__init__(cookie_file, domain_name)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">def</span> <span style="color:#a6e22e">load</span>(self):
+</span></span><span style="display:flex;"><span>        <span style="color:#f92672">...</span>
+</span></span></code></pre></div><h2 id="decrypting-cookies">decrypting cookies</h2>
+<p>the ability to decrypt encrypted cookies is the most important part of <code>cookieJar</code>. it&rsquo;s done using the <code>Cryptodome</code> library, which provides a variety of cryptographic recipes and primitives.</p>
+<p>the decryption process varies depending on the browser and the OS. for example, chromium-based browsers on windows use the windows data protection API (DPAPI) to encrypt cookies, while on linux/macOS, they use AES encryption with a key derived from a predefined password.</p>
+<p>the <code>_decrypt</code> method in the <code>ChromiumBasedBrowser</code> handles this decryption process. it first checks the OS, then uses the appropriate decryption method.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_decrypt</span>(self, value, encrypted_value):
+</span></span><span style="display:flex;"><span>    <span style="color:#75715e"># method to decrypt encoded cookies</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> sys<span style="color:#f92672">.</span>platform <span style="color:#f92672">==</span> <span style="color:#e6db74">&#39;win32&#39;</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#75715e"># try to decrypt using the Windows Chromium method</span>
+</span></span><span style="display:flex;"><span>            decrypted_value <span style="color:#f92672">=</span> _crypt_unprotect_data(encrypted_value)
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">except</span> <span style="color:#a6e22e">Exception</span>:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> value
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">else</span>:
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># for Linux &amp; Mac, we have to remove the &#39;v10&#39; or &#39;v11&#39; prefix</span>
+</span></span><span style="display:flex;"><span>        encrypted_value <span style="color:#f92672">=</span> encrypted_value[<span style="color:#ae81ff">3</span>:]
+</span></span><span style="display:flex;"><span>        nonce, tag <span style="color:#f92672">=</span> encrypted_value[:<span style="color:#ae81ff">12</span>], encrypted_value[<span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>:]
+</span></span><span style="display:flex;"><span>        cipher <span style="color:#f92672">=</span> AES<span style="color:#f92672">.</span>new(self<span style="color:#f92672">.</span>v10_key, AES<span style="color:#f92672">.</span>MODE_GCM, nonce<span style="color:#f92672">=</span>nonce)
+</span></span><span style="display:flex;"><span>        decrypted_value <span style="color:#f92672">=</span> cipher<span style="color:#f92672">.</span>decrypt_and_verify(encrypted_value[<span style="color:#ae81ff">12</span>:<span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>], tag)
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> decrypted_value<span style="color:#f92672">.</span>decode(<span style="color:#e6db74">&#39;utf-8&#39;</span>)
+</span></span></code></pre></div><p>in the case of windows, the <code>_crypt_unprotect_data</code> function is used to decrypt the cookie using the DPAPI. this function uses the <code>CryptUnprotectData</code> function from the <code>crypt32.dll</code> library, which is a part of the windows API.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_crypt_unprotect_data</span>(
+</span></span><span style="display:flex;"><span>        cipher_text<span style="color:#f92672">=</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;&#39;</span>, entropy<span style="color:#f92672">=</span><span style="color:#e6db74">b</span><span style="color:#e6db74">&#39;&#39;</span>, reserved<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, prompt_struct<span style="color:#f92672">=</span><span style="color:#66d9ef">None</span>, is_key<span style="color:#f92672">=</span><span style="color:#66d9ef">False</span>
+</span></span><span style="display:flex;"><span>):
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">if</span> <span style="color:#f92672">not</span> ctypes<span style="color:#f92672">.</span>windll<span style="color:#f92672">.</span>crypt32<span style="color:#f92672">.</span>CryptUnprotectData(
+</span></span><span style="display:flex;"><span>            ctypes<span style="color:#f92672">.</span>byref(blob_in), ctypes<span style="color:#f92672">.</span>byref(desc), ctypes<span style="color:#f92672">.</span>byref(blob_entropy),
+</span></span><span style="display:flex;"><span>            reserved, prompt_struct, CRYPTPROTECT_UI_FORBIDDEN, ctypes<span style="color:#f92672">.</span>byref(blob_out)
+</span></span><span style="display:flex;"><span>    ):
+</span></span><span style="display:flex;"><span>        <span style="color:#75715e"># if the function fails, raise a RuntimeError</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">raise</span> <span style="color:#a6e22e">RuntimeError</span>(<span style="color:#e6db74">&#39;Failed to decrypt the cipher text with DPAPI&#39;</span>)  <span style="color:#75715e"># raise an error</span>
+</span></span></code></pre></div><p>on linux/macOS, the script uses the AES algorithm from the <code>Cryptodome.Cipher</code> module to decrypt the cookies. the key for the AES encryption is derived from the predefined password using the PBKDF2 algorithm from the <code>Cryptodome.Protocol.KDF</code> module.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>aes <span style="color:#f92672">=</span> AES<span style="color:#f92672">.</span>new(self<span style="color:#f92672">.</span>v10_key, AES<span style="color:#f92672">.</span>MODE_GCM, nonce<span style="color:#f92672">=</span>nonce)
+</span></span><span style="display:flex;"><span>data <span style="color:#f92672">=</span> aes<span style="color:#f92672">.</span>decrypt_and_verify(encrypted_value[<span style="color:#ae81ff">12</span>:<span style="color:#f92672">-</span><span style="color:#ae81ff">16</span>], tag)
+</span></span></code></pre></div><h2 id="error-handling">error handling</h2>
+<p>issues can arise when dealing with cookies. for example, if a browser&rsquo;s cookies are stored in a SQLite database, and that database is locked because the browser is currently using it, the script creates a temporary copy of the database to avoid a locking error.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">def</span> <span style="color:#a6e22e">_create_local_copy</span>(cookie_file):
+</span></span><span style="display:flex;"><span>    <span style="color:#f92672">...</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">with</span> contextlib<span style="color:#f92672">.</span>closing(sqlite3<span style="color:#f92672">.</span>connect(<span style="color:#e6db74">&#39;file:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">?mode=ro&#39;</span><span style="color:#f92672">.</span>format(pathname2url(cookie_file)), uri<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)) <span style="color:#66d9ef">as</span> conn:
+</span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">with</span> tempfile<span style="color:#f92672">.</span>TemporaryFile() <span style="color:#66d9ef">as</span> tmp_file:
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">for</span> line <span style="color:#f92672">in</span> conn<span style="color:#f92672">.</span>iterdump():
+</span></span><span style="display:flex;"><span>                tmp_file<span style="color:#f92672">.</span>write(<span style="color:#e6db74">&#39;</span><span style="color:#e6db74">{}</span><span style="color:#ae81ff">\n</span><span style="color:#e6db74">&#39;</span><span style="color:#f92672">.</span>format(line)<span style="color:#f92672">.</span>encode(<span style="color:#e6db74">&#39;utf-8&#39;</span>))
+</span></span><span style="display:flex;"><span>            tmp_file<span style="color:#f92672">.</span>seek(<span style="color:#ae81ff">0</span>)
+</span></span><span style="display:flex;"><span>            conn_temp <span style="color:#f92672">=</span> sqlite3<span style="color:#f92672">.</span>connect(<span style="color:#e6db74">&#39;file:</span><span style="color:#e6db74">{}</span><span style="color:#e6db74">?mode=rw&#39;</span><span style="color:#f92672">.</span>format(pathname2url(tmp_file<span style="color:#f92672">.</span>name)), uri<span style="color:#f92672">=</span><span style="color:#66d9ef">True</span>)
+</span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> conn_temp
+</span></span></code></pre></div><p>the script also includes a custom exception class: <code>BrowserCookieError</code>. it&rsquo;s raised when there&rsquo;s an error retrieving or decrypting cookies, this allows the script to fail gracefully and provide usefull error messages.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BrowserCookieError</span>(<span style="color:#a6e22e">Exception</span>): <span style="color:#66d9ef">pass</span>
+</span></span></code></pre></div><h1 id="conclusion">conclusion</h1>
+<p>i wrote this for the same reason i wrote everything else: education. <code>cookieJar</code> illustrates key security concepts, specifically those related to web security, encryption, and data storage.</p>
+
+        </div>
+    </article>
+</div>
+
+    
+     <script src="http://localhost:1313/p5/p5.min.js"></script>
+     <script src="http://localhost:1313/js/genart.js"></script>
+     <script src="http://localhost:1313/js/main.js"></script>
+</body>
+</html>

@@ -1,7 +1,7 @@
-baseURL = ""
-title   = ""
+baseURL = "http://localhost:1313/"
+title   = "༧"
 languageCode = "en-us"
-theme = "hello-friend-ng"
+theme = "Ardeidae"
 
 PygmentsCodeFences = true
 PygmentsStyle = "monokai"
@@ -49,7 +49,7 @@ disableHugoGeneratorInject = false
   series   = "series"
 
 [params]
-  dateform        = "Jan 2, 2006"
+  dateform        = "2006-01-02"
   dateformShort   = "Jan 2"
   dateformNum     = "2006-01-02"
   dateformNumTime = "2006-01-02 15:04"
@@ -134,27 +134,27 @@ disableHugoGeneratorInject = false
 
 
   # Social icons
-  [[params.social]]
+  [[params.socialIcons]]
     name = "email"
     url  = "mailto:bilal.s12@protonmail.com"
 
-  [[params.social]]
+  [[params.socialIcons]]
     name = "linkedin"
     url = "https://www.linkedin.com/in/bilal-s-b857601a/"
   
-  [[params.social]]
+  [[params.socialIcons]]
     name = "github"
     url = "https://github.com/bilals12"
 
-  [[params.social]]
+  [[params.socialIcons]]
     name = "soundcloud"
     url = "https://soundcloud.com/snr_1"
 
-  [[params.social]]
+  [[params.socialIcons]]
     name = "letterboxd"
     url = "https://letterboxd.com/mescalinesun/"
 
-  [[params.social]]
+  [[params.socialIcons]]
     name = "leetcode"
     url = "https://leetcode.com/0xME/"
 

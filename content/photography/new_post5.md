@@ -2,6 +2,7 @@
 title: "portra 800"
 date: 2023-09-09T12:08:02-05:00
 draft: false
+type: "photography"
 ---
 
 second roll for the manitoba trip. first time shooting with the portra 800, and it turned out great (even if some shots are blurry).

@@ -1,12 +1,18 @@
 {{ define "main" }}
-	<div class="container">
-	  <h1>all posts for {{ .Type | singularize }} "{{ .Title }}"</h1>
-	  <ul>
-	    {{ range .Data.Pages }}
-	       <li>
-	         <a href="{{ .Permalink }}">{{ .Title }}</a>
-	       </li>
-	    {{ end }}
-	  </ul>
-	</div>
-{{ end}}
+<div id="content-area" data-page-type="terms">
+    <h1>
+        {{ if eq .Type "categories" }}
+            all posts for {{ .Type | singularize }} "{{ .Title }}"
+        {{ else }}
+            {{ .Type }} "{{ .Title }}"
+        {{ end }}
+    </h1>
+    <ul>
+      {{ range .Data.Pages }}
+         <li>
+           <a href="{{ .Permalink }}">{{ .Title }}</a>
+         </li>
+      {{ end }}
+    </ul>
+</div>
+{{ end }}

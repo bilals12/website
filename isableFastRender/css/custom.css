@@ -1,0 +1,274 @@
+/* Styles for categories */
+#categories-container {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    margin-top: 2rem;
+    transition: opacity 0.25s ease-in-out;
+}
+
+#content-area {
+    transition: transform 0.25s ease-in-out, opacity 0.25s ease-in-out;
+    transform: translateX(100%);
+    opacity: 0;
+}
+
+.category-item {
+    color: #F5F5F5;
+    text-decoration: none;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-transform: lowercase;
+    transition: color 0.25s ease;
+    cursor: pointer;
+}
+
+.category-item:hover {
+    color: #CD0000;
+    text-decoration: none;
+}
+
+/* underlining the category */
+.category-title-underline {
+    border-bottom: 2px solid #CD0000;
+    padding-bottom: 5px;
+    display: inline-block;
+}
+
+/* post lists styling */
+.post-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+.post-list li {
+    margin-bottom: 1rem;
+}
+
+.post-list a {
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1.5rem;
+    font-weight: bold;
+    color: #F5F5F5;
+    text-decoration: none;
+    transition: color 0.25s ease;
+}
+
+.post-list a:hover {
+    color: #CD0000;
+}
+
+.post-date {
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1rem;
+    color: #CD0000;
+    margin-right: 1rem;
+}
+
+/* Back button */
+#back-button {
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #F5F5F5;
+    cursor: pointer;
+    padding: 0;
+    margin-bottom: 10px;
+    align-self: flex-start;
+}
+
+#back-button:hover {
+    color: #CD0000;
+}
+
+/* Category title */
+#category-title {
+    font-size: 2rem;
+    color: #CD0000;
+    margin-bottom: 0.5rem;
+    align-self: flex-start;
+}
+
+/* layout adjustments */
+#landing {
+    position: relative;
+    overflow: hidden;
+    display: flex;
+    min-height: 100vh;
+    width: 100vw;
+}
+/* art */
+#landing-canva {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+/* pane */
+#landing-content {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 45%;
+    height: 100%;
+    z-index: 2;
+    background: rgba(41, 82, 74, 0.2); /* Reduced opacity */
+    backdrop-filter: blur(5px); /* Reduced blur */
+    -webkit-backdrop-filter: blur(5px);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+    color: #F5F5F5;
+    padding: 2rem;
+}
+
+#landing-content::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -20px;
+    width: 20px;
+    height: 100%;
+    background: linear-gradient(to right, transparent, rgba(41, 82, 74, 0.2));
+}
+
+/* Social buttons */
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+}
+
+.header-group {
+    display: flex;
+    align-items: center;
+}
+
+.header-icon {
+    color: #F5F5F5;
+    margin-left: 10px;
+    font-size: 1.2rem;
+    transition: color 0.25s ease;
+}
+
+.header-icon:hover {
+    color: #CD0000;
+}
+
+/* title */
+#site-title {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    color: whitesmoke;
+    border: 2px solid whitesmoke;
+    padding: 0.5rem;
+    text-transform: uppercase;
+    font-family: "Noto Sans", sans-serif;
+    font-size: 1.2rem;
+    font-weight: bold;
+    text-decoration: none;
+    height: 1.2rem;
+    width: 1.2rem;
+    transition: all 0.25s ease;
+}
+
+#site-title:hover {
+    color: #29524a;
+    background-color: whitesmoke;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    padding: 10px 0;
+    text-align: center;
+    background-color: transparent;
+    color: #F5F5F5;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1rem;
+}
+
+/* Ensure content is visible */
+#categories-container, #content-area {
+    opacity: 1;
+    transform: none;
+}
+
+/* consistent styling across content */
+#categories-container a,
+#content-area a,
+#content-area li {
+    color: #F5F5F5;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 1.5rem;
+    text-decoration: none;
+    transition: color 0.25s ease;
+}
+
+#categories-container a:hover,
+#content-area a:hover {
+    color: #CD0000;
+}
+
+/* Adjustments for mobile devices */
+@media (max-width: 768px) {
+    #landing-content {
+        width: 100%;
+        height: auto;
+        min-height: 100vh;
+    }
+
+    #landing-canva {
+        height: 15rem;
+    }
+
+    #categories-container {
+        padding-left: 1em;
+    }
+}
+
+/* markdown mods */
+.markdown-content {
+    max-width: 100%;
+    overflow-wrap: break-word;
+    font-family: "Ubuntu Mono", monospace;
+    color: #F5F5F5;
+}
+
+.markdown-content h1, .markdown-content h2, .markdown-content h3, 
+.markdown-content h4, .markdown-content h5, .markdown-content h6 {
+    font-family: "Ubuntu Mono", monospace;
+    color: #F5F5F5;
+    margin-bottom: 1rem;
+}
+
+.markdown-content h1 {
+    font-size: 2rem;
+}
+
+.markdown-content h2 {
+    font-size: 1.75rem;
+}
+
+.markdown-content h3 {
+    font-size: 1.5rem;
+}
+
+.markdown-content img {
+    max-width: 100%;
+    height: auto;
+}
+
+.markdown-content pre, .markdown-content code {
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    background-color: rgba(0, 0, 0, 0.2);
+    padding: 5px;
+    border-radius: 3px;
+}

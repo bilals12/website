@@ -3,6 +3,7 @@ title: "tryhackme: game zone"
 date: 2021-10-26T17:21:48+04:00
 draft: false
 tags: ["cybersec", "tryhackme", "walkthrough", "pentesting", "sql"]
+type: "post"
 ---
 
 this is a walkthrough for the room "game zone" on tryhackme. this was the 4th room in the "advanced exploitation" chapter, part of the "offensive pentesting" path. 

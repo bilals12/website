@@ -2,6 +2,7 @@
 title: "violaTor"
 date: 2023-12-21T11:17:54-05:00
 draft: false
+type: "post"
 ---
 
 ![art](/violaTorArt.png)

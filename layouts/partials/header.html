@@ -1,0 +1,15 @@
+<header>
+    <a id="site-title" href="{{ relURL `` }}">
+        {{ .Site.Title }}
+    </a>
+    <section id="social-links" class="header-group">
+        {{ range .Site.Params.socialIcons }}
+            <a href="{{ .url }}" class="header-icon" target="_blank" rel="noopener noreferrer">
+                {{ partial "svg.html" (dict "name" .name) }}
+            </a>
+        {{ end }}
+        <a href="{{ relURL `index.xml` }}" class="header-icon">
+            {{ partial "svg.html" (dict "name" "rss") }}
+        </a>
+    </section>
+</header>

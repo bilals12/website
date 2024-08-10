@@ -3,6 +3,7 @@ title: "tryhackme: overpass2"
 date: 2021-10-27T16:16:04+04:00
 draft: false
 tags: ["cybersec", "tryhackme", "walkthrough", "pentesting", "wireshark"]
+type: "post"
 ---
 
 i'm going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the "advanced exploitation" chapter, of the "offensive pentesting" path. it's also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called "overpass". 

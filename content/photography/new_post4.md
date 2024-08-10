@@ -2,6 +2,7 @@
 title: "ultramax 400"
 date: 2023-09-08
 draft: false
+type: "photography"
 ---
 
 first time shooting with ultramax 400. the colours seem a little cooler than the gold 200, and definitely not as rich as the portra 800, but i do like the "real" feel of some of these photos.

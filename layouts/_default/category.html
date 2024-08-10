@@ -1,0 +1,28 @@
+{{ define "main" }}
+<div id="content-area" data-page-type="category">
+    {{ if eq .Type "posts" }}
+        <h1>posts</h1>
+    {{ else if eq .Type "photography" }}
+        <h1>photography</h1>
+    {{ else }}
+        <h1>{{ .Title }}</h1>
+    {{ end }}
+    {{ .Content }}
+    {{ if eq .Type "posts" }}
+        {{ range .Pages }}
+            <article>
+                <h2><a href="{{ .Permalink }}">{{ .Title }}</a></h2>
+                <time>{{ .Date.Format "January 2, 2006" }}</time>
+                {{ .Summary }}
+            </article>
+        {{ end }}
+    {{ else if eq .Type "photography" }}
+        {{ range .Pages }}
+            <div class="photo-item">
+                <img src="{{ .Params.image }}" alt="{{ .Title }}">
+                <h3>{{ .Title }}</h3>
+            </div>
+        {{ end }}
+    {{ end }}
+</div>
+{{ end }}

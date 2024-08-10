@@ -2,9 +2,7 @@
 title: "cracks"
 date: 2021-02-15T01:43:33-05:00
 draft: false
-toc: false
-images:
-tags: ["poem"]
+type: "post"
 ---
 
 cracks in the asphalt, cracks in the curb

@@ -2,6 +2,7 @@
 title: "portra 800"
 date: 2023-11-10
 draft: false
+type: "photography"
 ---
 
 portra 800 is probably my favourite film to shoot with. once i'd gotten comfortable enough with the gold 200, i wanted to elevate my colour game with a more light sensitive film and this one is definitely up there.

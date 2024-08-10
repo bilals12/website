@@ -2,6 +2,7 @@
 title: "gold 200"
 date: 2023-10-26
 draft: false
+type: "photography"
 ---
 
 more work with the gold 200, my first and favourite film (until i discovered portra 800 at least).

@@ -2,6 +2,7 @@
 title: "neverMind"
 date: 2024-01-18T11:05:32-05:00
 draft: false
+type: "post"
 ---
 
 ![neverMind](/neverMind.png)

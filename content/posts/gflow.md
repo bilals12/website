@@ -3,6 +3,7 @@ title: "perceptrons to GFlowNets"
 date: 2024-03-25T12:39:06-04:00
 draft: true
 math: true
+type: "post"
 ---
 
 # baking 101

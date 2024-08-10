@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ .Title }}</title>
+    {{ partial "head.html" . }}
+    <link rel="stylesheet" href="{{ "css/custom.css" | relURL }}">
+</head>
+<body>
+    {{ block "main" . }}{{ end }}
+    <!-- scripts -->
+     <script src="{{ relURL `p5/p5.min.js` }}"></script>
+     <script src="{{ relURL `js/genart.js` }}"></script>
+     <script src="{{ relURL `js/main.js` }}"></script>
+</body>
+</html>

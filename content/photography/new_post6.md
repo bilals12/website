@@ -2,6 +2,7 @@
 title: "gold 200"
 date: 2023-09-10T12:16:38-05:00
 draft: false
+type: "photography"
 ---
 
 the last roll of the manitoba trip. even though it's a technically "inferior" film, i still love the gold 200 and these shots are some of my favourites.

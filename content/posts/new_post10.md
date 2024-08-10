@@ -2,6 +2,7 @@
 title: "reading list [updated: january 29th, 2024]"
 date: 2024-01-03T10:08:54-05:00
 draft: false
+type: "post"
 ---
 
 **currently reading**
