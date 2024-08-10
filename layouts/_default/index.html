@@ -11,14 +11,6 @@
                 {{- partial "header.html" . -}}
                 <button id="back-button" style="display:none;">〈</button>
                 <section id="categories-container">
-                    <!-- Debug output -->
-                    <div style="display: none;">
-                        About URL: {{ "/about/" | absURL }}<br>
-                        CV URL: {{ "/cv/" | absURL }}<br>
-                        Posts URL: {{ "/posts/" | absURL }}<br>
-                        Photography URL: {{ "/photography/" | absURL }}<br>
-                    </div>
-                    <!-- End debug output -->
                     <a href="{{ "/about/" | absURL }}" class="category-item" data-category="about">about</a>
                     <a href="{{ "/cv/" | absURL }}" class="category-item" data-category="cv">cv</a>
                     <a href="{{ "/posts/" | absURL }}" class="category-item" data-category="posts">posts</a>

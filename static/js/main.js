@@ -24,6 +24,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadContent(url) {
         hideContent();
+        const absoluteUrl = new URL(url, window.location.origin).href;
         fetch(url)
             .then(response => response.text())
             .then(html => {
@@ -105,7 +106,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 categoriesContainer.style.display = 'none';
                 loadContent(url);
-            }, 250);
+            }, 100);
         });
     });
 
@@ -119,7 +120,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categoriesContainer.style.display = 'flex';
             categoriesContainer.style.opacity = '1';
             showContent();
-        }, 250);
+        }, 100);
     });
 
     // Initial setup
