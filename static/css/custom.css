@@ -329,7 +329,7 @@ td > code {
         width: 100%;
         min-height: 100vh;
         padding: 1rem;
-        background: rgba(41, 82, 74, 0.8);
+        background: rgba(41, 82, 74, 0.1);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -338,7 +338,7 @@ td > code {
 
     #categories-container,
     #content-area {
-        width: 90%;
+        width: 100%;
         max-width: 600px;
         margin: 0 auto;
     }
