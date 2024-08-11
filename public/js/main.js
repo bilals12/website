@@ -24,9 +24,16 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadContent(url) {
         hideContent();
-        const absoluteUrl = new URL(url, window.location.origin).href;
-        fetch(url)
-            .then(response => response.text())
+        // current origin to construct absolute url (CORS)
+        const currentOrigin = window.location.origin;
+        const absoluteUrl = new URL(url, currentOrigin).href;
+        fetch(absoluteUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
             .then(html => {
                 const parser = new DOMParser();
                 const doc = parser.parseFromString(html, 'text/html');

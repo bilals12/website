@@ -24,8 +24,9 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadContent(url) {
         hideContent();
-        // CORS check
-        const absoluteUrl = new URL(url, 'https://bsssq.xyz').href;
+        // current origin to construct absolute url (CORS)
+        const currentOrigin = window.location.origin;
+        const absoluteUrl = new URL(url, currentOrigin).href;
         fetch(absoluteUrl)
             .then(response => {
                 if (!response.ok) {
