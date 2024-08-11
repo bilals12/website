@@ -5,7 +5,6 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoriesContainer = document.getElementById('categories-container');
     const categoryItems = document.querySelectorAll('.category-item');
     const siteBaseUrl = document.querySelector('base')?.href || window.location.origin + '/';
-    //let previousUrl = null;
 
     console.log('Site Base URL:', siteBaseUrl);
     console.log('Number of category items:', categoryItems.length);
@@ -21,6 +20,8 @@ document.addEventListener('DOMContentLoaded', function() {
         contentArea.style.transform = 'translateX(100%)';
         contentArea.style.opacity = '0';
     }
+    // adding some back button changes
+    let previousUrl = null;
 
     function loadContent(url) {
         hideContent();
@@ -28,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const urlPath = new URL(url, window.location.origin).pathname;
         // construct absolute url using current origin (CORS)
         const absoluteUrl = new URL(urlPath, window.location.origin).href;
-        
+
         fetch(absoluteUrl)
             .then(response => {
                 if (!response.ok) {
@@ -50,7 +51,7 @@ document.addEventListener('DOMContentLoaded', function() {
                         addAllLinkListeners();
                     }, 100);
                     // store current url as previous url
-                    //previousUrl = url;
+                    previousUrl = absoluteUrl;
                 } else {
                     throw new Error('Content not found in loaded page');
                 }
@@ -120,9 +121,22 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     backButton.addEventListener('click', function() {
+        if (previousUrl) {
+            if (previousUrl.includes('/posts/')) {
+                loadContent('/posts/');
+            } else if (previousUrl.includes('/photography/')) {
+                loadContent('/photography/');
+            } else {
+                goToHomePage();
+            }
+        } else {
+            goToHomePage();
+        }
+    });
+
+    function goToHomePage() {
         hideContent();
         backButton.style.display = 'none';
-        
         setTimeout(() => {
             contentArea.innerHTML = '';
             contentArea.setAttribute('data-page-type', 'home');
@@ -130,8 +144,7 @@ document.addEventListener('DOMContentLoaded', function() {
             categoriesContainer.style.opacity = '1';
             showContent();
         }, 100);
-    });
-
+    }
     // Initial setup
     addAllLinkListeners();
 });

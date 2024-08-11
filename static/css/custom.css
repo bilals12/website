@@ -25,7 +25,7 @@
 }
 
 .category-item:hover {
-    color: #CD0000;
+    color: #8B0000;
     text-decoration: none;
 }
 
@@ -56,7 +56,7 @@
 }
 
 .post-list a:hover {
-    color: #CD0000;
+    color: #8b0000;
 }
 
 .post-date {
@@ -79,7 +79,7 @@
 }
 
 #back-button:hover {
-    color: #CD0000;
+    color: #8b0000;
 }
 
 /* Category title */
@@ -213,23 +213,39 @@ footer {
 
 #categories-container a:hover,
 #content-area a:hover {
-    color: #CD0000;
+    color: #8B0000;
 }
 
 /* Adjustments for mobile devices */
 @media (max-width: 768px) {
     #landing-content {
         width: 100%;
-        height: auto;
-        min-height: 100vh;
+        height: 100%;
+        padding: 1rem;
+        position: fixed;
+        overflow-y: auto;
     }
 
     #landing-canva {
-        height: 15rem;
+        display: none;
     }
 
-    #categories-container {
-        padding-left: 1em;
+    .category-item, .post-list a {
+        font-size: 1.2rem;
+    }
+
+    #site-title {
+        font-size: 1rem;
+        height: 1rem;
+        width: 1rem;
+    }
+
+    .header-icon {
+        font-size: 1rem;
+    }
+
+    #post-title {
+        font-size: 1.5rem;
     }
 }
 
@@ -268,18 +284,23 @@ footer {
 .markdown-content pre, .markdown-content code {
     white-space: pre-wrap;
     word-wrap: break-word;
-    background-color: rgba(41, 82, 74, 0.3);
+    background-color: rgba(255, 255, 255, 0.0); /* Transparent background */
     padding: 10px;
     border-radius: 5px;
     font-family: "Ubuntu Mono", monospace;
     font-size: 0.9em;
     line-height: 1.4;
+    color: #1a1a1a; /* Dark color for contrast */
+    border-left: 4px solid #29724a; /* Adding a left border to differentiate */
 }
+
 
 .post-date-time, #post-title, .post-list a {
     font-family: "Ubuntu Mono", monospace;
     font-size: 1.5rem;
+    font-weight: bold;
     color: #F5F5F5;
+    text-decoration: none;
 }
 
 #post-title {

@@ -129,6 +129,8 @@ document.addEventListener('DOMContentLoaded', function() {
             } else {
                 goToHomePage();
             }
+        } else {
+            goToHomePage();
         }
     });
 
