@@ -24,9 +24,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadContent(url) {
         hideContent();
-        // current origin to construct absolute url (CORS)
-        const currentOrigin = window.location.origin;
-        const absoluteUrl = new URL(url, currentOrigin).href;
+        // extract path from given url
+        const urlPath = new URL(url, window.location.origin).pathname;
+        // construct absolute url using current origin (CORS)
+        const absoluteUrl = new URL(urlPath, window.location.origin).href;
+        
         fetch(absoluteUrl)
             .then(response => {
                 if (!response.ok) {

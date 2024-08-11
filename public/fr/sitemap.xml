@@ -2,52 +2,52 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://bsssq.xyz/fr/</loc>
+    <loc>/fr/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/"
+                href="/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/"
+                href="/fr/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/fr/categories/</loc>
+    <loc>/fr/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/categories/"
+                href="/categories/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/categories/"
+                href="/fr/categories/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/fr/series/</loc>
+    <loc>/fr/series/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/series/"
+                href="/series/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/series/"
+                href="/fr/series/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/fr/tags/</loc>
+    <loc>/fr/tags/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/tags/"
+                href="/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/tags/"
+                href="/fr/tags/"
                 />
   </url>
 </urlset>

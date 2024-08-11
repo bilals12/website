@@ -2,162 +2,162 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>https://bsssq.xyz/</loc>
+    <loc>/</loc>
     <lastmod>2024-01-18T11:05:32-05:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/"
+                href="/fr/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/"
+                href="/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/posts/2024/01/nevermind/</loc>
+    <loc>/posts/2024/01/nevermind/</loc>
     <lastmod>2024-01-18T11:05:32-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/</loc>
+    <loc>/posts/</loc>
     <lastmod>2024-01-18T11:05:32-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2024/01/zynos-rom-0-fetching/</loc>
+    <loc>/posts/2024/01/zynos-rom-0-fetching/</loc>
     <lastmod>2024-01-10T11:32:59-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2024/01/cinestill-400d/</loc>
+    <loc>/photography/2024/01/cinestill-400d/</loc>
     <lastmod>2024-01-03T10:47:30-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/</loc>
+    <loc>/photography/</loc>
     <lastmod>2024-01-03T10:47:30-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2024/01/reading-list-updated-january-29th-2024/</loc>
+    <loc>/posts/2024/01/reading-list-updated-january-29th-2024/</loc>
     <lastmod>2024-01-03T10:08:54-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2024/01/cookiejar/</loc>
+    <loc>/posts/2024/01/cookiejar/</loc>
     <lastmod>2024-01-02T10:11:43-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2023/12/violator/</loc>
+    <loc>/posts/2023/12/violator/</loc>
     <lastmod>2023-12-21T11:17:54-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/12/portra-800/</loc>
+    <loc>/photography/2023/12/portra-800/</loc>
     <lastmod>2023-12-20T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2023/12/tcpsack/</loc>
+    <loc>/posts/2023/12/tcpsack/</loc>
     <lastmod>2023-12-07T15:14:13-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2023/12/ddos-flood-part-i/</loc>
+    <loc>/posts/2023/12/ddos-flood-part-i/</loc>
     <lastmod>2023-12-06T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2023/11/gdbextract/</loc>
+    <loc>/posts/2023/11/gdbextract/</loc>
     <lastmod>2023-11-27T13:43:26-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/cv/</loc>
+    <loc>/cv/</loc>
     <lastmod>2023-11-16T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/11/tri-x-400/</loc>
+    <loc>/photography/2023/11/tri-x-400/</loc>
     <lastmod>2023-11-13T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/11/portra-800/</loc>
+    <loc>/photography/2023/11/portra-800/</loc>
     <lastmod>2023-11-10T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/10/gold-200/</loc>
+    <loc>/photography/2023/10/gold-200/</loc>
     <lastmod>2023-10-26T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/09/gold-200/</loc>
+    <loc>/photography/2023/09/gold-200/</loc>
     <lastmod>2023-09-10T12:16:38-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/09/portra-800/</loc>
+    <loc>/photography/2023/09/portra-800/</loc>
     <lastmod>2023-09-09T12:08:02-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/09/ultramax-400/</loc>
+    <loc>/photography/2023/09/ultramax-400/</loc>
     <lastmod>2023-09-08T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/07/gold-200/</loc>
+    <loc>/photography/2023/07/gold-200/</loc>
     <lastmod>2023-07-25T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/photography/2023/07/intro--gold-200/</loc>
+    <loc>/photography/2023/07/intro--gold-200/</loc>
     <lastmod>2023-07-12T00:00:00+00:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2022/10/gatekeeper-buffer-overflows/</loc>
+    <loc>/posts/2022/10/gatekeeper-buffer-overflows/</loc>
     <lastmod>2022-10-23T06:59:16-04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2022/01/jenkins/</loc>
+    <loc>/posts/2022/01/jenkins/</loc>
     <lastmod>2022-01-08T14:37:40-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2022/01/update/</loc>
+    <loc>/posts/2022/01/update/</loc>
     <lastmod>2022-01-08T13:59:22-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2021/11/tryhackme-ra/</loc>
+    <loc>/posts/2021/11/tryhackme-ra/</loc>
     <lastmod>2021-11-10T16:37:38-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/cybersec/</loc>
+    <loc>/tags/cybersec/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/pentesting/</loc>
+    <loc>/tags/pentesting/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/</loc>
+    <loc>/tags/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/tags/"
+                href="/fr/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/tags/"
+                href="/tags/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/tags/tryhackme/</loc>
+    <loc>/tags/tryhackme/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2021/10/tryhackme-overpass2/</loc>
+    <loc>/posts/2021/10/tryhackme-overpass2/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/walkthrough/</loc>
+    <loc>/tags/walkthrough/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/wireshark/</loc>
+    <loc>/tags/wireshark/</loc>
     <lastmod>2021-10-27T16:16:04+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/tags/sql/</loc>
+    <loc>/tags/sql/</loc>
     <lastmod>2021-10-26T17:21:48+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2021/10/tryhackme-game-zone/</loc>
+    <loc>/posts/2021/10/tryhackme-game-zone/</loc>
     <lastmod>2021-10-26T17:21:48+04:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2021/10/intro-to-hacking/</loc>
+    <loc>/posts/2021/10/intro-to-hacking/</loc>
     <lastmod>2021-10-24T01:43:33-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/posts/2021/02/cracks/</loc>
+    <loc>/posts/2021/02/cracks/</loc>
     <lastmod>2021-02-15T01:43:33-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/about/</loc>
+    <loc>/about/</loc>
     <lastmod>2021-02-15T00:11:16-05:00</lastmod>
   </url><url>
-    <loc>https://bsssq.xyz/categories/</loc>
+    <loc>/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/categories/"
+                href="/fr/categories/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/categories/"
+                href="/categories/"
                 />
   </url><url>
-    <loc>https://bsssq.xyz/series/</loc>
+    <loc>/series/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="https://bsssq.xyz/fr/series/"
+                href="/fr/series/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="https://bsssq.xyz/series/"
+                href="/series/"
                 />
   </url>
 </urlset>

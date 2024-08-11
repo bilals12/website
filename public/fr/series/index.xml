@@ -2,10 +2,10 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Series on ༧</title>
-    <link>https://bsssq.xyz/fr/series/</link>
+    <link>/fr/series/</link>
     <description>Recent content in Series on ༧</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>fr</language>
-    <atom:link href="https://bsssq.xyz/fr/series/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="/fr/series/index.xml" rel="self" type="application/rss+xml" />
   </channel>
 </rss>

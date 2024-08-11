@@ -2,52 +2,52 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>Tags on ༧</title>
-    <link>https://bsssq.xyz/tags/</link>
+    <link>/tags/</link>
     <description>Recent content in Tags on ༧</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
     <lastBuildDate>Wed, 27 Oct 2021 16:16:04 +0400</lastBuildDate>
-    <atom:link href="https://bsssq.xyz/tags/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="/tags/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>cybersec</title>
-      <link>https://bsssq.xyz/tags/cybersec/</link>
+      <link>/tags/cybersec/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/cybersec/</guid>
+      <guid>/tags/cybersec/</guid>
       <description></description>
     </item>
     <item>
       <title>pentesting</title>
-      <link>https://bsssq.xyz/tags/pentesting/</link>
+      <link>/tags/pentesting/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/pentesting/</guid>
+      <guid>/tags/pentesting/</guid>
       <description></description>
     </item>
     <item>
       <title>tryhackme</title>
-      <link>https://bsssq.xyz/tags/tryhackme/</link>
+      <link>/tags/tryhackme/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/tryhackme/</guid>
+      <guid>/tags/tryhackme/</guid>
       <description></description>
     </item>
     <item>
       <title>walkthrough</title>
-      <link>https://bsssq.xyz/tags/walkthrough/</link>
+      <link>/tags/walkthrough/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/walkthrough/</guid>
+      <guid>/tags/walkthrough/</guid>
       <description></description>
     </item>
     <item>
       <title>wireshark</title>
-      <link>https://bsssq.xyz/tags/wireshark/</link>
+      <link>/tags/wireshark/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/wireshark/</guid>
+      <guid>/tags/wireshark/</guid>
       <description></description>
     </item>
     <item>
       <title>sql</title>
-      <link>https://bsssq.xyz/tags/sql/</link>
+      <link>/tags/sql/</link>
       <pubDate>Tue, 26 Oct 2021 17:21:48 +0400</pubDate>
-      <guid>https://bsssq.xyz/tags/sql/</guid>
+      <guid>/tags/sql/</guid>
       <description></description>
     </item>
   </channel>

