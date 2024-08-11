@@ -13,9 +13,9 @@
         <table>
             {{ range .Pages.ByPublishDate.Reverse }}
             <tr>
-                <td class="post-date-time date-time-font">
-                    <time>{{ .Date.Format (.Site.Params.dateform | default "2006-01-02") }}</time>
-                </td>
+                <!-- <td class="post-date-time">
+                    <time>{{ .Date.Format "Jan 2, 2006" }}</time>
+                </td> -->
                 <td class="post">
                     <a href="{{ .Permalink }}">{{ .Title }}</a>
                 </td>

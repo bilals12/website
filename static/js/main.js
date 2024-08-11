@@ -22,6 +22,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     // adding some back button changes
     let previousUrl = null;
+    let isInCategoryList = false;
 
     function loadContent(url) {
         hideContent();
@@ -50,8 +51,8 @@ document.addEventListener('DOMContentLoaded', function() {
                         showContent();
                         addAllLinkListeners();
                     }, 100);
-                    // store current url as previous url
                     previousUrl = absoluteUrl;
+                    isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
                 } else {
                     throw new Error('Content not found in loaded page');
                 }
@@ -121,7 +122,9 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     backButton.addEventListener('click', function() {
-        if (previousUrl) {
+        if (isInCategoryList) {
+            goToHomePage();
+        } else if (previousUrl) {
             if (previousUrl.includes('/posts/')) {
                 loadContent('/posts/');
             } else if (previousUrl.includes('/photography/')) {
