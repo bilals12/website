@@ -2,52 +2,52 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9"
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
-    <loc>http://localhost:1313/fr/</loc>
+    <loc>https://bsssq.xyz/fr/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/"
+                href="https://bsssq.xyz/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="http://localhost:1313/fr/"
+                href="https://bsssq.xyz/fr/"
                 />
   </url><url>
-    <loc>http://localhost:1313/fr/categories/</loc>
+    <loc>https://bsssq.xyz/fr/categories/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/categories/"
+                href="https://bsssq.xyz/categories/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="http://localhost:1313/fr/categories/"
+                href="https://bsssq.xyz/fr/categories/"
                 />
   </url><url>
-    <loc>http://localhost:1313/fr/series/</loc>
+    <loc>https://bsssq.xyz/fr/series/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/series/"
+                href="https://bsssq.xyz/series/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="http://localhost:1313/fr/series/"
+                href="https://bsssq.xyz/fr/series/"
                 />
   </url><url>
-    <loc>http://localhost:1313/fr/tags/</loc>
+    <loc>https://bsssq.xyz/fr/tags/</loc>
     <xhtml:link
                 rel="alternate"
                 hreflang="en"
-                href="http://localhost:1313/tags/"
+                href="https://bsssq.xyz/tags/"
                 />
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
-                href="http://localhost:1313/fr/tags/"
+                href="https://bsssq.xyz/fr/tags/"
                 />
   </url>
 </urlset>

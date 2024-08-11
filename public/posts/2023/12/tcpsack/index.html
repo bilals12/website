@@ -29,11 +29,11 @@
     
 
 
-    <base href="http://localhost:1313/">
-    <link rel="stylesheet" href="http://localhost:1313/css/style.css">
-    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+    <base href="https://bsssq.xyz/">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/style.css">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
 </head>
-    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
 </head>
 <body>
     
@@ -51,7 +51,7 @@
 <p>at the time, i was a little too impatient to actually grasp the nuances of such advice, because i had the immediate gratification of well-built programs and tools to carry out whatever tasks i needed to. but as i delved deeper into security and pentesting, i understood that not everything is as well understood by everyone as i had once thought. lately, i&rsquo;ve been ruminating about fundamental misunderstandings of seemingly straightforward and basic networking concepts, and how that leads to slip-ups and oversights inside organizations. in this post, we&rsquo;re going to look at a cornerstone of the networking world, the TCP Handshake, and then an attack i wrote that specifically targets it, known as a SYN-ACK spoofing attack.</p>
 <h1 id="tcp-handshake">TCP handshake</h1>
 <p>the TCP handshake is a 3-step process that occurs when devices (typically, a client and a server) attempt to establish a network connection. it&rsquo;s used in many network protocols, like HTTP/HTTPS, SSH, and more.</p>
-<p><img src="http://localhost:1313/1_rgXykunw7cXVE2OnnFH4YA.jpg" alt="handshake"></p>
+<p><img src="https://bsssq.xyz/1_rgXykunw7cXVE2OnnFH4YA.jpg" alt="handshake"></p>
 <ol>
 <li>SYN (synchronize)</li>
 </ol>
@@ -76,7 +76,7 @@
 </ul>
 <h1 id="the-syn-ack-spoofing-attack">the SYN-ACK spoofing attack</h1>
 <p>in this attack, an attacker (me) manipulates the TCP handshake process to disrupt or compromise network communication.</p>
-<p><img src="http://localhost:1313/synack.jpg" alt="synack"></p>
+<p><img src="https://bsssq.xyz/synack.jpg" alt="synack"></p>
 <h2 id="steps">steps</h2>
 <ol>
 <li>attacker impersonation</li>
@@ -127,7 +127,7 @@
 </li>
 </ul>
 <p>in the image below, taken from wireshark, we can see the massive spike in overall packets.</p>
-<p><img src="http://localhost:1313/packets.jpg" alt="packets"></p>
+<p><img src="https://bsssq.xyz/packets.jpg" alt="packets"></p>
 <p>attackers tend to use this attack because it evades detection mechanisms and bypasses security solutions that rely on analyzing network traffic patterns. it&rsquo;s hard to trace, and it can also lead to more serious security breaches based on the target&rsquo;s TCP/IP stack.</p>
 <h1 id="tcpsack">tcpSACK</h1>
 <p>i wrote <a href="https://github.com/bilals12/tcpSACK/tree/main">tcpSACK</a> to carry out a SYN-ACK spoofing attack by generating and sending TCP packets with spoofed IPv4 addresses to a target server. the aim is to disrupt the target&rsquo;s network communication by making the server allocate increasing resources for non-existent connections, eventually causing service disruption and resource exhaustion.</p>
@@ -602,8 +602,8 @@
 </div>
 
     
-     <script src="http://localhost:1313/p5/p5.min.js"></script>
-     <script src="http://localhost:1313/js/genart.js"></script>
-     <script src="http://localhost:1313/js/main.js"></script>
+     <script src="https://bsssq.xyz/p5/p5.min.js"></script>
+     <script src="https://bsssq.xyz/js/genart.js"></script>
+     <script src="https://bsssq.xyz/js/main.js"></script>
 </body>
 </html>

