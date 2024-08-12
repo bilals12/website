@@ -1,67 +1,40 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('main.js is running');
     const contentArea = document.getElementById('content-area');
     const backButton = document.getElementById('back-button');
     const categoriesContainer = document.getElementById('categories-container');
     const categoryItems = document.querySelectorAll('.category-item');
     const siteBaseUrl = document.querySelector('base')?.href || window.location.origin + '/';
 
-    console.log('Site Base URL:', siteBaseUrl);
-    console.log('Number of category items:', categoryItems.length);
-    console.log('Categories container HTML:', categoriesContainer.innerHTML);
+    // flag to prevent multiple animations starting simultaneously
+    let isAnimating = false;
 
-    function showContent() {
+    // CSS transitions instead of requestAnimationFrame for smoother animations
+    // timings adjusted to make sure animations complete before new content is loaded
+    // determining transition speeds based on page type (quicker for about + cv)
+    function showContent(pageType) {
+        isAnimating = true;
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
+        contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(0)';
         contentArea.style.opacity = '1';
         contentArea.style.display = 'block';
+        setTimeout(() => {
+            isAnimating = false;
+        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
     }
 
-    function hideContent() {
+    function hideContent(pageType) {
+        if (isAnimating) return;
+        isAnimating = true;
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
+        contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(100%)';
         contentArea.style.opacity = '0';
-    }
-    // adding some back button changes
-    let previousUrl = null;
-    let isInCategoryList = false;
-
-    function loadContent(url) {
-        hideContent();
-        // extract path from given url
-        const urlPath = new URL(url, window.location.origin).pathname;
-        // construct absolute url using current origin (CORS)
-        const absoluteUrl = new URL(urlPath, window.location.origin).href;
-
-        fetch(absoluteUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const newContent = doc.querySelector('#content-area');
-    
-                if (newContent) {
-                    contentArea.innerHTML = newContent.innerHTML;
-                    applyStyles();
-                    backButton.style.display = 'inline-block';
-                    setTimeout(() => {
-                        showContent();
-                        addAllLinkListeners();
-                    }, 100);
-                    previousUrl = absoluteUrl;
-                    isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
-                } else {
-                    throw new Error('Content not found in loaded page');
-                }
-            })
-            .catch(error => {
-                contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
-                backButton.style.display = 'inline-block';
-                showContent();
-            });
+        setTimeout(() => {
+            isAnimating = false;
+        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
     }
 
     function applyStyles() {
@@ -70,7 +43,7 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.add('markdown-content');
         });
 
-        // Style post lists
+        // style post lists
         const postLists = contentArea.querySelectorAll('ul');
         postLists.forEach(list => {
             list.classList.add('post-list');
@@ -99,9 +72,80 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function loadContent(url) {
+        if (isAnimating) return;
+        const urlPath = new URL(url, window.location.origin).pathname;
+        const pageType = urlPath.includes('/about/') ? 'about' : 
+                         urlPath.includes('/cv/') ? 'cv' : 
+                         'other';
+        hideContent(pageType);
+        const absoluteUrl = new URL(urlPath, window.location.origin).href;
+
+        fetch(absoluteUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#content-area');
+    
+                if (newContent) {
+                    setTimeout(() => {
+                        contentArea.innerHTML = newContent.innerHTML;
+                        applyStyles();
+                        backButton.style.display = 'inline-block';
+                        showContent(pageType);
+                        addAllLinkListeners();
+                        addBottomBackButton();
+                    }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
+                    previousUrl = absoluteUrl;
+                    isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
+                } else {
+                    throw new Error('Content not found in loaded page');
+                }
+            })
+            .catch(error => {
+                contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
+                backButton.style.display = 'inline-block';
+                showContent(pageType);
+            });
+    }
+
+    function addBottomBackButton() {
+        const existingButton = contentArea.querySelector('#bottom-back-button');
+        if (!existingButton) {
+            const bottomBackButton = document.createElement('button');
+            bottomBackButton.id = 'bottom-back-button';
+            bottomBackButton.innerHTML = backButton.innerHTML;;
+            bottomBackButton.addEventListener('click', handleBackButtonClick);
+            contentArea.appendChild(bottomBackButton);
+        }
+    }
+
+    function handleBackButtonClick() {
+        if (isInCategoryList) {
+            goToHomePage();
+        } else if (previousUrl) {
+            if (previousUrl.includes('/posts/')) {
+                loadContent('/posts/');
+            } else if (previousUrl.includes('/photography/')) {
+                loadContent('/photography/');
+            } else {
+                goToHomePage();
+            }
+        } else {
+            goToHomePage();
+        }
+    }
+
     categoryItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
+            if (isAnimating) return;
             const url = this.href;
             
             console.log(`Loading category: ${url}`);
@@ -117,7 +161,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 categoriesContainer.style.display = 'none';
                 loadContent(url);
-            }, 100);
+            }, 300);
         });
     });
 
@@ -148,6 +192,9 @@ document.addEventListener('DOMContentLoaded', function() {
             showContent();
         }, 100);
     }
-    // Initial setup
-    addAllLinkListeners();
+
+    const pageType = contentArea.getAttribute('data-page-type');
+    if (pageType === 'single' || pageType === 'cv') {
+        addBottomBackButton();
+    }
 });

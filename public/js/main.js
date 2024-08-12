@@ -6,62 +6,28 @@ document.addEventListener('DOMContentLoaded', function() {
     const categoryItems = document.querySelectorAll('.category-item');
     const siteBaseUrl = document.querySelector('base')?.href || window.location.origin + '/';
 
-    console.log('Site Base URL:', siteBaseUrl);
-    console.log('Number of category items:', categoryItems.length);
-    console.log('Categories container HTML:', categoriesContainer.innerHTML);
+    let isAnimating = false;
 
     function showContent() {
+        isAnimating = true;
+        contentArea.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
         contentArea.style.transform = 'translateX(0)';
         contentArea.style.opacity = '1';
         contentArea.style.display = 'block';
+        setTimeout(() => {
+            isAnimating = false;
+        }, 300);
     }
 
     function hideContent() {
+        if (isAnimating) return;
+        isAnimating = true;
+        contentArea.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
         contentArea.style.transform = 'translateX(100%)';
         contentArea.style.opacity = '0';
-    }
-    // adding some back button changes
-    let previousUrl = null;
-    let isInCategoryList = false;
-
-    function loadContent(url) {
-        hideContent();
-        // extract path from given url
-        const urlPath = new URL(url, window.location.origin).pathname;
-        // construct absolute url using current origin (CORS)
-        const absoluteUrl = new URL(urlPath, window.location.origin).href;
-
-        fetch(absoluteUrl)
-            .then(response => {
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                return response.text();
-            })
-            .then(html => {
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(html, 'text/html');
-                const newContent = doc.querySelector('#content-area');
-    
-                if (newContent) {
-                    contentArea.innerHTML = newContent.innerHTML;
-                    applyStyles();
-                    backButton.style.display = 'inline-block';
-                    setTimeout(() => {
-                        showContent();
-                        addAllLinkListeners();
-                    }, 100);
-                    previousUrl = absoluteUrl;
-                    isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
-                } else {
-                    throw new Error('Content not found in loaded page');
-                }
-            })
-            .catch(error => {
-                contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
-                backButton.style.display = 'inline-block';
-                showContent();
-            });
+        setTimeout(() => {
+            isAnimating = false;
+        }, 300);
     }
 
     function applyStyles() {
@@ -99,9 +65,49 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 
+    function loadContent(url) {
+        if (isAnimating) return;
+        hideContent();
+        const urlPath = new URL(url, window.location.origin).pathname;
+        const absoluteUrl = new URL(urlPath, window.location.origin).href;
+
+        fetch(absoluteUrl)
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                return response.text();
+            })
+            .then(html => {
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(html, 'text/html');
+                const newContent = doc.querySelector('#content-area');
+    
+                if (newContent) {
+                    setTimeout(() => {
+                        contentArea.innerHTML = newContent.innerHTML;
+                        applyStyles();
+                        backButton.style.display = 'inline-block';
+                        showContent();
+                        addAllLinkListeners();
+                    }, 300);
+                    previousUrl = absoluteUrl;
+                    isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
+                } else {
+                    throw new Error('Content not found in loaded page');
+                }
+            })
+            .catch(error => {
+                contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
+                backButton.style.display = 'inline-block';
+                showContent();
+            });
+    }
+
     categoryItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();
+            if (isAnimating) return;
             const url = this.href;
             
             console.log(`Loading category: ${url}`);
@@ -117,7 +123,7 @@ document.addEventListener('DOMContentLoaded', function() {
             setTimeout(() => {
                 categoriesContainer.style.display = 'none';
                 loadContent(url);
-            }, 100);
+            }, 300);
         });
     });
 
@@ -148,6 +154,33 @@ document.addEventListener('DOMContentLoaded', function() {
             showContent();
         }, 100);
     }
-    // Initial setup
-    addAllLinkListeners();
+
+    function addBottomBackButton() {
+        const bottomBackButton = document.createElement('button');
+        bottomBackButton.id = 'bottom-back-button';
+        bottomBackButton.innerHTML = '&larr; Back';
+        bottomBackButton.addEventListener('click', handleBackButtonClick);
+        contentArea.appendChild(bottomBackButton);
+    }
+
+    function handleBackButtonClick() {
+        if (isInCategoryList) {
+            goToHomePage();
+        } else if (previousUrl) {
+            if (previousUrl.includes('/posts/')) {
+                loadContent('/posts/');
+            } else if (previousUrl.includes('/photography/')) {
+                loadContent('/photography/');
+            } else {
+                goToHomePage();
+            }
+        } else {
+            goToHomePage();
+        }
+    }
+
+    const pageType = contentArea.getAttribute('data-page-type');
+    if (pageType === 'single' || pageType === 'cv') {
+        addBottomBackButton();
+    }
 });

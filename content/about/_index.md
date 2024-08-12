@@ -5,10 +5,10 @@ type: "about"
 layout: "category"
 ---
 
-i'm bilal. 
+i'm bilal.
 
-i'm a security researcher and penetration tester, with former software and database development experience. i currently live in toronto.
+i'm a security engineer, researcher, and penetration tester, with a background in electrical + computer engineering. needless to say, technology plays a big part in my life and i spend every day making bits of it less inscrutable.
 
-this website is a little corner of the internet i've carved out for myself to share my internal monologue with the world (or whoever's looking, at least).
+a few years ago, i had the idea of creating this website, in honour of the internet of yesteryear. efforts to carve out personalized corners of the vast web capitulated to the forces of centralized and aggregated feeds, and we lost a good deal of ourselves in the process. i hope this place can provide the information, knowledge, and inspiration you seek.
 
 thanks for coming!

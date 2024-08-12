@@ -14,19 +14,21 @@ let phiIncrement = 3;
 
 let rotation = 0;
 
+// device detection
+// reducing frame rate if mobile device to mitigate resource guzzling
+let isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+
 function setup() {
-    //const canvaContainer = select("#landing-canva");
-    //const canva = createCanvas(canvaContainer.width, canvaContainer.height);
     const canva = createCanvas(windowWidth, windowHeight);
     canva.parent("landing-canva");
-    frameRate(15);
+    frameRate(isMobile ? 10 : 15);
 
     // random vars
     rotation = random(PI / 2);
-    arcSize = random(50, 150);
-    yStep = random(5, 10);
-    phiIncrement = random(1, 5);
-    padding = arcSize * 4; // adjust padding based on arc size
+    arcSize = random(isMobile ? 30 : 50, isMobile ? 100 : 150);
+    yStep = random(isMobile ? 8 : 5, isMobile ? 15 : 10);
+    phiIncrement = random(1, isMobile ? 3 : 5);
+    padding = arcSize * (isMobile ? 3 : 4); // adjust padding based on arc size
 }
 
 function windowResized() {

@@ -10,26 +10,30 @@ a fun aspect of pentesting is finding interesting ways to get authenticated sess
 i wrote `cookieJar` for exactly this purpose: extracting cookies from various browsers (and factor in the OS) and then use them to create authenticated sessions. the script handles different formats and encryption methods (see: `Cryptodome`) and can extract cookies related to all websites or a specific domain.
 
 some limitiations of the script:
-- if browsers update their cookie storage mechanisms (very likely), the script will stop working.
-- accounts with 2FA will stop the script from working.
-- sessions are managed server-side, so if specific parameters like user-agent, IP address, etc. don't line up, the script will stop working.
-- consent + security risks...
+
+if browsers update their cookie storage mechanisms (very likely), the script will stop working.
+
+accounts with 2FA will stop the script from working.
+
+sessions are managed server-side, so if specific parameters like user-agent, IP address, etc. don't line up, the script will stop working.
+
+consent + security risks...
 
 `cookieJar` uses several libraries and modules to retrieve, decrypt, and manage browser cookies across multiple browsers and operating systems. arguably, the most important module i've used is `Cryptodome`, which is included in the [source repo](https://github.com/bilals12/cookieJar).
 
-# Cryptodome
+## Cryptodome
 
 the `Cryptodome` module contains the `pycryptodome` library, which is used for secure hashing and encryption services. in the context of `cookieJar`, it's used for decrypting cookies. 
 
-1. `AES.py`: used for decrypting cookies from browsers like chrome, opera, edge.
+`AES.py`: used for decrypting cookies from browsers like chrome, opera, edge.
 
-2. `KDF.py`: a key derivation function that's used to generate a cryptographic key from a password. used in the `PBKDF2` function in `cookieJar`.
+`KDF.py`: a key derivation function that's used to generate a cryptographic key from a password. used in the `PBKDF2` function in `cookieJar`.
 
-3. `padding.py`: used in block cipher algorithms to ensure that the last block of data is the correct size. used in `unpad` to remove padding from the decrypted data.
+`padding.py`: used in block cipher algorithms to ensure that the last block of data is the correct size. used in `unpad` to remove padding from the decrypted data.
 
-4. `lz4.block`: part of the `lz4` library, which provides bindings for the LZ4 compression algorithm. used specifically for handling cookies from firefox, which uses the compression algorithm to store its cookies. 
+`lz4.block`: part of the `lz4` library, which provides bindings for the LZ4 compression algorithm. used specifically for handling cookies from firefox, which uses the compression algorithm to store its cookies. 
 
-# cookieJar
+## cookieJar
 
 ![flowchart](/download.png)
 
@@ -40,13 +44,20 @@ the `Cryptodome` module contains the `pycryptodome` library, which is used for s
 ```
 
 this cookie has the following properties:
-- `name`: the name of the cookie (`sessionid`).
-- `value`: the value of the cookie, usually a unique identifier that the server uses to recognize the client.
-- `domain`: the domain that set the cookie (`instagram.com`).
-- `path`: path on the domain where the cookie is valid. in this case, it's `/`, meaning the cookie is valid for the entire domain.
-- `secure`: a boolean value indicating whether the cookie should only be sent over secure (`HTTPS`) connections.
-- `expires`: expiration date of the cookie as a timestamp (`1672444800` corresponds to january 1st, 2024).
-- `HttpOnly`: a flag indicating whether the cookie is inaccessible to javascript's `Document.cookie` API to mitigate XSS attacks.
+
+`name`: the name of the cookie (`sessionid`).
+
+`value`: the value of the cookie, usually a unique identifier that the server uses to recognize the client.
+
+`domain`: the domain that set the cookie (`instagram.com`).
+
+`path`: path on the domain where the cookie is valid. in this case, it's `/`, meaning the cookie is valid for the entire domain.
+
+`secure`: a boolean value indicating whether the cookie should only be sent over secure (`HTTPS`) connections.
+
+`expires`: expiration date of the cookie as a timestamp (`1672444800` corresponds to january 1st, 2024).
+
+`HttpOnly`: a flag indicating whether the cookie is inaccessible to javascript's `Document.cookie` API to mitigate XSS attacks.
 
 the actual data stored in a cookie can vary greatly depending on the website and the purpose of the cookie. for example, a session cookie might contain a unique identifier that the server uses to keep track of your session, while a preference cookie might contain information about your preferred language or other settings.
 
@@ -254,6 +265,6 @@ the script also includes a custom exception class: `BrowserCookieError`. it's ra
 class BrowserCookieError(Exception): pass
 ```
 
-# conclusion
+## conclusion
 
 i wrote this for the same reason i wrote everything else: education. `cookieJar` illustrates key security concepts, specifically those related to web security, encryption, and data storage. 
