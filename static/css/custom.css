@@ -340,12 +340,12 @@ td > code {
         align-items: center;
         text-align: center;
         /* reducing box-shadow and backdrop-filter on phones */
-        /* box-shadow: none; */
-        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+        box-shadow: none;
+        /* box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2); */
         /* backdrop-filter: none; */
         backdrop-filter: blur(5px); /* reduced blur */
-        /* -webkit-backdrop-filter: none; */
-        -webkit-backdrop-filter: blur(5px);
+        -webkit-backdrop-filter: none;
+        /* -webkit-backdrop-filter: blur(5px); */
     }
 
     #categories-container,
