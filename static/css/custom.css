@@ -302,12 +302,13 @@ td > code {
 #post-title {
     font-family: "Noto Sans", sans-serif;
     font-size: 2rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.25rem;
 }
 
 .post-date-time, time {
     font-size: 0.75rem;
-    margin-bottom: 0.5rem;
+    display: block;
+    margin-bottom: 1rem;
     color: #F5F5F5;
     text-transform: lowercase;
 }
@@ -329,6 +330,7 @@ td > code {
         width: 100%;
         min-height: 100vh;
         padding: 1rem;
+        box-sizing: border-box;
         background: rgba(41, 82, 74, 0.1);
         display: flex;
         flex-direction: column;
@@ -339,12 +341,15 @@ td > code {
     #categories-container,
     #content-area {
         width: 100%;
-        max-width: 600px;
-        margin: 0 auto;
+        padding: 0 1rem;
+        box-sizing: border-box;
+        text-align: center;
     }
 
     .category-item, .post-list a {
         font-size: 1.2rem;
+        font-family: "Noto Sans", sans-serif;
+        text-transform: lowercase;
     }
 
     #site-title {
@@ -364,5 +369,13 @@ td > code {
     header {
         width: 100%;
         justify-content: center;
+    }
+    
+    .markdown-content {
+        text-align: left;
+    }
+
+    pre.markdown-content {
+        max-width: calc(100vw - 2rem);
     }
 }
