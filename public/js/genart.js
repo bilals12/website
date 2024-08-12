@@ -14,9 +14,9 @@ let phiIncrement = 3;
 
 let rotation = 0;
 
-// device detection
+// device detection: smartphone + coarse input (finger) + no hover
 // reducing frame rate if mobile device to mitigate resource guzzling
-let isMobile = /iPhone|iPad|Android/i.test(navigator.userAgent);
+let isMobile = window.matchMedia("(max-width: 1024px) and (hover: none) and (pointer: coarse)").matches;
 
 function setup() {
     const canva = createCanvas(windowWidth, windowHeight);

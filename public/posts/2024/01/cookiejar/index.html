@@ -36,7 +36,10 @@
     <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body>
-    
+    <div id="landing">
+        <div id="landing-canva"></div>
+        <div id="landing-content">
+            
 <div id="content-area" data-page-type="single">
     <article id="post">
         <header>
@@ -50,43 +53,29 @@
             <p>a fun aspect of pentesting is finding interesting ways to get authenticated sessions running. usually, a session authentication relies on the user entering some kind of key (password) that corresponds to their user ID (username). however, in some cases an attacker can &ldquo;revive&rdquo; sessions using just the session cookies.</p>
 <p>i wrote <code>cookieJar</code> for exactly this purpose: extracting cookies from various browsers (and factor in the OS) and then use them to create authenticated sessions. the script handles different formats and encryption methods (see: <code>Cryptodome</code>) and can extract cookies related to all websites or a specific domain.</p>
 <p>some limitiations of the script:</p>
-<ul>
-<li>if browsers update their cookie storage mechanisms (very likely), the script will stop working.</li>
-<li>accounts with 2FA will stop the script from working.</li>
-<li>sessions are managed server-side, so if specific parameters like user-agent, IP address, etc. don&rsquo;t line up, the script will stop working.</li>
-<li>consent + security risks&hellip;</li>
-</ul>
+<p>if browsers update their cookie storage mechanisms (very likely), the script will stop working.</p>
+<p>accounts with 2FA will stop the script from working.</p>
+<p>sessions are managed server-side, so if specific parameters like user-agent, IP address, etc. don&rsquo;t line up, the script will stop working.</p>
+<p>consent + security risks&hellip;</p>
 <p><code>cookieJar</code> uses several libraries and modules to retrieve, decrypt, and manage browser cookies across multiple browsers and operating systems. arguably, the most important module i&rsquo;ve used is <code>Cryptodome</code>, which is included in the <a href="https://github.com/bilals12/cookieJar">source repo</a>.</p>
-<h1 id="cryptodome">Cryptodome</h1>
+<h2 id="cryptodome">Cryptodome</h2>
 <p>the <code>Cryptodome</code> module contains the <code>pycryptodome</code> library, which is used for secure hashing and encryption services. in the context of <code>cookieJar</code>, it&rsquo;s used for decrypting cookies.</p>
-<ol>
-<li>
 <p><code>AES.py</code>: used for decrypting cookies from browsers like chrome, opera, edge.</p>
-</li>
-<li>
 <p><code>KDF.py</code>: a key derivation function that&rsquo;s used to generate a cryptographic key from a password. used in the <code>PBKDF2</code> function in <code>cookieJar</code>.</p>
-</li>
-<li>
 <p><code>padding.py</code>: used in block cipher algorithms to ensure that the last block of data is the correct size. used in <code>unpad</code> to remove padding from the decrypted data.</p>
-</li>
-<li>
 <p><code>lz4.block</code>: part of the <code>lz4</code> library, which provides bindings for the LZ4 compression algorithm. used specifically for handling cookies from firefox, which uses the compression algorithm to store its cookies.</p>
-</li>
-</ol>
-<h1 id="cookiejar">cookieJar</h1>
+<h2 id="cookiejar">cookieJar</h2>
 <p><img src="/download.png" alt="flowchart"></p>
 <p><code>cookieJar</code> is a comprehensive python script for security research and penetration testing, as it allows researchers to analyze the cookies stored by a browser, which can contain sensitive information such as session identifiers and login tokens.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-http" data-lang="http"><span style="display:flex;"><span><span style="color:#960050;background-color:#1e0010">&lt;http.cookiejar.Cookie version=0 name=&#39;sessionid&#39; value=&#39;1234567890abcdef&#39; port=None port_specified=False domain=&#39;instagram.com&#39; domain_specified=True domain_initial_dot=False path=&#39;/&#39; path_specified=True secure=True expires=1672444800 discard=False comment=None comment_url=None rest={&#39;HttpOnly&#39;: None}, rfc2109=False&gt;
 </span></span></span></code></pre></div><p>this cookie has the following properties:</p>
-<ul>
-<li><code>name</code>: the name of the cookie (<code>sessionid</code>).</li>
-<li><code>value</code>: the value of the cookie, usually a unique identifier that the server uses to recognize the client.</li>
-<li><code>domain</code>: the domain that set the cookie (<code>instagram.com</code>).</li>
-<li><code>path</code>: path on the domain where the cookie is valid. in this case, it&rsquo;s <code>/</code>, meaning the cookie is valid for the entire domain.</li>
-<li><code>secure</code>: a boolean value indicating whether the cookie should only be sent over secure (<code>HTTPS</code>) connections.</li>
-<li><code>expires</code>: expiration date of the cookie as a timestamp (<code>1672444800</code> corresponds to january 1st, 2024).</li>
-<li><code>HttpOnly</code>: a flag indicating whether the cookie is inaccessible to javascript&rsquo;s <code>Document.cookie</code> API to mitigate XSS attacks.</li>
-</ul>
+<p><code>name</code>: the name of the cookie (<code>sessionid</code>).</p>
+<p><code>value</code>: the value of the cookie, usually a unique identifier that the server uses to recognize the client.</p>
+<p><code>domain</code>: the domain that set the cookie (<code>instagram.com</code>).</p>
+<p><code>path</code>: path on the domain where the cookie is valid. in this case, it&rsquo;s <code>/</code>, meaning the cookie is valid for the entire domain.</p>
+<p><code>secure</code>: a boolean value indicating whether the cookie should only be sent over secure (<code>HTTPS</code>) connections.</p>
+<p><code>expires</code>: expiration date of the cookie as a timestamp (<code>1672444800</code> corresponds to january 1st, 2024).</p>
+<p><code>HttpOnly</code>: a flag indicating whether the cookie is inaccessible to javascript&rsquo;s <code>Document.cookie</code> API to mitigate XSS attacks.</p>
 <p>the actual data stored in a cookie can vary greatly depending on the website and the purpose of the cookie. for example, a session cookie might contain a unique identifier that the server uses to keep track of your session, while a preference cookie might contain information about your preferred language or other settings.</p>
 <p>when <code>cookieJar</code> collects cookies, it stores them in a <code>http.cookiejar.CookieJar</code> object. this object behaves like a list of <code>http.cookiejar.Cookie</code> objects, and you can iterate over it to access individual cookies.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span>cookies <span style="color:#f92672">=</span> load()
@@ -219,16 +208,19 @@
 </span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">return</span> conn_temp
 </span></span></code></pre></div><p>the script also includes a custom exception class: <code>BrowserCookieError</code>. it&rsquo;s raised when there&rsquo;s an error retrieving or decrypting cookies, this allows the script to fail gracefully and provide usefull error messages.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#66d9ef">class</span> <span style="color:#a6e22e">BrowserCookieError</span>(<span style="color:#a6e22e">Exception</span>): <span style="color:#66d9ef">pass</span>
-</span></span></code></pre></div><h1 id="conclusion">conclusion</h1>
+</span></span></code></pre></div><h2 id="conclusion">conclusion</h2>
 <p>i wrote this for the same reason i wrote everything else: education. <code>cookieJar</code> illustrates key security concepts, specifically those related to web security, encryption, and data storage.</p>
 
         </div>
     </article>
+    <div id="bottom-back-button-placeholder"></div>
 </div>
 
+        </div>
+    </div>
     
-     <script src="/p5/p5.min.js"></script>
-     <script src="/js/genart.js"></script>
-     <script src="/js/main.js"></script>
+    <script src="/p5/p5.min.js"></script>
+    <script src="/js/genart.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>

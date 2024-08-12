@@ -142,6 +142,26 @@ document.addEventListener('DOMContentLoaded', function() {
         }
     }
 
+    function initializePageState() {
+        const pageType = contentArea.getAttribute('data-page-type');
+        if (pageType === 'single' || pageType === 'cv') {
+            addBottomBackButton();
+            if (backButton) {
+                backButton.style.display = 'inline-block';
+            }
+            addAllLinkListeners();
+            applyStyles();
+        } else if (pageType === 'home') {
+            if (categoriesContainer) {
+                categoriesContainer.style.display = 'flex';
+                categoriesContainer.style.opacity = '1';
+            }
+        }
+        showContent(pageType);
+    }
+
+    initializePageState();
+
     categoryItems.forEach(item => {
         item.addEventListener('click', function(e) {
             e.preventDefault();

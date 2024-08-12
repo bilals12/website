@@ -416,3 +416,86 @@ td > code {
         text-align: center;
     }
 }
+
+/* Styles for single posts */
+#content-area[data-page-type="single"] {
+    opacity: 1;
+    transform: none;
+}
+
+#content-area[data-page-type="single"] #post-title {
+    font-size: 2rem;
+    color: #F5F5F5;
+    margin-bottom: 0.5rem;
+}
+
+#content-area[data-page-type="single"] .post-date-time {
+    font-size: 0.9rem;
+    color: #FF6666;
+    display: block;
+    margin-bottom: 1rem;
+}
+
+#content-area[data-page-type="single"] .markdown-content {
+    color: #F5F5F5;
+    font-family: "Ubuntu Mono", monospace;
+    line-height: 1.6;
+}
+
+/* Code block styling for single posts */
+#content-area[data-page-type="single"] pre,
+#content-area[data-page-type="single"] code {
+    background-color: rgba(41, 82, 74, 0.2);
+    border-radius: 5px;
+    padding: 0.2em 0.4em;
+}
+
+#content-area[data-page-type="single"] pre {
+    padding: 1em;
+    overflow-x: auto;
+}
+
+/* Styles for list pages */
+#content-area[data-page-type="list"] {
+    opacity: 1;
+    transform: none;
+}
+
+#content-area[data-page-type="list"] #category-title {
+    font-size: 2rem;
+    color: #CD0000;
+    margin-bottom: 1rem;
+}
+
+#content-area[data-page-type="list"] .post-list {
+    list-style-type: none;
+    padding: 0;
+}
+
+#content-area[data-page-type="list"] .post-list li {
+    margin-bottom: 0.5rem;
+}
+
+#content-area[data-page-type="list"] .post-list a {
+    font-size: 1.5rem;
+    color: #F5F5F5;
+    text-decoration: none;
+}
+
+#content-area[data-page-type="list"] .post-date {
+    font-size: 1rem;
+    color: #FF6666;
+    margin-right: 1rem;
+}
+
+/* Back button styling for both single and list pages */
+#content-area[data-page-type="single"] #back-button,
+#content-area[data-page-type="list"] #back-button {
+    display: inline-block;
+    background: none;
+    border: none;
+    font-size: 24px;
+    color: #F5F5F5;
+    cursor: pointer;
+    margin-bottom: 1rem;
+}

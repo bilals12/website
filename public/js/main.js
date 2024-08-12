@@ -1,33 +1,42 @@
 document.addEventListener('DOMContentLoaded', function() {
-    console.log('main.js is running');
     const contentArea = document.getElementById('content-area');
     const backButton = document.getElementById('back-button');
     const categoriesContainer = document.getElementById('categories-container');
     const categoryItems = document.querySelectorAll('.category-item');
     const siteBaseUrl = document.querySelector('base')?.href || window.location.origin + '/';
 
+    // flag to prevent multiple animations starting simultaneously
     let isAnimating = false;
+    let previousUrl = null;
+    let isInCategoryList = false;
 
-    function showContent() {
+    // CSS transitions instead of requestAnimationFrame for smoother animations
+    // timings adjusted to make sure animations complete before new content is loaded
+    // determining transition speeds based on page type (quicker for about + cv)
+    function showContent(pageType) {
         isAnimating = true;
-        contentArea.style.transition = 'transform 0.3s ease-out, opacity 0.3s ease-out';
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
+        contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(0)';
         contentArea.style.opacity = '1';
         contentArea.style.display = 'block';
         setTimeout(() => {
             isAnimating = false;
-        }, 300);
+        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
     }
 
-    function hideContent() {
+    function hideContent(pageType) {
         if (isAnimating) return;
         isAnimating = true;
-        contentArea.style.transition = 'transform 0.3s ease-in, opacity 0.3s ease-in';
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
+        contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(100%)';
         contentArea.style.opacity = '0';
         setTimeout(() => {
             isAnimating = false;
-        }, 300);
+        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
     }
 
     function applyStyles() {
@@ -36,7 +45,7 @@ document.addEventListener('DOMContentLoaded', function() {
             el.classList.add('markdown-content');
         });
 
-        // Style post lists
+        // style post lists
         const postLists = contentArea.querySelectorAll('ul');
         postLists.forEach(list => {
             list.classList.add('post-list');
@@ -67,8 +76,11 @@ document.addEventListener('DOMContentLoaded', function() {
 
     function loadContent(url) {
         if (isAnimating) return;
-        hideContent();
         const urlPath = new URL(url, window.location.origin).pathname;
+        const pageType = urlPath.includes('/about/') ? 'about' : 
+                         urlPath.includes('/cv/') ? 'cv' : 
+                         'other';
+        hideContent(pageType);
         const absoluteUrl = new URL(urlPath, window.location.origin).href;
 
         fetch(absoluteUrl)
@@ -88,9 +100,10 @@ document.addEventListener('DOMContentLoaded', function() {
                         contentArea.innerHTML = newContent.innerHTML;
                         applyStyles();
                         backButton.style.display = 'inline-block';
-                        showContent();
+                        showContent(pageType);
                         addAllLinkListeners();
-                    }, 300);
+                        addBottomBackButton();
+                    }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
                     previousUrl = absoluteUrl;
                     isInCategoryList = urlPath.endsWith('/posts/') || urlPath.endsWith('/photography/');
                 } else {
@@ -100,9 +113,56 @@ document.addEventListener('DOMContentLoaded', function() {
             .catch(error => {
                 contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
                 backButton.style.display = 'inline-block';
-                showContent();
+                showContent(pageType);
             });
     }
+
+    function addBottomBackButton() {
+        const existingButton = contentArea.querySelector('#bottom-back-button');
+        if (!existingButton) {
+            const bottomBackButton = document.createElement('button');
+            bottomBackButton.id = 'bottom-back-button';
+            bottomBackButton.innerHTML = backButton.innerHTML;;
+            bottomBackButton.addEventListener('click', handleBackButtonClick);
+            contentArea.appendChild(bottomBackButton);
+        }
+    }
+
+    function handleBackButtonClick() {
+        if (isInCategoryList) {
+            goToHomePage();
+        } else if (previousUrl) {
+            if (previousUrl.includes('/posts/')) {
+                loadContent('/posts/');
+            } else if (previousUrl.includes('/photography/')) {
+                loadContent('/photography/');
+            } else {
+                goToHomePage();
+            }
+        } else {
+            goToHomePage();
+        }
+    }
+
+    function initializePageState() {
+        const pageType = contentArea.getAttribute('data-page-type');
+        if (pageType === 'single' || pageType === 'cv') {
+            addBottomBackButton();
+            if (backButton) {
+                backButton.style.display = 'inline-block';
+            }
+            addAllLinkListeners();
+            applyStyles();
+        } else if (pageType === 'home') {
+            if (categoriesContainer) {
+                categoriesContainer.style.display = 'flex';
+                categoriesContainer.style.opacity = '1';
+            }
+        }
+        showContent(pageType);
+    }
+
+    initializePageState();
 
     categoryItems.forEach(item => {
         item.addEventListener('click', function(e) {
@@ -153,30 +213,6 @@ document.addEventListener('DOMContentLoaded', function() {
             categoriesContainer.style.opacity = '1';
             showContent();
         }, 100);
-    }
-
-    function addBottomBackButton() {
-        const bottomBackButton = document.createElement('button');
-        bottomBackButton.id = 'bottom-back-button';
-        bottomBackButton.innerHTML = '&larr; Back';
-        bottomBackButton.addEventListener('click', handleBackButtonClick);
-        contentArea.appendChild(bottomBackButton);
-    }
-
-    function handleBackButtonClick() {
-        if (isInCategoryList) {
-            goToHomePage();
-        } else if (previousUrl) {
-            if (previousUrl.includes('/posts/')) {
-                loadContent('/posts/');
-            } else if (previousUrl.includes('/photography/')) {
-                loadContent('/photography/');
-            } else {
-                goToHomePage();
-            }
-        } else {
-            goToHomePage();
-        }
     }
 
     const pageType = contentArea.getAttribute('data-page-type');
