@@ -334,16 +334,18 @@ td > code {
         min-height: 100vh;
         padding: 1rem;
         box-sizing: border-box;
-        background: rgba(41, 82, 74, 0.1);
+        background: rgba(41, 82, 74, 0.2);
         display: flex;
         flex-direction: column;
         align-items: center;
         text-align: center;
         /* reducing box-shadow and backdrop-filter on phones */
-        box-shadow: none;
+        /* box-shadow: none; */
+        box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
         /* backdrop-filter: none; */
         backdrop-filter: blur(5px); /* reduced blur */
-        -webkit-backdrop-filter: none;
+        /* -webkit-backdrop-filter: none; */
+        -webkit-backdrop-filter: blur(5px);
     }
 
     #categories-container,
