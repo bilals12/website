@@ -341,7 +341,8 @@ td > code {
         text-align: center;
         /* reducing box-shadow and backdrop-filter on phones */
         box-shadow: none;
-        backdrop-filter: none;
+        /* backdrop-filter: none; */
+        backdrop-filter: blur(5px); /* reduced blur */
         -webkit-backdrop-filter: none;
     }
 

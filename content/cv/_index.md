@@ -10,7 +10,7 @@ layout: "category"
 all things security: OffSec, InfraSec, AppSec/ProdSec, CloudSec, etc. 
 i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much any kinds of tech mischief i can integrate into my professional career. 
 
-- ## ***experience**
+- ## **experience**
 
 - #### [2024 -]
 ### **senior security engineer** @ [Numerator](https://www.numerator.com/)
