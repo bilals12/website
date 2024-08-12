@@ -360,6 +360,8 @@ td > code {
         font-size: 1.2rem;
         font-family: "Noto Sans", sans-serif;
         text-transform: lowercase;
+        align-items: center;
+        text-align: center;
     }
 
     #site-title {

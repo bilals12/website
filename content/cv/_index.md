@@ -41,7 +41,7 @@ data warehousing, ETL, automations, etc.
 majored in electrical and computer engineering, with a specialization in information communication and transmission. graduated in 2018. 
 
 
-- ## ***languages***
+- ## **languages**
 english: native
 
 hindi: native
@@ -54,7 +54,7 @@ arabic: intermediate
 
 mandarin: rudimentary
 
-- ## ***interests***
+- ## **interests**
 homelab
 
 philosophy
@@ -68,7 +68,7 @@ dancing
 basketball
 
 
-- ## ***tech + skills***
+- ## **tech + skills**
 **frontend**: React • Angular • Vue.js • JavaScript • TypeScript
 
 **backend**: Java • Python • C/C++/C# • Node.js • Ruby • Go• Ruby on Rails • .NET • Express.js • Flask • Django • Spring Boot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
