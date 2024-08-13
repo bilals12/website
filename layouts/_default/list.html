@@ -1,6 +1,6 @@
 {{ define "main" }}
 <div id="content-area" data-page-type="list">
-    <h1>
+    <h1 id="category-title">
         {{ if eq .Type "posts" }}
             posts
         {{ else if eq .Type "photography" }}
@@ -10,18 +10,13 @@
         {{ end }}
     </h1>
     {{ if or (eq .Type "posts") (eq .Type "photography") }}
-        <table>
+        <div class="post-list-container">
             {{ range .Pages.ByPublishDate.Reverse }}
-            <tr>
-                <!-- <td class="post-date-time">
-                    <time>{{ .Date.Format "Jan 2, 2006" }}</time>
-                </td> -->
-                <td class="post">
-                    <a href="{{ .Permalink }}">{{ .Title }}</a>
-                </td>
-            </tr>
+            <div class="post-item">
+                <a href="{{ .Permalink }}">{{ .Title }}</a>
+            </div>
             {{ end }}
-        </table>
+        </div>
     {{ else }}
         {{ .Content }}
     {{ end }}

@@ -346,7 +346,7 @@ td > code {
         position: relative;
         width: 100%;
         min-height: 100vh;
-        padding: 1rem;
+        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
         box-sizing: border-box;
         background: rgba(41, 82, 74, 0.2);
         display: flex;
@@ -395,6 +395,7 @@ td > code {
     header {
         width: 100%;
         justify-content: center;
+        padding-top: env(safe-area-inset-top);
     }
     
     .markdown-content {
@@ -509,7 +510,7 @@ td > code {
 
 #content-area[data-page-type="list"] #category-title {
     font-size: 2rem;
-    color: #CD0000;
+    color: #FF6666;
     margin-bottom: 1rem;
 }
 
