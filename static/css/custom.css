@@ -126,6 +126,19 @@
     overflow-y: auto;
     color: #F5F5F5;
     padding: 2rem;
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-top: env(safe-area-inset-top);
+    padding-bottom: env(safe-area-inset-bottom);
+}
+
+@supports (padding: max(0px)) {
+    #landing-content {
+        padding-left: max(2rem, env(safe-area-inset-left));
+        padding-right: max(2rem, env(safe-area-inset-right));
+        padding-top: max(2rem, env(safe-area-inset-top));
+        padding-bottom: max(2rem, env(safe-area-inset-bottom));
+    }
 }
 
 #landing-content::before {
@@ -144,6 +157,7 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
+    padding-top: env(safe-area-inset-top);
 }
 
 .header-group {
@@ -311,7 +325,7 @@ td > code {
     font-size: 0.75rem;
     display: block;
     margin-bottom: 1rem;
-    color: #F5F5F5;
+    color: #FF6666;
     text-transform: lowercase;
     order: 2;
 }
