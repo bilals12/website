@@ -30,13 +30,6 @@
     text-decoration: none;
 }
 
-/* underlining the category */
-.category-title-underline {
-    border-bottom: 2px solid #CD0000;
-    padding-bottom: 5px;
-    display: inline-block;
-}
-
 /* post lists styling */
 .post-list {
     list-style-type: none;
@@ -87,7 +80,7 @@
 /* category title */
 #category-title {
     font-size: 2rem;
-    color: #CD0000;
+    color: #FF6666;
     margin-bottom: 0.5rem;
     align-self: flex-start;
 }
@@ -126,20 +119,8 @@
     overflow-y: auto;
     color: #F5F5F5;
     padding: 2rem;
-    padding-left: env(safe-area-inset-left);
-    padding-right: env(safe-area-inset-right);
-    padding-top: env(safe-area-inset-top);
-    padding-bottom: env(safe-area-inset-bottom);
 }
 
-@supports (padding: max(0px)) {
-    #landing-content {
-        padding-left: max(2rem, env(safe-area-inset-left));
-        padding-right: max(2rem, env(safe-area-inset-right));
-        padding-top: max(2rem, env(safe-area-inset-top));
-        padding-bottom: max(2rem, env(safe-area-inset-bottom));
-    }
-}
 
 #landing-content::before {
     content: '';
@@ -157,7 +138,6 @@ header {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 2rem;
-    padding-top: env(safe-area-inset-top);
 }
 
 .header-group {
@@ -346,7 +326,7 @@ td > code {
         position: relative;
         width: 100%;
         min-height: 100vh;
-        padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+        padding: 1rem;
         box-sizing: border-box;
         background: rgba(41, 82, 74, 0.2);
         display: flex;
@@ -395,7 +375,6 @@ td > code {
     header {
         width: 100%;
         justify-content: center;
-        padding-top: env(safe-area-inset-top);
     }
     
     .markdown-content {
