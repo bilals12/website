@@ -404,6 +404,38 @@ td > code {
     pre.markdown-content {
         max-width: calc(100vw - 2rem);
     }
+
+    /* Center align category titles */
+    #category-title {
+        text-align: center;
+    }
+
+    /* Center align list items */
+    .post-list {
+        text-align: center;
+    }
+
+    .post-list li {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+    }
+
+    /* Center align category items */
+    #categories-container {
+        align-items: center;
+    }
+
+    .category-item {
+        text-align: center;
+    }
+
+    /* Ensure back button is centered */
+    #back-button {
+        display: block;
+        margin: 0 auto;
+        text-align: center;
+    }
 }
 
 /* bottom Back button */
