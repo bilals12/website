@@ -1,25 +1,39 @@
 ---
-title: "reading list [updated: january 29th, 2024]"
+title: "reading list [updated: august 14th, 2024]"
 date: 2024-01-03T10:08:54-05:00
 draft: false
 type: "post"
 ---
 
-**currently reading**
+## **currently reading**
+
+- [the poetics of space by gaston bachelard](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
+
+## **completed [2024]**
+
+- [revolutionary demonology by gruppo di nun](https://www.goodreads.com/book/show/57927485-revolutionary-demonology?from_search=true&from_srp=true&qid=z5ao8hXxVN&rank=1)
+
+- [the messianic reduction: walter benjamin and the shape of time by peter fenves](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
+
+- [intelligence and spirit by reza negarestani](https://www.goodreads.com/book/show/35218850-intelligence-and-spirit?from_search=true&from_srp=true&qid=nUITbVXOaM&rank=1)
+
+- [define and rule: native as political identity by mahmood mamdani](https://www.goodreads.com/book/show/15861565-define-and-rule?from_search=true&from_srp=true&qid=8BBvUD3ujO&rank=1)
 
 - [aberration in the heartland of the real by wendy s. painting](https://www.goodreads.com/en/book/show/23281022)
 
 - [palestine by joe sacco](https://www.goodreads.com/book/show/769712.Palestine?from_search=true&from_srp=true&qid=tz8S3Ow0HM&rank=2)
 
-**queue**
+- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg) 
+
+- [the art of doing science and engineering: learning to learn by richard hamming](https://www.goodreads.com/book/show/530415.The_Art_of_Doing_Science_and_Engineering?from_search=true&from_srp=true&qid=yPVd4Oc3lA&rank=1)
+
+- [inside deep learning: math, algorithms, models by edward raff](https://www.goodreads.com/book/show/57553039-inside-deep-learning?from_search=true&from_srp=true&qid=4HjWLxAolm&rank=1)
+
+## **queue**
 
 - [the three body problem by cixin liu](https://www.goodreads.com/book/show/20518872-the-three-body-problem)
 
 - [solenoid by mircea cartarescu](https://www.goodreads.com/book/show/196842517-solenoid?from_search=true&from_srp=true&qid=phntqqLkD8&rank=2)
-
-- [the poetics of space by gaston bachelard](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
-
-- [the messianic reduction: walter benjamin and the shape of time by peter fenves](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
 
 - [the storm before the storm: the beginning of the end of the roman republic by mike duncan](https://www.goodreads.com/book/show/34184069-the-storm-before-the-storm?from_search=true&from_srp=true&qid=wULe01SkY7&rank=1)
 
@@ -31,30 +45,15 @@ type: "post"
 
 - [melancholy by jon fosse](https://www.goodreads.com/book/show/118449.Melancholy?from_search=true&from_srp=true&qid=7CwUWghR1R&rank=1)
 
-- [revolutionary demonology by gruppo di nun](https://www.goodreads.com/book/show/57927485-revolutionary-demonology?from_search=true&from_srp=true&qid=z5ao8hXxVN&rank=1)
-
 - [the space of literature by maurice blanchot](https://www.goodreads.com/book/show/184882.The_Space_of_Literature?from_search=true&from_srp=true&qid=HoIOHVsDBV&rank=1)
-
-- [intelligence and spirit by reza negarestani](https://www.goodreads.com/book/show/35218850-intelligence-and-spirit?from_search=true&from_srp=true&qid=nUITbVXOaM&rank=1)
 
 - [the invention of the white race: the origin of racial oppression by theodore w. allen](https://www.goodreads.com/book/show/39948369-the-power-of-ritual-in-prehistory?ref=nav_sb_ss_4_19)
 
 - [the power of ritual in prehistory: secret societies and origins of social complexity by brian hayden](https://www.goodreads.com/book/show/39948369-the-power-of-ritual-in-prehistory?ref=nav_sb_ss_4_19)
 
-- [define and rule: native as political identity by mahmood mamdani](https://www.goodreads.com/book/show/15861565-define-and-rule?from_search=true&from_srp=true&qid=8BBvUD3ujO&rank=1)
-
 - [the ladder of lights by william g. gray](https://www.goodreads.com/book/show/1360219.The_Ladder_of_Lights?ref=nav_sb_ss_1_16)
 
-
-**completed [2024]**
-
-- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg) 
-
-- [the art of doing science and engineering: learning to learn by richard hamming](https://www.goodreads.com/book/show/530415.The_Art_of_Doing_Science_and_Engineering?from_search=true&from_srp=true&qid=yPVd4Oc3lA&rank=1)
-
-- [inside deep learning: math, algorithms, models by edward raff](https://www.goodreads.com/book/show/57553039-inside-deep-learning?from_search=true&from_srp=true&qid=4HjWLxAolm&rank=1)
-
-**completed [2023]**
+## **completed [2023]**
 
 - [museum of innocence by orhan pamuk](https://www.goodreads.com/book/show/6282753-the-museum-of-innocence?from_search=true&from_srp=true&qid=lrj8YyZN5L&rank=1)
 
