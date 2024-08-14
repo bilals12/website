@@ -23,15 +23,15 @@ type: "post"
 
 - [palestine by joe sacco](https://www.goodreads.com/book/show/769712.Palestine?from_search=true&from_srp=true&qid=tz8S3Ow0HM&rank=2)
 
-- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg) 
+- [the cuckoo's egg: tracking a spy through the maze of computer espionage by clifford stoll](https://www.goodreads.com/book/show/18154.The_Cuckoo_s_Egg)
+
+- [the three body problem by cixin liu](https://www.goodreads.com/book/show/20518872-the-three-body-problem)
 
 - [the art of doing science and engineering: learning to learn by richard hamming](https://www.goodreads.com/book/show/530415.The_Art_of_Doing_Science_and_Engineering?from_search=true&from_srp=true&qid=yPVd4Oc3lA&rank=1)
 
 - [inside deep learning: math, algorithms, models by edward raff](https://www.goodreads.com/book/show/57553039-inside-deep-learning?from_search=true&from_srp=true&qid=4HjWLxAolm&rank=1)
 
 ## **queue**
-
-- [the three body problem by cixin liu](https://www.goodreads.com/book/show/20518872-the-three-body-problem)
 
 - [solenoid by mircea cartarescu](https://www.goodreads.com/book/show/196842517-solenoid?from_search=true&from_srp=true&qid=phntqqLkD8&rank=2)
 
