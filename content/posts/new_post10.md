@@ -1,6 +1,6 @@
 ---
 title: "reading list [updated: august 14th, 2024]"
-date: 2024-01-03T10:08:54-05:00
+date: 2024-08-14
 draft: false
 type: "post"
 ---
