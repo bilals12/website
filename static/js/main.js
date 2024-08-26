@@ -96,6 +96,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 if (newContent) {
                     setTimeout(() => {
                         contentArea.innerHTML = newContent.innerHTML;
+                        contentArea.setAttribute('data-page-type', pageType === 'other' ? 'single' : pageType);
+                        contentArea.style.background = 'rgba(41, 82, 74, 0.2)';
+                        contentArea.style.backdropFilter = 'blur(5px)';
+                        contentArea.style.webkitBackdropFilter = 'blur(5px)';
                         applyStyles();
                         backButton.style.display = 'inline-block';
                         showContent(pageType);

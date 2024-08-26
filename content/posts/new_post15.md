@@ -2,6 +2,7 @@
 title: "goPro: detecting process hollowing with Go"
 date: 2024-08-12T14:25:48-05:00
 draft: false
+type: "post"
 ---
 
 if you ever find yourself in between jobs for an extended period of time, remember to take time off from bouncing from constantly worrying to being completely nihilistic. if you can spare the time and energy, it can be quite rewarding to find something that you can totally nerd out on. for me, it was the world of windows malware.

@@ -2,6 +2,7 @@
 title: "goLatro: malware analysis + detection"
 date: 2024-08-22T15:54:29-05:00
 draft: false
+type: "post"
 ---
 
 ![binja](/binja.png)
