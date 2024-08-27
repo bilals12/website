@@ -1,5 +1,5 @@
 ---
-title: "goLatro: reverse engineering, malware analysis, detection"
+title: "goL0: reverse engineering + malware analysis"
 date: 2024-08-26T16:29:25-04:00
 draft: false
 type: "post"

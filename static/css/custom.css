@@ -216,8 +216,11 @@ footer {
 .markdown-content {
     max-width: 100%;
     overflow-wrap: break-word;
+    word-wrap: break-word;
     font-family: "Ubuntu Mono", monospace;
     color: #F5F5F5;
+    font-size: 16px;
+    line-height: 1.6;
 }
 
 .markdown-content h1, .markdown-content h2, .markdown-content h3, 
@@ -255,6 +258,7 @@ pre.markdown-content {
     white-space: pre;
     word-wrap: normal;
     border: 1px solid rgba(255, 255, 255, 0.1);
+    word-wrap: break-word;
 }
 
 pre.markdown-content code {
@@ -421,6 +425,14 @@ td > code {
         display: block;
         margin: 0 auto;
         text-align: center;
+    }
+
+    .markdown-content {
+        font-size: 14px;
+    }
+
+    pre.markdown-content {
+        font-size: 12px;
     }
 }
 
