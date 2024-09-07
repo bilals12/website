@@ -141,6 +141,10 @@ disableHugoGeneratorInject = false
   [[params.socialIcons]]
     name = "linkedin"
     url = "https://www.linkedin.com/in/bilal-s-b857601a/"
+
+  [[params.socialIcons]]
+    name = "twitter"
+    url = "https://www.twitter.com/mescalinesun"
   
   [[params.socialIcons]]
     name = "github"
