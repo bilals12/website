@@ -57,7 +57,7 @@ these domains are connected by a two-way trust relationship, also known as a "pa
 
 **domain**: `Nebula.Cosmos.Local`
 
-### Devsrv.Nebula.Cosmos.Local`
+### `Devsrv.Nebula.Cosmos.Local`
 **role**: development server. hosts dev environments + tools. may contain valuable source code and often has connections to other critical systems.
 
 **domain**: `Nebula.Cosmos.Local`
