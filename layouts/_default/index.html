@@ -16,7 +16,7 @@
                     <a href="{{ "/posts/" | absURL }}" class="category-item" data-category="posts">posts</a>
                     <a href="{{ "/photography/" | absURL }}" class="category-item" data-category="photography">photography</a>
                 </section>
-                <div id="content-area" data-page-type="single">
+                <div id="content-area" {{ if eq .Type "post" }}data-page-type="single"{{ end }}>
                     <!-- Content will be loaded here dynamically -->
                 </div>
                 {{- partial "footer.html" . -}}
