@@ -347,12 +347,6 @@ td > code {
         text-align: center;
     }
 
-    #content-area[data-page-type="single"] {
-        background: inherit;
-        backdrop-filter: inherit;
-        -webkit-backdrop-filter: inherit;
-    }
-
     .category-item, .post-list a {
         font-size: 1.2rem;
         font-family: "Noto Sans", sans-serif;

