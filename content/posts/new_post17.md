@@ -2,9 +2,8 @@
 title: "cosmos, part 1: red-teaming corporate AD environments"
 date: 2024-09-19T10:56:20-04:00
 draft: false
+type: "post"
 ---
-
-# active directory
 
 corporate networks face a constant and ever-evolving array of threats. at the heart of many enterprise IT infrastructures lies Active Directory [AD]. this is a directory service developed by Microsoft that provides authentication (AuthC) and authorization (AuthZ) services. AD is ubiquitous because of its robust capabilities in managing users, groups, computers, and access to resources across large-scale networks.
 
@@ -88,7 +87,7 @@ abuse the production server's privileges to attack the `Nebula` domain controlle
 
 finally, exploit the trust relationship to compromise the `Cosmos` domain controller and the entire forest.
 
-# target 1: `User.Nebula.Cosmos.Local` - the foothold
+# target 1: the foothold
 
 the seemingly innocuous user workstation is the entry point into the network. in a typical enterprise environment, these workstations are the most numerous and often considered low-hanging fruit for attackers. employees use them for daily tasks and so they're often less strictly controlled than servers.
 
@@ -260,7 +259,7 @@ SharpHound Enumeration Completed at 10:49 PM on 7/3/2024! Happy Graphing!
 
 the `All` collection method would gather comprehensive data about the domain, while the `LoggedOn` method focuses on currently active sessions. 
 
-# target 2: `Uatsrv.Nebula.Cosmos.Local` - leveraging password resets
+# target 2: leveraging password resets
 
 this machine represents a typical UAT server in an enterprise environment. UAT servers are used to test apps in an environment that closely mimic production, allowing users to verify that the software meets requirements before going live.
 
@@ -339,7 +338,7 @@ Ok.
 [uatsrv.nebula.cosmos.local]: PS C:\Users\uatadmin\Documents> Test-NetConnection 172.16.10.1 -CommonTCPPort rdp
 ```
 
-# target 3: `Devsrv.Nebula.Cosmos.Local` - sql server exploitation
+# target 3: sql server exploitation
 
 this is a dev server that hosts critical database services. dev servers are used by engineers to build + test apps before moving them to production.
 
