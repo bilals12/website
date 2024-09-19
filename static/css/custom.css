@@ -450,9 +450,6 @@ td > code {
 #content-area[data-page-type="single"] {
     opacity: 1;
     transform: none;
-    background: rgba(41, 82, 74, 0.2); /* Ensure transparent but slightly blurred background */
-    backdrop-filter: blur(5px);
-    -webkit-backdrop-filter: blur(5px);
 }
 
 #content-area[data-page-type="single"] #post-title {
