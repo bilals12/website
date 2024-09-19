@@ -6,8 +6,36 @@
     <description>Recent content in Photographies on ༧</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Wed, 03 Jan 2024 10:47:30 -0500</lastBuildDate>
+    <lastBuildDate>Wed, 10 Apr 2024 10:12:23 -0400</lastBuildDate>
     <atom:link href="/photography/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>ultramax 400 [eclipse in toronto]</title>
+      <link>/photography/2024/04/ultramax-400-eclipse-in-toronto/</link>
+      <pubDate>Wed, 10 Apr 2024 10:12:23 -0400</pubDate>
+      <guid>/photography/2024/04/ultramax-400-eclipse-in-toronto/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ultramax 400</title>
+      <link>/photography/2024/03/ultramax-400/</link>
+      <pubDate>Sun, 10 Mar 2024 10:08:13 -0400</pubDate>
+      <guid>/photography/2024/03/ultramax-400/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>portra 800 [manitoba]</title>
+      <link>/photography/2024/02/portra-800-manitoba/</link>
+      <pubDate>Tue, 20 Feb 2024 10:17:24 -0400</pubDate>
+      <guid>/photography/2024/02/portra-800-manitoba/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>portra 800 [toronto &#43; manitoba]</title>
+      <link>/photography/2024/01/portra-800-toronto--manitoba/</link>
+      <pubDate>Thu, 25 Jan 2024 10:01:53 -0400</pubDate>
+      <guid>/photography/2024/01/portra-800-toronto--manitoba/</guid>
+      <description></description>
+    </item>
     <item>
       <title>cinestill 400d</title>
       <link>/photography/2024/01/cinestill-400d/</link>
@@ -55,35 +83,6 @@ wrapping up the month of october. warm, sunny days and the leaves just starting 
       <pubDate>Sun, 10 Sep 2023 12:16:38 -0500</pubDate>
       <guid>/photography/2023/09/gold-200/</guid>
       <description>the last roll of the manitoba trip. even though it&amp;rsquo;s a technically &amp;ldquo;inferior&amp;rdquo; film, i still love the gold 200 and these shots are some of my favourites.</description>
-    </item>
-    <item>
-      <title>portra 800</title>
-      <link>/photography/2023/09/portra-800/</link>
-      <pubDate>Sat, 09 Sep 2023 12:08:02 -0500</pubDate>
-      <guid>/photography/2023/09/portra-800/</guid>
-      <description>second roll for the manitoba trip. first time shooting with the portra 800, and it turned out great (even if some shots are blurry).</description>
-    </item>
-    <item>
-      <title>ultramax 400</title>
-      <link>/photography/2023/09/ultramax-400/</link>
-      <pubDate>Fri, 08 Sep 2023 00:00:00 +0000</pubDate>
-      <guid>/photography/2023/09/ultramax-400/</guid>
-      <description>first time shooting with ultramax 400. the colours seem a little cooler than the gold 200, and definitely not as rich as the portra 800, but i do like the &amp;ldquo;real&amp;rdquo; feel of some of these photos.
-it was also the first of 3 rolls i took along with me on my trip to manitoba, so the photos are a mix of toronto and manitoba scenes.</description>
-    </item>
-    <item>
-      <title>gold 200</title>
-      <link>/photography/2023/07/gold-200/</link>
-      <pubDate>Tue, 25 Jul 2023 00:00:00 +0000</pubDate>
-      <guid>/photography/2023/07/gold-200/</guid>
-      <description>still practicing. stuck with the gold 200 because it&amp;rsquo;s a low-cost film, and nice for summer days.</description>
-    </item>
-    <item>
-      <title>intro &#43; gold 200</title>
-      <link>/photography/2023/07/intro--gold-200/</link>
-      <pubDate>Wed, 12 Jul 2023 00:00:00 +0000</pubDate>
-      <guid>/photography/2023/07/intro--gold-200/</guid>
-      <description>my first ever roll of film + my first ever analog camera. during the summer, i became increasingly disillusioned with our (my) over-dependence on technology, especially given both my career and hobbies are steeped in digitalia. i decided to shoot film, and was able to find a great deal for an intermediate analog camera: the Asahi Pentax Spotmatic SPII. with it came 3 lenses: a 35mm Zeiss Zebra, a 55m SMC Takumar (pictured), and a 135mm long.</description>
     </item>
   </channel>
 </rss>

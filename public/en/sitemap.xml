@@ -3,7 +3,7 @@
   xmlns:xhtml="http://www.w3.org/1999/xhtml">
   <url>
     <loc>/</loc>
-    <lastmod>2024-08-12T14:25:48-05:00</lastmod>
+    <lastmod>2024-09-19T10:56:20-04:00</lastmod>
     <xhtml:link
                 rel="alternate"
                 hreflang="fr"
@@ -15,23 +15,41 @@
                 href="/"
                 />
   </url><url>
+    <loc>/posts/2024/09/cosmos-part-1-red-teaming-corporate-ad-environments/</loc>
+    <lastmod>2024-09-19T10:56:20-04:00</lastmod>
+  </url><url>
+    <loc>/posts/</loc>
+    <lastmod>2024-09-19T10:56:20-04:00</lastmod>
+  </url><url>
+    <loc>/posts/2024/08/gol0-reverse-engineering--malware-analysis/</loc>
+    <lastmod>2024-08-26T16:29:25-04:00</lastmod>
+  </url><url>
+    <loc>/posts/2024/08/reading-list-updated-august-14th-2024/</loc>
+    <lastmod>2024-08-14T00:00:00+00:00</lastmod>
+  </url><url>
     <loc>/posts/2024/08/gopro-detecting-process-hollowing-with-go/</loc>
     <lastmod>2024-08-12T14:25:48-05:00</lastmod>
   </url><url>
-    <loc>/posts/</loc>
-    <lastmod>2024-08-12T14:25:48-05:00</lastmod>
+    <loc>/photography/</loc>
+    <lastmod>2024-04-10T10:12:23-04:00</lastmod>
+  </url><url>
+    <loc>/photography/2024/04/ultramax-400-eclipse-in-toronto/</loc>
+    <lastmod>2024-04-10T10:12:23-04:00</lastmod>
+  </url><url>
+    <loc>/photography/2024/03/ultramax-400/</loc>
+    <lastmod>2024-03-10T10:08:13-04:00</lastmod>
+  </url><url>
+    <loc>/photography/2024/02/portra-800-manitoba/</loc>
+    <lastmod>2024-02-20T10:17:24-04:00</lastmod>
+  </url><url>
+    <loc>/photography/2024/01/portra-800-toronto--manitoba/</loc>
+    <lastmod>2024-01-25T10:01:53-04:00</lastmod>
   </url><url>
     <loc>/posts/2024/01/nevermind/</loc>
     <lastmod>2024-01-18T11:05:32-05:00</lastmod>
   </url><url>
     <loc>/photography/2024/01/cinestill-400d/</loc>
     <lastmod>2024-01-03T10:47:30-05:00</lastmod>
-  </url><url>
-    <loc>/photography/</loc>
-    <lastmod>2024-01-03T10:47:30-05:00</lastmod>
-  </url><url>
-    <loc>/posts/2024/01/reading-list-updated-january-29th-2024/</loc>
-    <lastmod>2024-01-03T10:08:54-05:00</lastmod>
   </url><url>
     <loc>/posts/2024/01/cookiejar/</loc>
     <lastmod>2024-01-02T10:11:43-05:00</lastmod>

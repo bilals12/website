@@ -7,15 +7,13 @@ document.addEventListener('DOMContentLoaded', function() {
 
     // flag to prevent multiple animations starting simultaneously
     let isAnimating = false;
-    let previousUrl = null;
-    let isInCategoryList = false;
 
     // CSS transitions instead of requestAnimationFrame for smoother animations
     // timings adjusted to make sure animations complete before new content is loaded
     // determining transition speeds based on page type (quicker for about + cv)
     function showContent(pageType) {
         isAnimating = true;
-        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.1s' : '0.2s';
         const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
         contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(0)';
@@ -23,20 +21,20 @@ document.addEventListener('DOMContentLoaded', function() {
         contentArea.style.display = 'block';
         setTimeout(() => {
             isAnimating = false;
-        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
+        }, (pageType === 'about' || pageType === 'cv') ? 100 : 200);
     }
 
     function hideContent(pageType) {
         if (isAnimating) return;
         isAnimating = true;
-        const duration = (pageType === 'about' || pageType === 'cv') ? '0.2s' : '0.3s';
+        const duration = (pageType === 'about' || pageType === 'cv') ? '0.1s' : '0.2s';
         const easing = 'cubic-bezier(0.25, 0.1, 0.25, 1.0)'; // smoother easing function
         contentArea.style.transition = `transform ${duration} ${easing}, opacity ${duration} ${easing}`;
         contentArea.style.transform = 'translateX(100%)';
         contentArea.style.opacity = '0';
         setTimeout(() => {
             isAnimating = false;
-        }, (pageType === 'about' || pageType === 'cv') ? 200 : 300);
+        }, (pageType === 'about' || pageType === 'cv') ? 100 : 200);
     }
 
     function applyStyles() {

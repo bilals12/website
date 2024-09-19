@@ -6,8 +6,37 @@
     <description>Recent content on ༧</description>
     <generator>Hugo -- gohugo.io</generator>
     <language>en</language>
-    <lastBuildDate>Mon, 12 Aug 2024 14:25:48 -0500</lastBuildDate>
+    <lastBuildDate>Thu, 19 Sep 2024 10:56:20 -0400</lastBuildDate>
     <atom:link href="/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>cosmos, part 1: red-teaming corporate AD environments</title>
+      <link>/posts/2024/09/cosmos-part-1-red-teaming-corporate-ad-environments/</link>
+      <pubDate>Thu, 19 Sep 2024 10:56:20 -0400</pubDate>
+      <guid>/posts/2024/09/cosmos-part-1-red-teaming-corporate-ad-environments/</guid>
+      <description>corporate networks face a constant and ever-evolving array of threats. at the heart of many enterprise IT infrastructures lies Active Directory [AD]. this is a directory service developed by Microsoft that provides authentication (AuthC) and authorization (AuthZ) services. AD is ubiquitous because of its robust capabilities in managing users, groups, computers, and access to resources across large-scale networks.
+this also makes it a prime target for attackers. a successful attack on an org&amp;rsquo;s AD can lead to data breaches, intellectual property theft, or complete takeover of the corporate infrastructure.</description>
+    </item>
+    <item>
+      <title>goL0: reverse engineering &#43; malware analysis</title>
+      <link>/posts/2024/08/gol0-reverse-engineering--malware-analysis/</link>
+      <pubDate>Mon, 26 Aug 2024 16:29:25 -0400</pubDate>
+      <guid>/posts/2024/08/gol0-reverse-engineering--malware-analysis/</guid>
+      <description>LATRODECTUS is an emerging malware loader that i first encountered during my research at the start of 2024. initially discovered by walmart&amp;rsquo;s security team, it quickly gained attention due to the similarities it held with ICEDID, particularly in the use of a command handler for downloading and executing encrypted payloads. proofpoint and team cymru both established a link between the network infrastructure used by operators of both LATRODECTUS and ICEDID, suggesting a common origin.</description>
+    </item>
+    <item>
+      <title>reading list [updated: august 14th, 2024]</title>
+      <link>/posts/2024/08/reading-list-updated-august-14th-2024/</link>
+      <pubDate>Wed, 14 Aug 2024 00:00:00 +0000</pubDate>
+      <guid>/posts/2024/08/reading-list-updated-august-14th-2024/</guid>
+      <description>currently reading [+] the poetics of space by gaston bachelard
+completed [2024] [+] revolutionary demonology by gruppo di nun
+[+] the messianic reduction: walter benjamin and the shape of time by peter fenves
+[+] intelligence and spirit by reza negarestani
+[+] define and rule: native as political identity by mahmood mamdani
+[+] aberration in the heartland of the real by wendy s. painting
+[+] palestine by joe sacco
+[+] the cuckoo&amp;rsquo;s egg: tracking a spy through the maze of computer espionage by clifford stoll</description>
+    </item>
     <item>
       <title>goPro: detecting process hollowing with Go</title>
       <link>/posts/2024/08/gopro-detecting-process-hollowing-with-go/</link>
@@ -15,6 +44,34 @@
       <guid>/posts/2024/08/gopro-detecting-process-hollowing-with-go/</guid>
       <description>if you ever find yourself in between jobs for an extended period of time, remember to take time off from bouncing from constantly worrying to being completely nihilistic. if you can spare the time and energy, it can be quite rewarding to find something that you can totally nerd out on. for me, it was the world of windows malware.
 this could probably benefit from being part of a series, so i&amp;rsquo;ll keep the contents of this post focused on the title.</description>
+    </item>
+    <item>
+      <title>ultramax 400 [eclipse in toronto]</title>
+      <link>/photography/2024/04/ultramax-400-eclipse-in-toronto/</link>
+      <pubDate>Wed, 10 Apr 2024 10:12:23 -0400</pubDate>
+      <guid>/photography/2024/04/ultramax-400-eclipse-in-toronto/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>ultramax 400</title>
+      <link>/photography/2024/03/ultramax-400/</link>
+      <pubDate>Sun, 10 Mar 2024 10:08:13 -0400</pubDate>
+      <guid>/photography/2024/03/ultramax-400/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>portra 800 [manitoba]</title>
+      <link>/photography/2024/02/portra-800-manitoba/</link>
+      <pubDate>Tue, 20 Feb 2024 10:17:24 -0400</pubDate>
+      <guid>/photography/2024/02/portra-800-manitoba/</guid>
+      <description></description>
+    </item>
+    <item>
+      <title>portra 800 [toronto &#43; manitoba]</title>
+      <link>/photography/2024/01/portra-800-toronto--manitoba/</link>
+      <pubDate>Thu, 25 Jan 2024 10:01:53 -0400</pubDate>
+      <guid>/photography/2024/01/portra-800-toronto--manitoba/</guid>
+      <description></description>
     </item>
     <item>
       <title>neverMind</title>
@@ -30,68 +87,6 @@ backdoors are often used for securing remote access to a computer. they&amp;rsqu
       <pubDate>Wed, 03 Jan 2024 10:47:30 -0500</pubDate>
       <guid>/photography/2024/01/cinestill-400d/</guid>
       <description>first time running with the cinestill 400d. it&amp;rsquo;s quite a finicky film, and i&amp;rsquo;m not sure i have the skill or patience (yet) to deal with its many quirks.</description>
-    </item>
-    <item>
-      <title>reading list [updated: january 29th, 2024]</title>
-      <link>/posts/2024/01/reading-list-updated-january-29th-2024/</link>
-      <pubDate>Wed, 03 Jan 2024 10:08:54 -0500</pubDate>
-      <guid>/posts/2024/01/reading-list-updated-january-29th-2024/</guid>
-      <description>currently reading
-aberration in the heartland of the real by wendy s. painting
-palestine by joe sacco
-queue
-the three body problem by cixin liu
-solenoid by mircea cartarescu
-the poetics of space by gaston bachelard
-the messianic reduction: walter benjamin and the shape of time by peter fenves
-the storm before the storm: the beginning of the end of the roman republic by mike duncan
-elite capture: how the powerful took over identity politics (and everything else) by olufemi o.</description>
-    </item>
-    <item>
-      <title>cookieJar</title>
-      <link>/posts/2024/01/cookiejar/</link>
-      <pubDate>Tue, 02 Jan 2024 10:11:43 -0500</pubDate>
-      <guid>/posts/2024/01/cookiejar/</guid>
-      <description>a fun aspect of pentesting is finding interesting ways to get authenticated sessions running. usually, a session authentication relies on the user entering some kind of key (password) that corresponds to their user ID (username). however, in some cases an attacker can &amp;ldquo;revive&amp;rdquo; sessions using just the session cookies.
-i wrote cookieJar for exactly this purpose: extracting cookies from various browsers (and factor in the OS) and then use them to create authenticated sessions.</description>
-    </item>
-    <item>
-      <title>violaTor</title>
-      <link>/posts/2023/12/violator/</link>
-      <pubDate>Thu, 21 Dec 2023 11:17:54 -0500</pubDate>
-      <guid>/posts/2023/12/violator/</guid>
-      <description>since splurging on a new macbook m3 pro, that came with a 12-core CPU, 18-core GPU, 16-core neural engine, and 36GB of RAM, i thought to myself: i should probably use this to train some version of a local AI (LLM) i can use to boost my security and hacking toolchains, namely SAST/DAST and vulnerability scanning. thus began my journey into acquiring the perfect flavours of AI that were ideal for how i work (iteratively but in bursts, and lots of back and forth).</description>
-    </item>
-    <item>
-      <title>portra 800</title>
-      <link>/photography/2023/12/portra-800/</link>
-      <pubDate>Wed, 20 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>/photography/2023/12/portra-800/</guid>
-      <description>i really love this film.</description>
-    </item>
-    <item>
-      <title>tcpSACK</title>
-      <link>/posts/2023/12/tcpsack/</link>
-      <pubDate>Thu, 07 Dec 2023 15:14:13 -0500</pubDate>
-      <guid>/posts/2023/12/tcpsack/</guid>
-      <description>a number of years ago, i received advice that would deeply change my outlook on engineering and understanding of technology.
-if you want to understand how something works, build it.
-at the time, i was a little too impatient to actually grasp the nuances of such advice, because i had the immediate gratification of well-built programs and tools to carry out whatever tasks i needed to. but as i delved deeper into security and pentesting, i understood that not everything is as well understood by everyone as i had once thought.</description>
-    </item>
-    <item>
-      <title>ddos flood part I</title>
-      <link>/posts/2023/12/ddos-flood-part-i/</link>
-      <pubDate>Wed, 06 Dec 2023 00:00:00 +0000</pubDate>
-      <guid>/posts/2023/12/ddos-flood-part-i/</guid>
-      <description>earlier this week, while trawling through forums looking for malware and worm samples, i was surprised to find a rather intriguing, but hideous, slab of code. the source was a private channel for hackers of presumably israeli origin, and the script itself was part of a fully functional DDoS suite, including a .exe file for windows systems as well as a .apk for android smartphones. running the script from a *nix system seems simple enough:</description>
-    </item>
-    <item>
-      <title>gdbExtract</title>
-      <link>/posts/2023/11/gdbextract/</link>
-      <pubDate>Mon, 27 Nov 2023 13:43:26 -0500</pubDate>
-      <guid>/posts/2023/11/gdbextract/</guid>
-      <description>over the past few days, i&amp;rsquo;ve been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call gdbExtract.
-as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating.</description>
     </item>
   </channel>
 </rss>

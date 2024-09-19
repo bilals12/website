@@ -10,6 +10,7 @@ const eventColors = {
 fetch('cumulative_data.csv')
     .then(response => response.text())
     .then(data => {
+        console.log('Cumulative Data:', data); // Log the cumulative data
         const lines = data.split('\n').slice(1); // skip header row
         lines.forEach(line => {
             const [event, count] = line.split(',');
@@ -26,6 +27,7 @@ fetch('cumulative_data.csv')
 fetch('past_24_hours_data.csv')
     .then(response => response.text())
     .then(data => {
+        console.log('Past 24 Hours Data:', data); // Log the past 24 hours data
         const parsedData = parseCSV(data);
         renderChart(parsedData);
     })
@@ -209,4 +211,3 @@ function updateChart() {
 
 // set interval to update chart every minute (60000 milliseconds)
 setInterval(updateChart, 600000);
-
