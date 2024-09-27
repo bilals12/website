@@ -1,11 +1,13 @@
 ---
-title: "reading list [updated: september 24th, 2024]"
+title: "reading list [updated: september 27th, 2024]"
 date: 2024-08-14
 draft: false
 type: "post"
 ---
 
 ## **currently reading**
+
+[+] [applied cryptography: protocols, algorithms, and source code in C by bruce schneier](https://www.schneier.com/books/applied-cryptography/)
 
 [+]  [the wretched of the earth by frantz fanon](https://en.wikipedia.org/wiki/The_Wretched_of_the_Earth)
 
