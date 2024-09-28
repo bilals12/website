@@ -1,11 +1,13 @@
 ---
-title: "reading list [updated: september 27th, 2024]"
-date: 2024-08-14
+title: "reading list [updated: september 28th, 2024]"
+date: 2024-09-28
 draft: false
 type: "post"
 ---
 
 ## **currently reading**
+
+[+] [blue fox: ARM assembly internals and reverse engineering by maria azeria markstedter](https://leg-assembly.com/)
 
 [+] [applied cryptography: protocols, algorithms, and source code in C by bruce schneier](https://www.schneier.com/books/applied-cryptography/)
 

@@ -1,6 +1,6 @@
 ---
 title: "cosmos, part 2: domain + forest compromise"
-date: 2024-09-22T12:30:34-04:00
+date: 2024-09-27T12:30:34-04:00
 draft: false
 type: "post"
 ---
