@@ -1,3 +1,12 @@
+/* Base font styles */
+body {
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-size: 27px; /* Increased from default */
+    line-height: 1.6; /* Improved line height for readability */
+    letter-spacing: 0.5px; /* Slightly increased character spacing */
+    color: #F5F5F5; /* Ensuring high contrast against dark background */
+}
+
 /* Styles for categories */
 #categories-container {
     display: flex;
@@ -17,9 +26,9 @@
 .category-item {
     color: #F5F5F5;
     text-decoration: none;
-    font-family: "Noto Sans", sans-serif;
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-size: 2.2rem; /* Slightly larger than body text */
+    font-weight: 600; /* SemiBold weight */
     text-transform: lowercase;
     transition: color 0.1s ease-out;
     cursor: pointer;
@@ -38,14 +47,19 @@
 
 .post-list li {
     margin-bottom: 0.5rem;
+    align-self: center;
+    align-items: center;
+    text-align: center;
 }
 
 .post-list a {
-    font-family: "Noto Sans", sans-serif;
-    font-size: 1.5rem;
-    font-weight: bold;
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-size: 2.2rem; /* Slightly larger than body text */
+    font-weight: 600;
     color: #F5F5F5;
     text-decoration: none;
+    align-items: center;
+    text-align: center;
     transition: color 0.1s ease-out;
 }
 
@@ -54,7 +68,7 @@
 }
 
 .post-date {
-    font-family: "Noto Sans", sans-serif;
+    font-family: "Epilogue", sans-serif;
     font-size: 1rem;
     color: #FF6666;
     margin-right: 1rem;
@@ -70,7 +84,8 @@
     cursor: pointer;
     padding: 0;
     margin-bottom: 10px;
-    align-self: flex-start;
+    align-self: center;
+    text-align: center;
 }
 
 #back-button:hover {
@@ -79,10 +94,13 @@
 
 /* category title */
 #category-title {
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-weight: 600;
     font-size: 2rem;
     color: #FF6666;
     margin-bottom: 0.5rem;
     align-self: flex-start;
+    text-align: center;
 }
 
 /* layout adjustments */
@@ -107,18 +125,21 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 45%;
+    width: 100%;
+    max-width: 100%;
     height: 100%;
     z-index: 2;
-    background: rgba(41, 82, 74, 0.2); /* reduced opacity */
+    background: rgba(5, 10, 9, 0.5); /* reduced opacity */
     backdrop-filter: blur(5px); /* reduced blur */
     -webkit-backdrop-filter: blur(5px);
-    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.2);
+    box-shadow: -5px 0 15px rgba(0, 0, 0, 0.5);
     display: flex;
     flex-direction: column;
     overflow-y: auto;
     color: #F5F5F5;
     padding: 2rem;
+    box-sizing: border-box;
+    align-items: center;
 }
 
 #landing-content::before {
@@ -128,7 +149,7 @@
     left: -20px;
     width: 20px;
     height: 100%;
-    background: linear-gradient(to right, transparent, rgba(41, 82, 74, 0.2));
+    background: linear-gradient(to right, transparent, rgba(5, 10, 9, 0.5));
 }
 
 /* Social buttons */
@@ -164,7 +185,7 @@ header {
     border: 2px solid whitesmoke;
     padding: 0.5rem;
     text-transform: uppercase;
-    font-family: "Noto Sans", sans-serif;
+    font-family: "Epilogue", sans-serif;
     font-size: 1.2rem;
     font-weight: bold;
     text-decoration: none;
@@ -185,7 +206,7 @@ footer {
     text-align: center;
     background-color: transparent;
     color: #F5F5F5;
-    font-family: "Ubuntu Mono", monospace;
+    font-family: "Epilogue", monospace;
     font-size: 1rem;
 }
 
@@ -200,9 +221,12 @@ footer {
 #content-area a,
 #content-area li {
     color: #F5F5F5;
-    font-family: "Ubuntu Mono", monospace;
-    font-size: 1.5rem;
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-size: 1.2rem; /* Slightly larger than body text */
+    font-weight: 600; /* SemiBold weight */
     text-decoration: none;
+    align-items: center;
+    text-align: center;
     transition: color 0.1s ease-out;
 }
 
@@ -213,39 +237,51 @@ footer {
 
 /* markdown mods */
 .markdown-content {
-    max-width: 100%;
+    max-width: 6500px;
     overflow-wrap: break-word;
     word-wrap: break-word;
-    font-family: "Ubuntu Mono", monospace;
+    font-family: "Epilogue", sans-serif;
+    font-size: 1.1rem; /* Slightly larger for better readability */
     color: #F5F5F5;
+    margin: 0 auto;
+    padding: 0 1rem; /* Additional padding for nested content */
+}
+
+.markdown-content p {
+    margin-bottom: 1.5em; /* Increased space between paragraphs */
 }
 
 .markdown-content h1, .markdown-content h2, .markdown-content h3, 
 .markdown-content h4, .markdown-content h5, .markdown-content h6 {
-    font-family: "Ubuntu Mono", monospace;
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    margin-top: 1.5em;
+    margin-bottom: 0.5em;
     color: #F5F5F5;
     margin-bottom: 1rem;
 }
 
 .markdown-content h1 {
-    font-size: 2rem;
+    font-size: 2.2rem;
 }
 
 .markdown-content h2 {
-    font-size: 1.75rem;
+    font-size: 1.9rem;
 }
 
 .markdown-content h3 {
-    font-size: 1.5rem;
+    font-size: 1.6rem;
 }
 
 .markdown-content img {
     max-width: 100%;
     height: auto;
 }
+
 /* code blocks */
 pre.markdown-content {
-    background-color: rgba(41, 82, 74, 0.2) !important;
+    background-color: rgba(5, 10, 9, 0.5) !important;
     border-radius: 5px;
     padding: 1em;
     margin: 1em 0;
@@ -263,20 +299,25 @@ pre.markdown-content code {
     background-color: transparent !important;
 }
 
+/* Ensure consistent styling for code spans */
 pre.markdown-content code span {
     font-family: "Ubuntu Mono", monospace;
 }
 
+/* Updated styles for all code elements */
 code {
-    background-color: rgba(41, 82, 74, 0.2);
-    border-radius: 3px;
-    padding: 0.1em 0.1em;
     font-family: "Ubuntu Mono", monospace;
     font-size: 0.9em;
+    background-color: rgba(5, 10, 9, 0.5);
+    border-radius: 3px;
+    padding: 0.2em 0.4em;
+    line-height: 1.4;
+    font-weight: 500;
     white-space: pre-wrap;
     word-wrap: break-word;
 }
 
+/* Specific styles for inline code */
 p > code,
 li > code,
 td > code {
@@ -285,19 +326,24 @@ td > code {
 }
 
 .post-date-time, time, #post-title, .post-list a {
-    font-family: "Noto Sans", sans-serif;
-    font-size: 1rem;
-    font-weight: bold;
+    font-family: "Epilogue SemiBold", sans-serif;
+    font-size: 2rem;
+    font-weight: 600;
     color: #F5F5F5;
     text-decoration: none;
     text-transform: lowercase;
+    align-items: center;
+    text-align: center;
+    display: flex;
+    flex-direction: column;
     margin-bottom: 0.5rem;
 }
 
 #post-title {
-    font-family: "Noto Sans", sans-serif;
+    font-family: "Epilogue SemiBold", sans-serif;
     font-size: 2rem;
-    margin-bottom: 0.3rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
     order: 1;
 }
 
@@ -328,7 +374,7 @@ td > code {
         min-height: 100vh;
         padding: 1rem;
         box-sizing: border-box;
-        background: rgba(41, 82, 74, 0.2);
+        background: rgba(5, 10, 9, 0.5);
         display: flex;
         flex-direction: column;
         align-items: center;
@@ -349,7 +395,7 @@ td > code {
 
     .category-item, .post-list a {
         font-size: 1.2rem;
-        font-family: "Noto Sans", sans-serif;
+        font-family: "Epilogue", sans-serif;
         text-transform: lowercase;
         align-items: center;
         text-align: center;
@@ -378,6 +424,10 @@ td > code {
         text-align: left;
     }
 
+    .markdown-content p {
+        margin-bottom: 1.5em; /* Increased space between paragraphs */
+    }
+
     pre.markdown-content {
         max-width: calc(100vw - 2rem);
     }
@@ -389,13 +439,13 @@ td > code {
 
     /* Center align list items */
     .post-list {
-        text-align: center;
+        align-items: center;
     }
 
     .post-list li {
         display: flex;
         flex-direction: column;
-        align-items: center;
+        text-align: center;
     }
 
     /* Center align category items */
@@ -427,7 +477,7 @@ td > code {
     align-self: flex-start;
     display: block;
     width: 100%;
-    text-align: left;
+    text-align: center;
 }
 
 #bottom-back-button:hover {
@@ -447,7 +497,9 @@ td > code {
 }
 
 #content-area[data-page-type="single"] #post-title {
+    font-family: "Epilogue SemiBold", sans-serif;
     font-size: 2rem;
+    font-weight: 600;
     color: #F5F5F5;
     margin-bottom: 0.5rem;
 }
@@ -461,16 +513,25 @@ td > code {
 
 #content-area[data-page-type="single"] .markdown-content {
     color: #F5F5F5;
-    font-family: "Ubuntu Mono", monospace;
+    font-family: "Epilogue", sans-serif;
     line-height: 1.6;
 }
 
 /* Code block styling for single posts */
 #content-area[data-page-type="single"] pre,
 #content-area[data-page-type="single"] code {
-    background-color: rgba(41, 82, 74, 0.2);
+    background-color: rgba(5, 10, 9, 0.5);
     border-radius: 5px;
     padding: 0.2em 0.4em;
+}
+
+/* Override padding for code blocks in single posts */
+#content-area[data-page-type="single"] pre {
+    padding: 1em;
+}
+
+#content-area[data-page-type="single"] pre code {
+    padding: 0;
 }
 
 #content-area[data-page-type="single"] pre {
@@ -482,27 +543,37 @@ td > code {
 #content-area[data-page-type="list"] {
     opacity: 1;
     transform: none;
+    align-items: center;
+    text-align: center;
 }
 
 #content-area[data-page-type="list"] #category-title {
     font-size: 2rem;
     color: #FF6666;
     margin-bottom: 1rem;
+    align-items: center;
+    text-align: center;
 }
 
 #content-area[data-page-type="list"] .post-list {
     list-style-type: none;
     padding: 0;
+    align-items: center;
+    text-align: center;
 }
 
 #content-area[data-page-type="list"] .post-list li {
     margin-bottom: 0.5rem;
+    align-items: center;
+    text-align: center;
 }
 
 #content-area[data-page-type="list"] .post-list a {
     font-size: 1.5rem;
     color: #F5F5F5;
     text-decoration: none;
+    align-items: center;
+    text-align: center;
 }
 
 #content-area[data-page-type="list"] .post-date {
@@ -521,4 +592,5 @@ td > code {
     color: #F5F5F5;
     cursor: pointer;
     margin-bottom: 1rem;
+    text-align: center;
 }

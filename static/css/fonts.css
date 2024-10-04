@@ -1,3 +1,30 @@
+/* Epilogue Regular */
+@font-face {
+    font-family: "Epilogue";
+    src: url('/fonts/static/Epilogue-Regular.ttf');
+    src: url('/fonts/static/Epilogue-Regular.ttf') format('truetype');
+    font-weight: normal;
+    font-style: normal;
+}
+
+/* Epilogue */
+@font-face {
+    font-family: "Epilogue SemiBold";
+    src: url('/fonts/static/Epilogue-SemiBold.ttf');
+    src: url('/fonts/static/Epilogue-SemiBold.ttf') format('truetype');
+    font-weight: 600;
+    font-style: normal;
+}
+
+/* Epilogue Bold */
+@font-face {
+    font-family: "Epilogue";
+    src: url('/fonts/static/Epilogue-Bold.ttf');
+    src: url('/fonts/static/Epilogue-Bold.ttf') format('truetype');
+    font-weight: 700;
+    font-style: normal;
+}
+
 /* Ubuntu Mono Regular */
 @font-face {
     font-family: "Ubuntu Mono";

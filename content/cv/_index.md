@@ -1,47 +1,59 @@
 ---
-title: ""
+title: "cv"
 date: 2023-11-16
-type: "cv"
-layout: "category"
+type: "post"
 ---
 
-- ## **tl;dr**
+- # **tl;dr**
 
+```bash
 all things security: OffSec, InfraSec, AppSec/ProdSec, CloudSec, etc. 
-i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career. 
+
+i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career.
+```
 
 - ## **experience**
 
-- #### [2024 - present]
+#### [2024 - present]
 ### **senior security engineer** @ [Numerator](https://www.numerator.com/)
 
+```bash
 focal point between SecOps, DevOps, IT, Platform, and Data teams.
 
 scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response. 
+```
 
-- #### [2021 - 2024]
+#### [2021 - 2024]
 ### **software security engineer + researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
 
+```bash
 investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.
 
 lots of deep research and red teaming (offensive security), specifically around database security, to build up **threat intelligence**. 
 
 built **sensors** based on collected intelligence (attacker + malware behaviour, OSINT, dark net markets, shadow channels, etc) to keep clients up-to-date and protected. 
+```
 
-- ### [2018 - 2021]
+### [2018 - 2021]
 ### **lead database developer** @ [Veryon](https://veryon.com/)
 
+```
 entry-level software + database development. 
 
 data warehousing, ETL, automations, etc. 
+```
 
 - ## **education**
 ### **bachelor of engineering** @ [Western U](https://www.eng.uwo.ca/)
 
-majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. graduated in 2018. 
+```bash
+majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. graduated in 2018.
+```
 
 
 - ## **languages**
+
+```bash
 english: native
 
 hindi: native
@@ -53,8 +65,11 @@ french: intermediate
 arabic: intermediate
 
 mandarin: rudimentary
+```
 
 - ## **interests**
+
+```bash
 homelab
 
 philosophy
@@ -66,9 +81,11 @@ photography
 dancing
 
 basketball
-
+```
 
 - ## **tech + skills**
+
+```bash
 **frontend**: React • Angular • Vue.js • JavaScript • TypeScript
 
 **backend**: Java • Python • C/C++/C# • Node.js • Ruby • Go • Ruby on Rails • .NET • Express.js • Flask • Django • Spring Boot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
@@ -91,3 +108,4 @@ NIST SP 800-53 • Vanta • GitHub Advanced Security (CodeQL) • JupiterOne
 **IAM + cryptography**: Okta • Auth0 • AD • AWS IAM • OAuth2.0 • OIDC • SAML • AES • RSA • ECC • SHA-256 • MD5 • OpenSSL
 
 **reverse engineering**: IDA Pro • Ghidra • Immunity Debugger • Decompilation • GDB • WinDBG • x64dbg • gdbExtract
+```

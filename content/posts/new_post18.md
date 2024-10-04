@@ -277,7 +277,7 @@ nebula-dc
 [nebula-dc.nebula.cosmos.local]: PS C:\Users\Administrator\Documents>
 ```
 
-i know have command execution on the domain controller.
+i now have command execution on the domain controller.
 
 ## target 6: forest domination
 
