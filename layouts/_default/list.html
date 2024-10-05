@@ -13,6 +13,7 @@
         <div class="post-list-container">
             {{ range .Pages.ByPublishDate.Reverse }}
             <div class="post-item">
+                <span class="post-date">{{ .Date.Format "Jan 2, 2006" }}</span>
                 <a href="{{ .Permalink }}">{{ .Title }}</a>
             </div>
             {{ end }}

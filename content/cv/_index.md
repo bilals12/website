@@ -4,108 +4,89 @@ date: 2023-11-16
 type: "post"
 ---
 
-- # **tl;dr**
+## **tl;dr**
 
-```bash
 all things security: OffSec, InfraSec, AppSec/ProdSec, CloudSec, etc. 
+i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career. 
 
-i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career.
-```
+- # **experience**
 
-- ## **experience**
+- ### [2024 - present]
+- #### **senior security engineer** @ [Numerator](https://www.numerator.com/)
 
-#### [2024 - present]
-### **senior security engineer** @ [Numerator](https://www.numerator.com/)
+- focal point between SecOps, DevOps, IT, Platform, and Data teams.
 
-```bash
-focal point between SecOps, DevOps, IT, Platform, and Data teams.
+- scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response. 
 
-scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response. 
-```
+- ### [2021 - 2024]
+- #### **software security engineer + researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
 
-#### [2021 - 2024]
-### **software security engineer + researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
+- investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.
 
-```bash
-investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.
+- lots of deep research and red teaming (offensive security), specifically around database security, to build up **threat intelligence**. 
 
-lots of deep research and red teaming (offensive security), specifically around database security, to build up **threat intelligence**. 
+- built **sensors** based on collected intelligence (attacker + malware behaviour, OSINT, dark net markets, shadow channels, etc) to keep clients up-to-date and protected. 
 
-built **sensors** based on collected intelligence (attacker + malware behaviour, OSINT, dark net markets, shadow channels, etc) to keep clients up-to-date and protected. 
-```
+- ### [2018 - 2021]
+- #### **lead database developer** @ [Veryon](https://veryon.com/)
 
-### [2018 - 2021]
-### **lead database developer** @ [Veryon](https://veryon.com/)
+- entry-level software + database development. 
 
-```
-entry-level software + database development. 
+- data warehousing, ETL, automations, etc. 
 
-data warehousing, ETL, automations, etc. 
-```
+- # **education**
+- ### **bachelor of engineering** @ [Western U](https://www.eng.uwo.ca/)
 
-- ## **education**
-### **bachelor of engineering** @ [Western U](https://www.eng.uwo.ca/)
-
-```bash
-majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. graduated in 2018.
-```
+- majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. graduated in 2018. 
 
 
-- ## **languages**
+- # **languages**
+- english: native
 
-```bash
-english: native
+- hindi: native
 
-hindi: native
+- urdu: native
 
-urdu: native
+- french: intermediate
 
-french: intermediate
+- arabic: intermediate
 
-arabic: intermediate
+- mandarin: rudimentary
 
-mandarin: rudimentary
-```
+- # **interests**
+- homelab
 
-- ## **interests**
+- philosophy
 
-```bash
-homelab
+- reading
 
-philosophy
+- photography
 
-reading
+- dancing
 
-photography
+- basketball
 
-dancing
 
-basketball
-```
+- # **tech + skills**
+- **frontend**: React • Angular • Vue.js • JavaScript • TypeScript
 
-- ## **tech + skills**
+- **backend**: Java • Python • C/C++/C# • Node.js • Ruby • Go • Ruby on Rails • .NET • Express.js • Flask • Django • Spring Boot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
 
-```bash
-**frontend**: React • Angular • Vue.js • JavaScript • TypeScript
+- **databases**: PostgreSQL • MySQL • MS SQL Server Oracle • MongoDB • Cassandra • Redis • Elasticsearch • Snowflake
 
-**backend**: Java • Python • C/C++/C# • Node.js • Ruby • Go • Ruby on Rails • .NET • Express.js • Flask • Django • Spring Boot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
+- **devops + infra**: AWS • Azure • Jenkins • GitLab CI • GitHub Actions • Docker • Kubernetes • OpenShift • Ansible • Terraform • Puppet • Chef
 
-**databases**: PostgreSQL • MySQL • MS SQL Server Oracle • MongoDB • Cassandra • Redis • Elasticsearch • Snowflake
+- **AI/ML + data**: TensorFlow • PyTorch • Pandas • NumPy • Matplotlib • Tableau • Deep Learning (RNN/CNN) • ETL
 
-**devops + infra**: AWS • Azure • Jenkins • GitLab CI • GitHub Actions • Docker • Kubernetes • OpenShift • Ansible • Terraform • Puppet • Chef
+- **insights**: Prometheus • Grafana • Datadog • ELK • Splunk • Git • Jira • Confluence
 
-**AI/ML + data**: TensorFlow • PyTorch • Pandas • NumPy • Matplotlib • Tableau • Deep Learning (RNN/CNN) • ETL
+- **penetration testing**: Metasploit • Burp Suite • nmap • Nessus • ZAP 
 
-**insights**: Prometheus • Grafana • Datadog • ELK • Splunk • Git • Jira • Confluence
+- **network security**: ASA/Palo Alto • Snort/Suricata• VPN • NAC • SSL/TLS • TCP/IP/UDP • SSH
 
-**penetration testing**: Metasploit • Burp Suite • nmap • Nessus • ZAP 
-
-**network security**: ASA/Palo Alto • Snort/Suricata• VPN • NAC • SSL/TLS • TCP/IP/UDP • SSH
-
-**application security**: Snyk • Semgrep • Socket • Burp Suite • OWASP Top 10 • CIS Controls •
+- **application security**: Snyk • Semgrep • Socket • Burp Suite • OWASP Top 10 • CIS Controls •
 NIST SP 800-53 • Vanta • GitHub Advanced Security (CodeQL) • JupiterOne
 
-**IAM + cryptography**: Okta • Auth0 • AD • AWS IAM • OAuth2.0 • OIDC • SAML • AES • RSA • ECC • SHA-256 • MD5 • OpenSSL
+- **IAM + cryptography**: Okta • Auth0 • AD • AWS IAM • OAuth2.0 • OIDC • SAML • AES • RSA • ECC • SHA-256 • MD5 • OpenSSL
 
-**reverse engineering**: IDA Pro • Ghidra • Immunity Debugger • Decompilation • GDB • WinDBG • x64dbg • gdbExtract
-```
+- **reverse engineering**: IDA Pro • Ghidra • Immunity Debugger • Decompilation • GDB • WinDBG • x64dbg • gdbExtract
