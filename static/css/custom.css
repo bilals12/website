@@ -535,6 +535,7 @@ td > code {
     color: #F5F5F5;
     font-family: 'Epilogue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
     line-height: 1.6;
+    align-items: center;
 }
 
 /* Code block styling for single posts */
