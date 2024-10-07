@@ -1,11 +1,13 @@
 ---
-title: "reading list [updated: september 28th, 2024]"
-date: 2024-09-28
+title: "reading list [updated]"
+date: 2024-10-07
 draft: false
 type: "post"
 ---
 
 ## **currently reading**
+
+[+] [topology of violence by byung chul han](https://mitpress.mit.edu/9780262534956/topology-of-violence/)
 
 [+] [blue fox: ARM assembly internals and reverse engineering by maria azeria markstedter](https://leg-assembly.com/)
 
