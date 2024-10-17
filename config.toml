@@ -141,10 +141,6 @@ disableHugoGeneratorInject = false
   [[params.socialIcons]]
     name = "linkedin"
     url = "https://www.linkedin.com/in/bilal-s-b857601a/"
-
-  [[params.socialIcons]]
-    name = "twitter"
-    url = "https://www.twitter.com/mescalinesun"
   
   [[params.socialIcons]]
     name = "github"
@@ -157,10 +153,6 @@ disableHugoGeneratorInject = false
   [[params.socialIcons]]
     name = "letterboxd"
     url = "https://letterboxd.com/mescalinesun/"
-
-  [[params.socialIcons]]
-    name = "leetcode"
-    url = "https://leetcode.com/0xME/"
 
 [languages]
   [languages.en.params]
