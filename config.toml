@@ -137,10 +137,6 @@ disableHugoGeneratorInject = false
   [[params.socialIcons]]
     name = "email"
     url  = "mailto:bilal.s12@protonmail.com"
-
-  [[params.socialIcons]]
-    name = "linkedin"
-    url = "https://www.linkedin.com/in/bilal-s-b857601a/"
   
   [[params.socialIcons]]
     name = "github"
