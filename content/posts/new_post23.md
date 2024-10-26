@@ -409,9 +409,9 @@ fn serialize_directories(
     minidump_header.StreamDirectoryRva = buf.len() as u32;
 ```
 
-Each directory entry maintains a stream type identifier, a location descriptor (offset and size), and the RVA to the actual stream data.
+each directory entry maintains a stream type identifier, a location descriptor (offset and size), and the RVA to the actual stream data.
 
-- RVA (Relative Virtual Address) implementation
+- # RVA (Relative Virtual Address) implementation
 
 the RVA system is fundamental to both PE files and minidump formats. our implementation uses generic types to provide type safety and proper pointer arithmetic.
 
