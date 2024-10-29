@@ -11,7 +11,13 @@ i'm also into reverse engineering, malware analysis/development, AI-boosted pent
 
 # **experience**
 
-### [2024 - present]
+## nov 2024 - present
+
+#### **staff security engineer** @ [Turo](https://turo.com/)
+
+head engineer for infrastructure security, detection + response, application security.
+
+## jul 2024 - nov 2024
 
 #### **senior security engineer** @ [Numerator](https://www.numerator.com/)
 
@@ -20,7 +26,7 @@ focal point between SecOps, DevOps, IT, Platform, and Data teams.
 scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response. 
 
 
-### [2021 - 2024]
+## dec 2021 - dec 2023
 
 #### **software security engineer + researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
 
@@ -35,7 +41,7 @@ built **sensors** based on collected intelligence (attacker + malware behaviour,
 c) to keep clients up-to-date and protected. 
 
 
-### [2018 - 2021]
+## jun 2018 - dec 2021
 
 #### **lead database developer** @ [Veryon](https://veryon.com/)
 
