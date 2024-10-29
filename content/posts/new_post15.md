@@ -11,9 +11,9 @@ this could probably benefit from being part of a series, so i'll keep the conten
 
 process hollowing, however, is quite well-documented. the inspiration behind this article and the code was [this](https://posts.specterops.io/lateral-movement-with-the-net-profiler-8772c86f9523) interesting piece by daniel mayer, where he uses the windows .NET profiler to pull over your payload and execute it. the offensive value is intriguing, and i'm sure we'll see more research in this area!
 
-### what exactly is process hollowing?
+# what exactly is process hollowing?
 
-#### **tl;dr**: 
+## **tl;dr**: 
 process hollowing (aka [RunPE](https://github.com/aaaddress1/RunPE-In-Memory)) is a method of process injection. what happens is original code + resources of a target process are replaced or removed, leaving behind bare process framework. the hollowed process becomes a host for injected malicious code, which is executed under the guise of a legit process. 
 
 the WinAPIs required for this are the usual suspects: `CreateProcess`, `NtUnmapViewOfSection`, `VirtualAllocEx`, `WriteProcessMemory`, `SetThreadContext`, `ResumeThread`. 
@@ -26,11 +26,11 @@ if the tactic hasn't been detected by this point, the attacker would then inject
 
 when process hollowing is successful, it should appear that a legitimate process is running. in reality, the process is executing the injected malicious code.
 
-### detecting process hollowing with Go
+# detecting process hollowing with Go
 
 i was preparing for an interview with ${company}, and the topic of writing detections in Go had come up. i hadn't really written much Go at this point, so i thought it would be fun to learn enough about the language to eventually use it to write detection scripts. 
 
-#### why Go, specifically?
+## why Go, specifically?
 
 Go is pretty well known for its performance and implementation of concurrency. process hollowing involves low-level operations on system processes, so being fast and efficient is crucial. the `goroutines` allow for concurrent operations, like monitoring/testing, without significant overhead (theoretically). 
 
@@ -40,7 +40,7 @@ a lesser known (to me) advantage of Go is that its statically typed nature and c
 
 i also had a lot of fun writing + testing the scripts, because of the memory safety of Go's design and smooth error handling.
 
-#### `endpoint`
+## `endpoint`
 
 ${company} discussed using a module called `endpoint`. essentially, it's a library that facilitates the creation and execution (and reporting) of security tests. it abstracts a lot of the complexities that would be involved when interacting with the system, and provided a consistent interface for performing and reporting on various operations.
 
@@ -58,7 +58,7 @@ some more functions include `AES256GCMEncrypt(data []byte) ([]byte, []byte, erro
 
 now, on to the tests!
 
-### **call stack spoofing via synthetic frames**
+# **call stack spoofing via synthetic frames**
 
 **call stack spoofing** is an attack where the call stack is manipulated to make it appear as if a function was called by legitimate code. used to hide the origin of suspicious API calls, it makes tracing malicious behaviour more difficult.
 
@@ -156,7 +156,7 @@ func cleanup() {
 }
 ```
 
-### **evasion via event tracing for windows patching**
+# **evasion via event tracing for windows patching**
 
 **ETW patching** is when the Event Tracing for Windows (ETW) is disabled/modified. ETW is a key feature in Windows, used to log + trace events within the OS. by patching ETW, security tools can be prevented from logging malicious activity and attackers can evade detection.
 
@@ -270,7 +270,7 @@ func cleanup() {
 }
 ```
 
-### **remote thread context manipulation**
+# **remote thread context manipulation**
 
 attackers can modify the execution context of a thread in a remote process, allowing them to execute arbitrary code within the process. this happens a lot with process injection attacks. 
 
@@ -373,7 +373,7 @@ func cleanup() {
 }
 ```
 
-### **suspicious windows NT API hooking**
+# **suspicious windows NT API hooking**
 
 **API hooking** is an attack where the behaviour of system APIs is intercepted and modified. by hooking APIs, attackers strive to alter the way system calls (syscalls) behave, usually to inject payloads or evade detection. hooking critical system APIs subverts normal system operations, and is used in a lot of attacks.
 
@@ -444,7 +444,7 @@ func cleanup() {
 }
 ```
 
-### **.NET COM object creation in non-standard windows script interpreter**
+# **.NET COM object creation in non-standard windows script interpreter**
 
 attackers can create .NET COM objects from within non-standard script interpreters (like VBScript) to execute arbitrary Win32 APIs. scripting languages can be used to execute .NET code and used to achieve similar ends as a more conventional binary payload, which is easily detected. 
 
@@ -530,7 +530,7 @@ func cleanup() {
 }
 ```
 
-### **potential browser exploit via fake RPC messages**
+# **potential browser exploit via fake RPC messages**
 
 this is an attack where specially crafted RPC (Remote Procedure Call) messages are sent to exploit vulnerabilities in web browsers. this can be used to bypass CFG (Control Flow Guard) mitigations, which prevent execution of arbitrary code.
 
@@ -607,7 +607,7 @@ func cleanup() {
 }
 ```
 
-### **suspicious API from an unsigned service DLL**
+# **suspicious API from an unsigned service DLL**
 
 here, the attacker loads a malicious, unsigned DLL into a service process like `svchost.exe` (a critical system process), then uses that DLL to execute suspicious APIs. this is often used to maintain persistence or for privilege escalation.
 
@@ -690,7 +690,7 @@ func cleanup() {
 }
 ```
 
-### **suspicious kernel mode address manipulation**
+# **suspicious kernel mode address manipulation**
 
 attackers try to modify memory in the kernel space from a user mode process, which is an obvious attempt at privilege escalation. manipulating kernel memory can allow attackers to gain **complete control** over the system.
 

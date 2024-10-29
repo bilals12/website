@@ -4,6 +4,7 @@ const colors = {
     "whiteSmoke": "#F5F5F5",
     "darkRed": "#8B0000",
     "lightRed": "#FF4500",
+    "complementary": "#006666"
 }
 
 let arcSize = 150;

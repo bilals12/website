@@ -8,9 +8,9 @@ type: "post"
 imagine if your computer kept a journal. a journal not merely consisting of poetic silicon muses, but moment-by-moment accounts of all its inner workings. these journals exist, and they're called **minidumps**. minidumps are compact snapshots of a computer's memory, and they capture the essence of what's happening inside your machine at any given moment.
 
 
-- ![bluescreenview](/bluescreenview.gif)
+![bluescreenview](/bluescreenview.gif)
 
-- ![bluescreenview](/bluescreenview2.gif)
+![bluescreenview](/bluescreenview2.gif)
 
 
 to the unitiated (or uninterested), minidumps would just look like cryptic glyphs, with maybe a vague understanding that these glyphs represent something "important". indeed, minidumps are extremely valuable, and at the heart of a hidden conflict inside the digital world: they're prized by software engineers hunting elusive bugs, revered by security/forensics experts trying to track down phantoms, and eyed warily by the very security systems designed to protect your computer.
@@ -19,7 +19,7 @@ think of your computer as if it were a bustling city, with programs + data zippi
 
 here's where it gets interesting. just as a city might restrict where cameras can be placed, to protect residents' privacy, your computer has security systems that keep an eye on who's taking these memory snapshots and why. it's a delicate balance between the need for insight and the demand for security.
 
-- # AV/EDR
+# AV/EDR
 
 most of us have had experience use AV (**antivirus**) tools in the past. EDR (**endpoint detection + response**) systems are an extension of traditional AVs, in that they have a heightened level of access to the underlying OS and, in some cases, even the kernel. i won't bore you too much with how exactly EDRs work, but there are some important points to remember:
 
@@ -30,9 +30,9 @@ most of us have had experience use AV (**antivirus**) tools in the past. EDR (**
 3. EDRs provide **continuous, real-time monitoring** of endpoints and their activites.
 
 
-- # AV/EDR + minidumps
+# AV/EDR + minidumps
 
-- ![edrminidump](/edrminidump.png)
+![edrminidump](/edrminidump.png)
 
 creating minidumps that won't trigger native security systems is of paramount importance to EDRs. to do this, many EDRs (and even some AVs) use **custom minidumpers** to capture specific memory regions of interest when a suspicious event occurs. 
 
@@ -40,7 +40,7 @@ take the crudely illustrated example above. the entire process is enclosed withi
 
 as you can see, this is a cyclical process: continuous monitoring feeds back into the minidump creation, and so on. but how exactly do EDRs achieve this?
 
-- # custom minidumpers
+# custom minidumpers
 
 EDRs have a vested interest in monitoring + controlling minidump creation. since minidumps contain snapshots of process memory, EDRs need to be able to prevent unauthorized data extraction, credential harvesting (like dumping `lsass.exe`), and attacks like process injection. this is done by EDRs leveraging **custom minidumpers**. ironically, attackers use **custom minidumpers** to evade detection and make reverse engineering malware more convoluted, but more on that later.
 
@@ -58,7 +58,7 @@ let's look at **memory forensics**, for example. custom minidumpers are used to 
 
 if you haven't already guessed, i'm going to be creating my own custom minidumper to see if i can exploit some EDR blindspots! now, let's dive into some technical details about minidumpers.
 
-- # minidumpers: the boring stuff
+# minidumpers: the boring stuff
 
 minidumps are typically stored as binary files with a structd format, often with the `.dmp` extension on Windows systems, and they contain a curated subset of the full process memory:
 
@@ -78,7 +78,7 @@ minidumps are typically stored as binary files with a structd format, often with
 
 8. system information.
 
-- # advanced minidump techniques
+# advanced minidump techniques
 
 advanced techniques for minidump creation go beyond standard API calls. the goal is to procure greater control, evasion capabilities, with full customization. let's take a look at some of them.
 
@@ -100,13 +100,13 @@ advanced techniques for minidump creation go beyond standard API calls. the goal
 
 as you might have guessed, there are many different ways of leveraging custom minidumpers to dump `lsass.exe`. for this project, however, i'm going to start with understanding + mapping the **portable executable**.
 
-- # PE: Portable Executable
+# PE: Portable Executable
 
 **PE** is a file format used in Windows for executables, object code, and **dynamic link libraries** (DLLs). simply put, it's the standard format for binary programs on Windows and is used by the OS to manage the **execution** of applications.
 
 when a **process** is created (a kernel-level operation), the creation of the PE is the second step, following the initialization of the address space. before i get into how the PE is created, let's take a look at what it consists of.
 
-- # ![PE](/PE.png)
+# ![PE](/PE.png)
 
 the PE file begins with an **MS-DOS header**, which includes a magic number (`MZ`) that identifies the file as a DOS executable. this header is primarily for backward compatibility and includes a pointer to the PE header.
 
@@ -120,29 +120,29 @@ the `.text` section contains the executable program code. the `.idata` section c
 
 finally, we have the `.reloc` section. since the PE binary is not "position-independent" (i.e., it won't work if moved from the intended location to a new location), `.reloc` tells the OS to translate memory addresses in the PE code if the PE has been moved (by adding/subtracting the offset from the memory address). 
 
-- # ![PE-sections](/PE-sections.png)
+# ![PE-sections](/PE-sections.png)
 
 - the section headers. you can see the **virtual address** and the **raw address** (the offset where the mapping starts).
 
-- # ![PE-sections-chars](/PE-sections-chars.png)
+# ![PE-sections-chars](/PE-sections-chars.png)
 
 - the characteristics breakdown of each section.
 
-- # ![PE-imports](/PE-imports.png)
+# ![PE-imports](/PE-imports.png)
 
 - the import directory. this PE imports from two libraries: `testlib.dll` and `KERNEL32.dll`. 
 
-- # ![PE-kernel32APIs](/PE-kernel32APIs.png)
+# ![PE-kernel32APIs](/PE-kernel32APIs.png)
 
 - the `KERNEL32.dll` contains all of the Windows APIs.
 
-- # ![PE-exports](/PE-exports.png)
+# ![PE-exports](/PE-exports.png)
 
 - the exports directory.
 
 by now you might be wondering: who cares? or, at the very least, why is the PE so important? and what does it have to do with creating custom minidumpers? i'm not going to answer the first question, and i think i've already answered the second question. so, i'm going to address the third question.
 
-- # PE + minidumpers
+# PE + minidumpers
 
 the PE format provides detailed information about the modules (**executables** + **DLLs**) loaded into a process's memory. this includes their base addresses, sizes, and sections. custom minidumpers need this information to capture the state of a process and its dependencies.
 
@@ -150,7 +150,7 @@ the PE also includes data directories that point to **export + import tables**. 
 
 custom minidumpers will also need the **debugging information** (symbol tables, line number data), **security analysis** (checksums, integrity), and everything else that the PE format provides. the PE format is a blueprint, so the logical first-step is to create a tool that parses + manipulates it. 
 
-- # mapping out the PE format...in Rust!
+# mapping out the PE format...in Rust!
 
 our custom minidumper starts with understanding + mapping out the the PE format. this is because we'll eventually be analyzing/manipulating Windows executables. we'll also be extracting specific information from the process's memory. then, we'll define custom structs that **mirror** the PE format, since we'll be serializing/deserializing data in a specific way.
 
@@ -168,7 +168,7 @@ by defining my own structs + parsing logic, we can tailor the minidump to includ
 
 a note on why i chose Rust: Rust's combination of performance, safety, and modernity  makes it an excellent choice for developing a custom minidumper. its ability to provide low-level control without sacrificing safety is advantageous in security-focused projects, where both performance + reliability are paramount. this project can now achieve high efficiency and robustness, making it a powerful tool offensive security.
 
-- # code
+# code
 
 ```rs
 

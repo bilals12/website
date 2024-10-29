@@ -22,6 +22,14 @@ body {
     transform: translateX(100%) translateZ(0);
     opacity: 0;
     will-change: transform, opacity;
+    width: 100%;
+    max-width: 100%;
+    box-sizing: border-box;
+    overflow-x: hidden; /* Prevent horizontal scroll */
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .category-item {
@@ -47,12 +55,17 @@ body {
     width: 100%;
     max-width: 800px; /* Adjust if needed */
     margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    text-align: center;
 }
 
 .post-list li {
     display: flex;
-    align-items: center;
-    justify-content: flex-start;
+    justify-content: center;
+    width: 100%;
+    max-width: 800px;
     margin-bottom: 1rem;
     text-align: left;
 }
@@ -109,6 +122,7 @@ body {
     margin-bottom: 0.5rem;
     align-self: flex-start;
     text-align: center;
+    width: 100%;
 }
 
 /* layout adjustments */
@@ -245,14 +259,17 @@ footer {
 
 /* markdown mods */
 .markdown-content {
-    max-width: 6500px;
+    max-width: 1000px; /* Increased from 800px */
     overflow-wrap: break-word;
     word-wrap: break-word;
     font-family: 'Epilogue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
-    font-size: 1.1rem; /* Slightly larger for better readability */
+    font-size: 1.1rem;
     color: #F5F5F5;
     margin: 0 auto;
-    padding: 0 1rem; /* Additional padding for nested content */
+    box-sizing: border-box;
+    width: 100%;
+    text-align: left;
+    padding: 0;  /* Removed padding */
 }
 
 .markdown-content p {
@@ -285,6 +302,8 @@ footer {
 .markdown-content img {
     max-width: 100%;
     height: auto;
+    display: block;
+    margin: 0 auto;
 }
 
 /* code blocks */
@@ -305,6 +324,7 @@ pre.markdown-content code {
     font-family: "Ubuntu Mono", monospace;
     font-size: 0.9em;
     background-color: transparent !important;
+    padding: 0;
 }
 
 /* Ensure consistent styling for code spans */
@@ -321,16 +341,17 @@ code {
     padding: 0.2em 0.4em;
     line-height: 1.4;
     font-weight: 500;
-    white-space: pre-wrap;
-    word-wrap: break-word;
+    display: inline-block;
 }
 
 /* Specific styles for inline code */
 p > code,
 li > code,
 td > code {
-    display: inline-block;
-    max-width: 100%;
+    display: inline;
+    white-space: normal;
+    word-wrap: break-word;
+    background-color: rgba(5, 10, 9, 0.5);
 }
 
 .post-date-time, time, #post-title, .post-list a {
@@ -483,6 +504,19 @@ td > code {
         margin: 0 auto;
         text-align: center;
     }
+
+    .markdown-content {
+        padding: 0 1rem;
+    }
+
+    #content-area[data-page-type="post"],
+    #content-area[data-page-type="photo"] {
+        padding: 0 1rem;
+    }
+
+    pre.markdown-content {
+        max-width: calc(100% - 2rem);
+    }
 }
 
 /* bottom Back button */
@@ -514,6 +548,9 @@ td > code {
 #content-area[data-page-type="single"] {
     opacity: 1;
     transform: none;
+    padding: 0;
+    max-width: 1000px;
+    margin: 0 auto;
 }
 
 #content-area[data-page-type="single"] #post-title {
@@ -536,6 +573,8 @@ td > code {
     font-family: 'Epilogue', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen-Sans, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif;
     line-height: 1.6;
     align-items: center;
+    text-align: left;
+    padding: 0;
 }
 
 /* Code block styling for single posts */
@@ -615,3 +654,123 @@ td > code {
     margin-bottom: 1rem;
     text-align: center;
 }
+
+/* Add specific handling for long screens using aspect ratio */
+@media (max-aspect-ratio: 1/1) {
+    #content-area[data-page-type="post"],
+    #content-area[data-page-type="photo"] {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 0 2rem;
+        box-sizing: border-box;
+        width: 100%;
+        overflow-x: hidden;
+    }
+
+    .markdown-content {
+        padding: 0 2rem;
+        max-width: calc(100% - 4rem);
+    }
+
+    pre.markdown-content {
+        max-width: calc(100% - 4rem);
+        overflow-x: auto;
+    }
+
+    /* Ensure code blocks and pre elements don't overflow */
+    pre, code {
+        max-width: 100%;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+    }
+}
+
+/* Mobile specific adjustments */
+@media (max-width: 768px) {
+    #landing-content {
+        padding: 1rem;
+    }
+
+    .markdown-content {
+        padding: 0 1rem;
+        max-width: calc(100% - 2rem);
+    }
+
+    #content-area[data-page-type="post"],
+    #content-area[data-page-type="photo"] {
+        padding: 0 1rem;
+    }
+
+    pre.markdown-content {
+        max-width: calc(100% - 2rem);
+    }
+    /* Ensure code blocks and pre elements don't overflow */
+    pre, code {
+        max-width: 100%;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        background-color: rgba(5, 10, 9, 0.5) !important;
+    }
+}
+
+/* Special handling for about/cv pages */
+#content-area[data-page-type="about"] .markdown-content,
+#content-area[data-page-type="cv"] .markdown-content {
+    text-align: center;
+}
+
+/* Comprehensive code block styling */
+pre, 
+.markdown-content pre,
+pre.markdown-content,
+[data-page-type="single"] pre,
+[data-page-type="post"] pre {
+    background-color: rgba(5, 10, 9, 0.5) !important;
+    border-radius: 5px;
+    padding: 1em;
+    margin: 1em 0;
+    overflow-x: auto;
+    width: 100%;
+    box-sizing: border-box;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    white-space: pre;
+}
+
+/* Code inside pre blocks */
+pre code,
+.markdown-content pre code,
+pre.markdown-content code,
+[data-page-type="single"] pre code,
+[data-page-type="post"] pre code {
+    background-color: transparent !important;
+    padding: 0;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 0.9em;
+    color: #F5F5F5;
+    display: inline-block;
+    width: 100%;
+}
+
+/* Inline code styling */
+:not(pre) > code,
+.markdown-content :not(pre) > code,
+[data-page-type="single"] :not(pre) > code,
+[data-page-type="post"] :not(pre) > code {
+    background-color: rgba(5, 10, 9, 0.5);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: "Ubuntu Mono", monospace;
+    font-size: 0.9em;
+    color: #F5F5F5;
+    display: inline;
+    white-space: normal;
+}
+
+/* Override for syntax highlighting */
+pre[class*="language-"],
+code[class*="language-"] {
+    background: none !important;
+    font-family: "Ubuntu Mono", monospace !important;
+}
+
+

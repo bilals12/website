@@ -7,7 +7,7 @@ type: "post"
 
 credential management in macOS is not dissimilar to that in Windows, but with some additional quirks. let's take a look at some of the ways they can be accessed, both legitimately and illegitimately.
 
-- # securityd
+ # securityd
 
 credentials are managed by the `securityd` process, and stored in the "keychain". `securityd` is a daemon (i.e. a background process) that maintains different security contexts and handles the various cryptographic operations in macOS. it manages access to the items in the keychain, as well as Security Authorizations.
 
@@ -29,10 +29,10 @@ SIP is enabled by default, but it can be disabled (or bypassed). to check its st
 
 for (legitimate) app developers, the method to get access to credentials is simple: prompts. however, this method isn't ideal for adversaries because it requires some level of elevated credentials. as always, we might be able to use this to our advantage. 
 
-- ![alt text](image-prompt.png)
+![alt text](image-prompt.png)
 
 
-- # credential acces via prompts
+# credential acces via prompts
 
 users have become increasingly trained to authenticate to any popup on their machine. this leads us to an obvious next-step: create custom popup messages to ask for authentication, and record the credentials entered. 
 
@@ -115,11 +115,11 @@ if (result !== null) {
 
 here it is in action.
 
-- ![prompted](/credential-prompt.png)
+![prompted](/credential-prompt.png)
 
-- ![recorded](/credential-recorded.png) 
+![recorded](/credential-recorded.png) 
 
-- ![revealed](/credential-revealed.png) 
+![revealed](/credential-revealed.png) 
 
 here's the full code if you want to try it yourself!
 
@@ -180,7 +180,7 @@ if (result !== null) {
 }
 ```
 
-- # credential access via chrome cookies
+# credential access via chrome cookies
 
 browser cookies are a highly valuable vector for attackers. cookies contain session identifiers that allow users to stay logged in, so if an attacker [steals them](https://eitca.org/cybersecurity/eitc-is-wasf-web-applications-security-fundamentals/session-attacks/cookie-and-session-attacks/examination-review-cookie-and-session-attacks/how-can-an-attacker-steal-a-users-cookies-using-a-http-get-request-embedded-in-an-image-source/), they can impersonate the user without needing credentials. 
 
@@ -378,7 +378,7 @@ if __name__ == "__main__":
     diagnose_database(cookie_path)
 ```
 
-- # credential access via authorization plugins
+# credential access via authorization plugins
 
 authorization plugins (located in `/Library/Security/SecurityAgentPlugins`) extend the authentication system in macOS by allowing custom authentication methods to be integrated into the standard login process. `securityd` works with these plugins to handle authentication requests, by communicating with `SecurityAgent`, which loads + uses these plugins.
 
@@ -657,13 +657,13 @@ OSStatus AuthorizationPluginCreate(
 
 opening the project in XCode, there are some housekeeping items to be performed first.
 
-- ![alt text](/plugin-info.png)
+![alt text](/plugin-info.png)
 
 the `info.plist` shows the high-level details of the plugin, including the bundle name and bundle identifier. we'll change this to be something a little more innocuous.
 
-- ![alt text](/plugin-name.png) 
+![alt text](/plugin-name.png) 
  
-- ![alt text](/plugin-bundleID.png)
+![alt text](/plugin-bundleID.png)
 
 note: the bundle name and identifier should match. 
 
@@ -746,7 +746,7 @@ when they log back in, the code will have executed and the password will be at `
 
 just some notes on this method, if you're experimenting: modifying the login process is quite risky, and potentially dangerous. if you're not sure what you're doing, you could prevent anybody from logging in (including yourself) via the login screen.
 
-- # credential access via ShadowHashData
+# credential access via ShadowHashData
 
 `ShadowHashData` is a mechanism in macOS used to store hashed password data for user accounts. it's stored as binary `.plist` files for each user account in `/var/db/dslocal/nodes/Default/users/`. 
 
@@ -783,7 +783,7 @@ you can now call functions inside this environment. for example, i want to get m
 Get_LocalUser({user:"bilal"})
 ```
 
-- ![alt text](/shadow.png)
+![alt text](/shadow.png)
 
 the output here is massive. i'm interested in `dsAttrTypeNative:ShadowHashData`, which manifests as a base64 blob. it's easier to save the output to a file, then `grep` it.
 

@@ -76,3 +76,33 @@ footer {
         -webkit-backdrop-filter: blur(5px);
     }
 }
+
+/* Base styles for code blocks - target both direct and dynamic loading */
+#landing-content pre,
+#content-area pre,
+#content-area[data-page-type="single"] pre {
+    background-color: rgba(5, 10, 9, 0.5);
+    border-radius: 5px;
+    padding: 1em;
+    margin: 1em 0;
+    overflow-x: auto;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Code inside pre blocks */
+#landing-content pre code,
+#content-area pre code,
+#content-area[data-page-type="single"] pre code {
+    background-color: transparent;
+}
+
+/* Inline code */
+#landing-content :not(pre) > code,
+#content-area :not(pre) > code,
+#content-area[data-page-type="single"] :not(pre) > code {
+    background-color: rgba(5, 10, 9, 0.5);
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    display: inline;
+}

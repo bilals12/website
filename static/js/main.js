@@ -77,7 +77,53 @@ document.addEventListener('DOMContentLoaded', function() {
         const urlPath = new URL(url, window.location.origin).pathname;
         const pageType = urlPath.includes('/about/') ? 'about' : 
                          urlPath.includes('/cv/') ? 'cv' : 
+                         urlPath.includes('/posts/') && !urlPath.endsWith('/posts/') ? 'post' :
+                         urlPath.includes('/photography/') && !urlPath.endsWith('/photography/') ? 'photo' :
                          'other';
+
+        // For about/cv/individual posts, update URL and load with proper styling
+        if (pageType === 'about' || pageType === 'cv' || pageType === 'post' || pageType === 'photo') {
+            // Update the URL without page reload
+            window.history.pushState({}, '', urlPath);
+            
+            const absoluteUrl = new URL(urlPath, window.location.origin).href;
+            fetch(absoluteUrl)
+                .then(response => response.text())
+                .then(html => {
+                    const parser = new DOMParser();
+                    const doc = parser.parseFromString(html, 'text/html');
+                    const newContent = doc.querySelector('#content-area');
+                    
+                    if (newContent) {
+                        // Preserve the original styling by keeping the structure
+                        contentArea.innerHTML = newContent.innerHTML;
+                        contentArea.style.transform = 'none';
+                        contentArea.style.opacity = '1';
+                        contentArea.setAttribute('data-page-type', pageType);
+                        
+                        // Apply the proper markdown styling
+                        const markdownContent = contentArea.querySelector('.markdown-content');
+                        if (markdownContent) {
+                            markdownContent.style.textAlign = pageType === 'about' || pageType === 'cv' ? 'center' : 'left';
+                        }
+                        
+                        backButton.style.display = 'inline-block';
+                        addAllLinkListeners();
+                        addBottomBackButton();
+                        previousUrl = absoluteUrl;
+                        isInCategoryList = false;
+                    } else {
+                        throw new Error('Content not found in loaded page');
+                    }
+                })
+                .catch(error => {
+                    contentArea.innerHTML = `<p>Error loading content. Please try again.</p>`;
+                    backButton.style.display = 'inline-block';
+                });
+            return;
+        }
+
+        // For category list pages (posts/ and photography/), keep the existing sliding animation
         hideContent(pageType);
         const absoluteUrl = new URL(urlPath, window.location.origin).href;
 
@@ -127,16 +173,15 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     function handleBackButtonClick() {
-        if (isInCategoryList) {
+        const pageType = contentArea.getAttribute('data-page-type');
+        if (pageType === 'about' || pageType === 'cv') {
             goToHomePage();
-        } else if (previousUrl) {
-            if (previousUrl.includes('/posts/')) {
-                loadContent('/posts/');
-            } else if (previousUrl.includes('/photography/')) {
-                loadContent('/photography/');
-            } else {
-                goToHomePage();
-            }
+        } else if (pageType === 'post') {
+            loadContent('/posts/');
+        } else if (pageType === 'photo') {
+            loadContent('/photography/');
+        } else if (isInCategoryList) {
+            goToHomePage();
         } else {
             goToHomePage();
         }
@@ -168,8 +213,15 @@ document.addEventListener('DOMContentLoaded', function() {
             if (isAnimating) return;
             const url = this.href;
             
-            console.log(`Loading category: ${url}`);
+            // For about/cv, hide categories immediately without animation
+            if (url.includes('/about/') || url.includes('/cv/')) {
+                categoriesContainer.style.display = 'none';
+                loadContent(url);
+                return;
+            }
 
+            // For other categories, keep existing animation
+            console.log(`Loading category: ${url}`);
             if (!url) {
                 console.error('URL is null or empty');
                 return;
@@ -202,15 +254,31 @@ document.addEventListener('DOMContentLoaded', function() {
     });
 
     function goToHomePage() {
-        hideContent();
-        backButton.style.display = 'none';
-        setTimeout(() => {
-            contentArea.innerHTML = '';
-            contentArea.setAttribute('data-page-type', 'home');
-            categoriesContainer.style.display = 'flex';
-            categoriesContainer.style.opacity = '1';
-            showContent();
-        }, 100);
+        if (contentArea.getAttribute('data-page-type') === 'about' || 
+            contentArea.getAttribute('data-page-type') === 'cv') {
+            // For about/cv pages, animate the transition back
+            hideContent();
+            backButton.style.display = 'none';
+            setTimeout(() => {
+                contentArea.innerHTML = '';
+                contentArea.setAttribute('data-page-type', 'home');
+                categoriesContainer.style.display = 'flex';
+                setTimeout(() => {
+                    categoriesContainer.style.opacity = '1';
+                }, 50);
+            }, 300);
+        } else {
+            // Original behavior for other pages
+            hideContent();
+            backButton.style.display = 'none';
+            setTimeout(() => {
+                contentArea.innerHTML = '';
+                contentArea.setAttribute('data-page-type', 'home');
+                categoriesContainer.style.display = 'flex';
+                categoriesContainer.style.opacity = '1';
+                showContent();
+            }, 100);
+        }
     }
 
     const pageType = contentArea.getAttribute('data-page-type');
