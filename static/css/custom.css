@@ -713,60 +713,130 @@ td > code {
     }
 }
 
+/* Markdown content structure */
+.markdown-content {
+    max-width: 1000px;
+    padding: 0 1rem;
+}
+
+/* Numbered lists styling */
+.markdown-content ol {
+    counter-reset: item;
+    list-style-type: none;
+    padding-left: 0;
+}
+
+.markdown-content ol li {
+    display: flex;
+    align-items: flex-start;
+    margin-bottom: 1rem;
+    padding-left: 3rem;
+    position: relative;
+}
+
+.markdown-content ol li:before {
+    content: counter(item) ".";
+    counter-increment: item;
+    position: absolute;
+    left: 0;
+    color: #F5F5F5;
+    font-weight: 600;
+    width: 2rem;
+    text-align: right;
+    margin-right: 1rem;
+}
+
+/* Headers styling */
+.markdown-content h1,
+.markdown-content h2 {
+    font-size: 2rem;
+    font-weight: 600;
+    margin: 2rem 0 1rem 0;
+    color: #F5F5F5;
+    text-align: left;
+}
+
+/* Regular text styling */
+.markdown-content p {
+    margin-bottom: 1.5rem;
+    line-height: 1.6;
+    color: #F5F5F5;
+}
+
+/* Add spacing after lists */
+.markdown-content ul,
+.markdown-content ol {
+    margin-bottom: 2rem;
+}
+
 /* Special handling for about/cv pages */
 #content-area[data-page-type="about"] .markdown-content,
 #content-area[data-page-type="cv"] .markdown-content {
     text-align: center;
 }
 
-/* Comprehensive code block styling */
-pre, 
+/* Most specific code block styling */
+#landing-content pre,
+#content-area pre,
+#content-area[data-page-type="single"] pre,
+#content-area[data-page-type="post"] pre,
 .markdown-content pre,
 pre.markdown-content,
-[data-page-type="single"] pre,
-[data-page-type="post"] pre {
+div[id="content-area"] pre {
     background-color: rgba(5, 10, 9, 0.5) !important;
-    border-radius: 5px;
-    padding: 1em;
-    margin: 1em 0;
-    overflow-x: auto;
-    width: 100%;
-    box-sizing: border-box;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    white-space: pre;
+    border-radius: 5px !important;
+    padding: 1em !important;
+    margin: 1em 0 !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border: 1px solid rgba(255, 255, 255, 0.1) !important;
+    white-space: pre !important;
+}
+
+/* Style all code elements */
+#landing-content code,
+#content-area code,
+#content-area[data-page-type="single"] code,
+#content-area[data-page-type="post"] code,
+.markdown-content code,
+pre.markdown-content code,
+div[id="content-area"] code {
+    font-family: "Ubuntu Mono", monospace !important;
+    font-size: 0.9em !important;
+    color: #F5F5F5 !important;
 }
 
 /* Code inside pre blocks */
-pre code,
+#landing-content pre code,
+#content-area pre code,
+#content-area[data-page-type="single"] pre code,
+#content-area[data-page-type="post"] pre code,
 .markdown-content pre code,
 pre.markdown-content code,
-[data-page-type="single"] pre code,
-[data-page-type="post"] pre code {
+div[id="content-area"] pre code {
     background-color: transparent !important;
-    padding: 0;
-    font-family: "Ubuntu Mono", monospace;
-    font-size: 0.9em;
-    color: #F5F5F5;
-    display: inline-block;
-    width: 100%;
+    padding: 0 !important;
+    display: inline-block !important;
+    width: 100% !important;
 }
 
-/* Inline code styling */
-:not(pre) > code,
+/* Inline code */
+#landing-content :not(pre) > code,
+#content-area :not(pre) > code,
+#content-area[data-page-type="single"] :not(pre) > code,
+#content-area[data-page-type="post"] :not(pre) > code,
 .markdown-content :not(pre) > code,
-[data-page-type="single"] :not(pre) > code,
-[data-page-type="post"] :not(pre) > code {
-    background-color: rgba(5, 10, 9, 0.5);
-    padding: 0.2em 0.4em;
-    border-radius: 3px;
-    font-family: "Ubuntu Mono", monospace;
-    font-size: 0.9em;
-    color: #F5F5F5;
-    display: inline;
-    white-space: normal;
+div[id="content-area"] :not(pre) > code {
+    background-color: rgba(5, 10, 9, 0.5) !important;
+    padding: 0.2em 0.4em !important;
+    border-radius: 3px !important;
+    display: inline !important;
+    white-space: normal !important;
 }
 
-/* Override for syntax highlighting */
+/* Override any syntax highlighting */
+[class*="language-"],
 pre[class*="language-"],
 code[class*="language-"] {
     background: none !important;

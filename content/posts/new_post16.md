@@ -11,7 +11,7 @@ type: "post"
 
 `LATRODECTUS` is a simple + efficient malware, that's part of a new trend in malware development, where the emphasis is on lightweight, direct-action tools. it contains only 11 command handlers, focused on tasks like enumeration + execution.
 
-## infection
+# infection
 
 infection typically begins with a spam email that points (via URL or PDF) to an oversized JavaScript dropper. 
 
@@ -22,7 +22,7 @@ this `.msi` file is responsible for executing `LATRODECTUS` on the target. when 
 when it's re-executed, the DLL establishes a connection back to the C2 server for further comms. 
 
 
-## stage 1: the [obfuscated] dropper
+# stage 1: the [obfuscated] dropper
 
 i grabbed the dropper from MalwareBazaar: `hxxps[://]bazaar[.]abuse[.]ch/sample/4ff60df7d165862e652f73752eb98cf92202a2d748b055ff1f99d4172fa4c92f/`
 
@@ -69,7 +69,7 @@ extract_code_lines(input_file, output_file)
 
 this script outputs to a cleaned-up file, which is the unobfuscated dropper.
 
-## stage 2: the [unobfuscated] dropper
+# stage 2: the [unobfuscated] dropper
 
 ```js
 
@@ -149,7 +149,7 @@ Orca (provided by the Windows SDK) can be used to analyze or edit `qual.msi`. he
 
 you could also use UniExtract to extract `qual.msi`. it will create the directory `LocalAppDataFolder\stat\falcon.dll`. i copied the DLL to a separate directory for analysis. this commences stage 3.
 
-## stage 3: `falcon.dll`
+# stage 3: `falcon.dll`
 
 this is a packed DLL that contains another DLL inside it, which is the main payload.
 
@@ -171,7 +171,7 @@ now, hit play until the first breakpoint (`VirtualAlloc ret`) is hit. take the `
 
 caution: hitting play again would execute the payload. so dump it first by following the address `140FDCD0000` in Memory Map then dump the memory to a file and save it. this commences stage 4.
 
-## stage 4: the payload
+# stage 4: the payload
 
 examine the generated `rundll32_00000140FDCD0000.bin` in IDA by going to Exports and selecting any of the entries to then open the decompiler. hit `run` at `180003CE4`, ordinal 3. enter the functions to check the hashes being declared and resolved to confirm that this is indeed the final payload.
 
@@ -854,7 +854,7 @@ __int64 mw_resolve_handle_apis()
 }
 ```
 
-## API pivoting
+# API pivoting
 
 the function `sub_180003868()` now has a lot more information than before. 
 
@@ -977,7 +977,7 @@ portions of malware code can be XOR-encrypted, and then decrypted on the fly whe
 
 string obfuscation is another effective tactic used by exploit devs, turning plaintext strings like APIs, URLs, file paths, and C2 server addresses into encrypted ones, so using a string extraction tool here won't help.
 
-## string decryption
+# string decryption
 
 let's come back to the function above with this new perspective.
 
@@ -1275,7 +1275,7 @@ the function then enters a loop that runs `decrypted_string_length` times, proce
 
 `current_encrypted_byte` is set to the byte at the current index `i` within the encrypted data. `xor_key` is updated using `increment_value` (altering the key for the next iteration). the byte at the current index of `decrypted_string` is first incremented by the value of `current_encrypted_byte` + 10. finally, the adjusted byte is XOR'd with the updated `xor_key`, completing the decryption for the byte. this result is stored in `decrypted_string` at the corresponding index.
 
-## automating the decryption
+# automating the decryption
 
 now that we know how the decryption/encryption works, automating the process to decrypt all the strings encrypted by the malware should be straightforward.
 
@@ -1452,11 +1452,11 @@ more decrypted strings. URLs like `https://scifimond.com/live/` and `https://dri
 
 decrypted strings show file paths + registry keys, like `C:\WINDOWS\SYSTEM32\rundll32.exe` and `\update_data.dat`. this suggests that the malware copies itself to a temporary location, exits the original location, and executes from the temporary location.
 
-## detecting the tactics + techniques used by `LATRODECTUS`
+# detecting the tactics + techniques used by `LATRODECTUS`
 
 this malware is a sophisticated loader, designed to deliver further payloads to compromised targets. it uses a multi-stage infection process that begins with a phishing email containing a link to a JavaScript dropper. the dropper connects to the C2 server to download a `.msi` file, which loads a packed DLL when executed. the unpacked DLL then performs activities like resolving critical APIs dynamically, decrypting encrypted strings, and executing commands for recon and persistence.
 
-### recap: dynamic API resolution + string decryption
+# recap: dynamic API resolution + string decryption
 
 when analyzing the decompilation, i identified several dynamic API resolutions where the hashes were used to resolve addresses of critical Windows Native APIs. 
 
@@ -1533,7 +1533,7 @@ func cleanup {
 
 the script detects the presence of unusually large script files being created + executed.
 
-### execution via suspicious WMI client
+# execution via suspicious WMI client
 
 `LATRODECTUS` uses WMI to execute processes in a suspicious manner, using parent processes like `mshta.exe`, `excel.exe`, and others. 
 
@@ -1591,7 +1591,7 @@ func test() {
 
 the script detects unusual WMI-based process executions when triggered by non-standard parent processes.
 
-### remote file execution via `MSIEXEC`
+# remote file execution via `MSIEXEC`
 
 `LATRODECTUS` abuses `msiexec.exe` to execute files hosted n remote WebDAV shares.
 
@@ -1641,7 +1641,7 @@ func test() {
 
 the script detects the use of `msiexec.exe` with remote URLs, which is uncommon. it simulates the downloading + execution of potentially malicious files.
 
-### `rundll32` or `regsvr32` loaded a DLL from unbacked memory
+# `rundll32` or `regsvr32` loaded a DLL from unbacked memory
 
 `LATRODECTUS` loads DLLs from unbacked memory regions, using `rundll32.exe` or `regsvr32.exe`. these are commonly abused in DLL side-loading attacks.
 
@@ -1693,7 +1693,7 @@ func test() {
 
 the script detects this advanced evasion technique, where the malware tries to execute code from regions in memory that are not tied to any known executable image. 
 
-### network module loaded from suspicious unbacked memory
+# network module loaded from suspicious unbacked memory
 
 the malware's network modules are sometimes loaded from memory regions that aren't backed by any known executable.
 
@@ -1755,7 +1755,7 @@ func test() {
 
 the script detects network-based behaviours of the malware, like unusual memory execution patterns. it can be thought of as an extension of the previous script.
 
-### shellcode execution from low reputation module
+# shellcode execution from low reputation module
 
 `LATRODECTUS` can execute shellcode from modules that have low or unknown reputations. 
 
@@ -1812,7 +1812,7 @@ func cleanup() {
 
 the script detects shellcode execution that hides behind seemingly benign or low-profile components.
 
-### `VirtualProtect` API call from an unsigned DLL
+# `VirtualProtect` API call from an unsigned DLL
 
 `LATRODECTUS` uses unsigned DLLs to call `VirtualProtect`, used to change memory permissions in order to execute code. 
 
@@ -1874,7 +1874,7 @@ func cleanup() {
 
 the script detects the execution of unsigned DLLs that attemp to modify memory protections. this is a red-flag for many memory-based attacks.
 
-### scheduled task creation by an unusual process
+# scheduled task creation by an unusual process
 
 `LATRODECTUS` uses unusual processes, like script interpreters, to create scheduled tasks for persistence. 
 
@@ -1984,7 +1984,7 @@ func cleanup() {
 
 the script detects persistence methods like task creation that isn't linked to a typical system management process
 
-### potential self deletion of a running executable
+# potential self deletion of a running executable
 
 the malware can delete its own executable after execution, to evade post-infection forensic analysis.
 
@@ -2042,7 +2042,7 @@ func cleanup() {
 
 the script detects attempts to remove running executables from the disk. 
 
-### long-term/high-count of network connections by `rundll32`
+# long-term/high-count of network connections by `rundll32`
 
 `LATRODECTUS` uses `rundll32.exe` to create a high number of network connections [C2 comms or data exfiltration].
 
@@ -2101,7 +2101,7 @@ func test() {
 
 the script detects abnormal network activity associated with `rundll32.exe`, especially when the activity involves multiple connections to public IP addresses.
 
-### command shell activity started via `rundll32`
+# command shell activity started via `rundll32`
 
 `rundll32.exe` can be used to launch a command shell, that's then used to execute malicious commands.
 
@@ -2144,6 +2144,6 @@ func test() {
 
 the script detects suspicious usage of `rundll32.exe` to initiate command shells, which is uncommon but a potent method of executing further commands.
 
-## conclusion
+# conclusion
 
 after deep-diving into the code and reverse engineering the malware, i developed a series of Go scripts to detect the key behaviors `LATRODECTUS` exhibits. the process involved decrypting strings, analyzing how the malware resolves native APIs dynamically, and understanding its payload delivery mechanisms. with these insights, i was able to create detection methods that directly address the tactics used by this malware. the goal wasn’t just to stop it in its tracks but to make sure we’re catching every subtle move it makes. each script is a result of careful analysis, aimed at covering all the gaps this malware might exploit.

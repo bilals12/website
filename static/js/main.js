@@ -41,6 +41,27 @@ document.addEventListener('DOMContentLoaded', function() {
         const markdownElements = contentArea.querySelectorAll('p, h1, h2, h3, h4, h5, h6, ul, ol, blockquote, pre, code');
         markdownElements.forEach(el => {
             el.classList.add('markdown-content');
+            // Handle ordered lists specifically
+            if (el.tagName === 'OL') {
+                const items = el.querySelectorAll('li');
+                items.forEach(item => {
+                    // Preserve any existing content
+                    const content = item.innerHTML;
+                    item.innerHTML = content;
+                });
+            }
+        });
+
+        // Add specific handling for code blocks
+        const codeBlocks = contentArea.querySelectorAll('pre, code');
+        codeBlocks.forEach(block => {
+            if (block.tagName === 'PRE') {
+                block.style.backgroundColor = 'rgba(5, 10, 9, 0.5)';
+            }
+            const codeElements = block.querySelectorAll('code');
+            codeElements.forEach(code => {
+                code.style.fontFamily = '"Ubuntu Mono", monospace';
+            });
         });
 
         // style post lists
