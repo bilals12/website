@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>wireshark on ༧</title>
-    <link>/tags/wireshark/</link>
-    <description>Recent content in wireshark on ༧</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
-    <lastBuildDate>Wed, 27 Oct 2021 16:16:04 +0400</lastBuildDate>
-    <atom:link href="/tags/wireshark/index.xml" rel="self" type="application/rss+xml" />
+    <title>Wireshark on ༧</title>
+    <link>//localhost:1313/tags/wireshark/</link>
+    <description>Recent content in Wireshark on ༧</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
+    <lastBuildDate>Sat, 10 Aug 2024 14:47:31 -0500</lastBuildDate>
+    <atom:link href="//localhost:1313/tags/wireshark/index.xml" rel="self" type="application/rss+xml" />
     <item>
       <title>tryhackme: overpass2</title>
-      <link>/posts/2021/10/tryhackme-overpass2/</link>
+      <link>//localhost:1313/posts/overpass2/</link>
       <pubDate>Wed, 27 Oct 2021 16:16:04 +0400</pubDate>
-      <guid>/posts/2021/10/tryhackme-overpass2/</guid>
-      <description>i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.
-this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.</description>
+      <guid>//localhost:1313/posts/overpass2/</guid>
+      <description>&lt;p&gt;i&amp;rsquo;m going to talk about one of my favourite rooms on thm, and that is overpass 2. overpass 2 is the 7th room in the &amp;ldquo;advanced exploitation&amp;rdquo; chapter, of the &amp;ldquo;offensive pentesting&amp;rdquo; path. it&amp;rsquo;s also the 2nd room in the overpass series, which is about a bunch of computer science students trying to run a company called &amp;ldquo;overpass&amp;rdquo;.&lt;/p&gt;&#xA;&lt;p&gt;this room is interesting and different because the &amp;ldquo;target&amp;rdquo; in question has already been hacked, and it&amp;rsquo;s our job to figure out how and if we can use the information left behind by the attacker to get back into the overpass network.&lt;/p&gt;</description>
     </item>
   </channel>
 </rss>

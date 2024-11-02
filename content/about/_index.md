@@ -1,7 +1,6 @@
 ---
-title: "about"
-date: 2021-02-15T00:11:16-05:00
-type: "post"
+type: about
+layout: single
 ---
 
 i'm bilal.
@@ -11,3 +10,5 @@ i'm a security engineer, researcher, and penetration tester, with a background i
 a few years ago, i had the idea of creating this website, in honour of the internet of yesteryear. efforts to carve out personalized corners of the vast web capitulated to the forces of centralized and aggregated feeds, and we lost a good deal of ourselves in the process. i hope this place can provide the information, knowledge, and inspiration you seek.
 
 thanks for coming!
+
+![salmon](/IMG_5040.JPG)

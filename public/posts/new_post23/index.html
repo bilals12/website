@@ -1,0 +1,1709 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="advanced evasions, part 2: implementing minidump structures">
+
+    
+        <title>advanced evasions, part 2: implementing minidump structures | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.6f40ec7b8baa6b4858deb6d2433606e0c74c60aa022d42f0d84457862cc005f3.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    advanced evasions, part 2: implementing minidump structures
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 25, 2024 &nbsp;&nbsp; m. jan 1, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+<aside class="toc" id="tableOfContentContainer">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#data-types">data types</a>
+      <ul>
+        <li><a href="#minidump_type"><code>MINIDUMP_TYPE</code></a></li>
+        <li><a href="#minidump_header"><code>MINIDUMP_HEADER</code></a></li>
+        <li><a href="#minidump_directory"><code>MINIDUMP_DIRECTORY</code></a></li>
+        <li><a href="#minidump_memory_descriptor"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></a></li>
+        <li><a href="#minidump_thread"><code>MINIDUMP_THREAD</code></a></li>
+        <li><a href="#minidump_module"><code>MINIDUMP_MODULE</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#data-serialization">data serialization</a></li>
+    <li><a href="#streams">streams</a></li>
+    <li><a href="#structure-design">structure design</a></li>
+    <li><a href="#module-state--pe-image-capture">module state + PE image capture</a></li>
+    <li><a href="#memory-range-capture-system">memory range capture system</a></li>
+    <li><a href="#memory-range-serialization">memory range serialization</a>
+      <ul>
+        <li><a href="#descriptor-phase">descriptor phase</a></li>
+        <li><a href="#content-phase">content phase</a></li>
+      </ul>
+    </li>
+    <li><a href="#system-information-capture">system information capture</a>
+      <ul>
+        <li><a href="#minidumpsysteminfor-directly-querying-registry"><code>MinidumpSystemInfoR</code>: directly querying registry</a></li>
+      </ul>
+    </li>
+    <li><a href="#directory-stream-management">directory stream management</a></li>
+    <li><a href="#rva-relative-virtual-address-implementation">RVA (Relative Virtual Address) implementation</a></li>
+    <li><a href="#memory-reading--validation">memory reading + validation</a>
+      <ul>
+        <li><a href="#reading-process-memory">reading process memory</a></li>
+        <li><a href="#validating-memory">validating memory</a></li>
+        <li><a href="#reading-validated-memory-regions">reading validated memory regions</a></li>
+      </ul>
+    </li>
+    <li><a href="#string-handling--unicode-support">string handling + unicode support</a></li>
+    <li><a href="#stream-directory-organization">stream directory organization</a></li>
+    <li><a href="#module-list-serialization">module list serialization</a></li>
+    <li><a href="#memory-list-organization">memory list organization</a></li>
+    <li><a href="#final-dump-assembly">final dump assembly</a></li>
+  </ul>
+</nav>
+</aside>
+
+
+<main><p><a href="https://www.bsssq.xyz/posts/2024/10/advanced-evasions-part-1-pe-maps-custom-minidumpers/"  target="_blank" rel="noreferrer nofollow">previously,</a>
+ we discussed/mapped all the fundamental Windows PE structures and parsing capabilities needed by every other component for our custom minidumper tool. in this part, we&rsquo;ll define the minidump format structures that build upon the PE definitions. following that, we&rsquo;ll learn how to implement the actual dumping logic using the types defined.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/minidumpstreams.png" alt="alt text"  />
+</p>
+</p>
+<h2 id="data-types">data types</h2>
+<p>in the context of minidumps, data types refer to the structured representations of various elements within the dump file. these types are defined to mirror the Windows minidump format specs. an example of this is the <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ne-minidumpapiset-minidump_type?redirectedfrom=MSDN"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_TYPE</code> enumeration</a>
+, aka <code>minidumpapiset.h</code>. this enum identifies the type of information written to the minidump file by the <a href="https://learn.microsoft.com/en-us/windows/desktop/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump"  target="_blank" rel="noreferrer nofollow"><code>MiniDumpWriteDump</code> function</a>
+.</p>
+<h3 id="minidump_type"><code>MINIDUMP_TYPE</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">_MINIDUMP_TYPE</span> {
+</span></span><span style="display:flex;"><span>  MiniDumpNormal <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithDataSegs <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000001</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000002</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithHandleData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000004</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000008</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpScanMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000010</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithUnloadedModules <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000020</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithIndirectlyReferencedMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000040</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterModulePaths <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000080</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithProcessThreadData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000100</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithPrivateReadWriteMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000200</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithoutOptionalData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000400</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullMemoryInfo <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000800</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithThreadInfo <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00001000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithCodeSegs <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00002000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithoutAuxiliaryState <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00004000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullAuxiliaryState <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00008000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithPrivateWriteCopyMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00010000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpIgnoreInaccessibleMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00020000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithTokenInformation <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00040000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithModuleHeaders <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00080000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterTriage <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00100000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithAvxXStateContext <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00200000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithIptTrace <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00400000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpScanInaccessiblePartialPages <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00800000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterWriteCombinedMemory,
+</span></span><span style="display:flex;"><span>  MiniDumpValidTypeFlags <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x01ffffff</span>
+</span></span><span style="display:flex;"><span>} MINIDUMP_TYPE;
+</span></span></code></pre></div><h3 id="minidump_header"><code>MINIDUMP_HEADER</code></h3>
+<p>the main header structure that appears at the beginning of every minidump file is <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_HEADER</code></a>
+. it contains the signature (<code>MINIDUMP_SIGNATURE = 0x504d444d</code> or &ldquo;MDMP&rdquo; in ascii), version, the number of streams, timestamp, and flags (seen above).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_HEADER</span> {
+</span></span><span style="display:flex;"><span>  ULONG32 Signature;
+</span></span><span style="display:flex;"><span>  ULONG32 Version;
+</span></span><span style="display:flex;"><span>  ULONG32 NumberOfStreams;
+</span></span><span style="display:flex;"><span>  RVA     StreamDirectoryRva;
+</span></span><span style="display:flex;"><span>  ULONG32 CheckSum;
+</span></span><span style="display:flex;"><span>  <span style="color:#ff79c6">union</span> {
+</span></span><span style="display:flex;"><span>    ULONG32 Reserved;
+</span></span><span style="display:flex;"><span>    ULONG32 TimeDateStamp;
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>  ULONG64 Flags;
+</span></span><span style="display:flex;"><span>} MINIDUMP_HEADER, <span style="color:#ff79c6">*</span>PMINIDUMP_HEADER;
+</span></span></code></pre></div><h3 id="minidump_directory"><code>MINIDUMP_DIRECTORY</code></h3>
+<p><a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_directory"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_DIRECTORY</code></a>
+ contains the information needed to access a specific data stream in a minidump file. it defines the location + type of each stream in the minidump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_DIRECTORY</span> {
+</span></span><span style="display:flex;"><span>  ULONG32                      StreamType;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR Location;
+</span></span><span style="display:flex;"><span>} MINIDUMP_DIRECTORY, <span style="color:#ff79c6">*</span>PMINIDUMP_DIRECTORY;
+</span></span></code></pre></div><h3 id="minidump_memory_descriptor"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></h3>
+<p>the <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_memory_descriptor"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></a>
+ defines a region (range) of memory in the minidump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_MEMORY_DESCRIPTOR</span> {
+</span></span><span style="display:flex;"><span>  ULONG64                      StartOfMemoryRange;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR Memory;
+</span></span><span style="display:flex;"><span>} MINIDUMP_MEMORY_DESCRIPTOR, <span style="color:#ff79c6">*</span>PMINIDUMP_MEMORY_DESCRIPTOR;
+</span></span></code></pre></div><h3 id="minidump_thread"><code>MINIDUMP_THREAD</code></h3>
+<p><code>MINIDUMP_THREAD</code> contains information about a thread, including its ID, stack information, and context.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_THREAD</span> {
+</span></span><span style="display:flex;"><span>  ULONG32                      ThreadId;
+</span></span><span style="display:flex;"><span>  ULONG32                      SuspendCount;
+</span></span><span style="display:flex;"><span>  ULONG32                      PriorityClass;
+</span></span><span style="display:flex;"><span>  ULONG32                      Priority;
+</span></span><span style="display:flex;"><span>  ULONG64                      Teb;
+</span></span><span style="display:flex;"><span>  MINIDUMP_MEMORY_DESCRIPTOR   Stack;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR ThreadContext;
+</span></span><span style="display:flex;"><span>} MINIDUMP_THREAD, <span style="color:#ff79c6">*</span>PMINIDUMP_THREAD;
+</span></span></code></pre></div><h3 id="minidump_module"><code>MINIDUMP_MODULE</code></h3>
+<p><code>MINIDUMP_MODULE</code> represents a loaded module (DLL or an EXE) in the process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_MODULE</span> {
+</span></span><span style="display:flex;"><span>  ULONG64                      BaseOfImage;
+</span></span><span style="display:flex;"><span>  ULONG32                      SizeOfImage;
+</span></span><span style="display:flex;"><span>  ULONG32                      CheckSum;
+</span></span><span style="display:flex;"><span>  ULONG32                      TimeDateStamp;
+</span></span><span style="display:flex;"><span>  RVA                          ModuleNameRva;
+</span></span><span style="display:flex;"><span>  VS_FIXEDFILEINFO             VersionInfo;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR CvRecord;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR MiscRecord;
+</span></span><span style="display:flex;"><span>  ULONG64                      Reserved0;
+</span></span><span style="display:flex;"><span>  ULONG64                      Reserved1;
+</span></span><span style="display:flex;"><span>} MINIDUMP_MODULE, <span style="color:#ff79c6">*</span>PMINIDUMP_MODULE;
+</span></span></code></pre></div><h2 id="data-serialization">data serialization</h2>
+<p>data serialization is the process of converting in-memory data structures into a format that can be written to disk or transmitted over a network. the minidump file itself is a container, which contains a number of typed &ldquo;streams&rdquo;, which contain some data according to its type attribute.</p>
+<p>minidumps preserve the endianness (little- or big-) of the platform they were generated on, since they contain lots of raw memory from the process. the serialization process must handle this to ensure cross-platform compatibility.</p>
+<p>some structures in the minidump format require specific alignment. serialization must account for this as well, by adding padding wherever necessary.</p>
+<p>since we&rsquo;re going to be writing this in rust, there needs to be type conversion between native rust types and the binary representation required by the minidump format.</p>
+<h2 id="streams">streams</h2>
+<p>streams are the core organizational units within a minidump file. each stream contains a specific type of data about the dumped process.</p>
+<p><strong>stream types</strong>, identified by a unique integer, basically describe the type of stream. for example:
+<code>3: ThreadListStream</code>, <code>4: ModuleListStream</code>, <code>5: MemoryListStream</code>, <code>6: ExceptionStream</code> or <code>7: SystemInfoStream</code>.</p>
+<p>the minidump file <a href="https://github.com/libyal/libmdmp/blob/main/documentation/Minidump%20%28MDMP%29%20format.asciidoc"  target="_blank" rel="noreferrer nofollow">contains a directory of streams</a>
+, allowing quick access to specific data without parsing the entire file.</p>
+<p>many streams follow a common &ldquo;List&rdquo; format, consisting of a count followed by an array of entries, like <code>MinidumpMemoryList</code> (maps the crashing program’s runtime addresses, such as <code>$rsp</code> to ranges of memory in the minidump), <code>MinidumpModuleList</code> (includes info on all the modules/libraries that were linked into the crashing program; this enables symbolication, as you can map instruction addresses back to offsets in a specific library’s binary), or <code>MinidumpThreadList</code> (includes the registers and stack memory of every thread in the program at the time of the crash; this enables generating backtraces for every thread).</p>
+<p>the minidump format also allows for custom stream types, enabling extensions to the format without breaking compatibility.</p>
+<p>to sum it up, we&rsquo;ll need to refine rust structures that accurately represent these different data types, implement serialization logic for each type, organize the captured data into appropriate streams, and create a stream directory that allows efficient access to each stream.</p>
+<h2 id="structure-design">structure design</h2>
+<p>recalling that the minidump format is a structured representation of process memory and state, our format begins with a header that Windows debugging engines use to validate and parse dump files.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpHeaderR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) signature: <span style="color:#8be9fd">u32</span>,      <span style="color:#6272a4">// &#39;MDMP&#39; (0x504d444d) in ASCII
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) version: <span style="color:#8be9fd">u32</span>,        <span style="color:#6272a4">// Format version identifier
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) number_of_streams: <span style="color:#8be9fd">u32</span>,  <span style="color:#6272a4">// Count of data streams
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) stream_directory_rva: <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_DIRECTORY<span style="color:#ff79c6">&gt;</span>,  <span style="color:#6272a4">// Pointer to stream listings
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) checksum: <span style="color:#8be9fd">u32</span>,       <span style="color:#6272a4">// Optional error checking value
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _time_date_stamp: <span style="color:#8be9fd">u32</span>,  <span style="color:#6272a4">// UNIX timestamp of dump creation
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) flags: <span style="color:#8be9fd">u64</span>,          <span style="color:#6272a4">// Dump content indicators
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) minidump_header_rva: <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> MINIDUMP_HEADER,  <span style="color:#6272a4">// Self-reference for validation
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the signature field contains &lsquo;MDMP&rsquo; in ASCII (<code>0x504d444d</code>), which debuggers use as a magic number to identify valid dump files. the version field indicates the minidump format version - our implementation uses version <code>0x0000000A</code>, corresponding to Windows 10 and later formats.</p>
+<p>when this header is serialized, it&rsquo;s written to the start of the dump file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span> MinidumpHeaderR {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> minidump_header <span style="color:#ff79c6">=</span> MINIDUMP_HEADER {
+</span></span><span style="display:flex;"><span>            Signature: <span style="color:#50fa7b">self</span>.signature,
+</span></span><span style="display:flex;"><span>            Version: <span style="color:#50fa7b">self</span>.version,
+</span></span><span style="display:flex;"><span>            NumberOfStreams: <span style="color:#50fa7b">self</span>.number_of_streams,
+</span></span><span style="display:flex;"><span>            StreamDirectoryRva: <span style="color:#50fa7b">self</span>.stream_directory_rva.<span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>            CheckSum: <span style="color:#50fa7b">self</span>.checksum,
+</span></span><span style="display:flex;"><span>            Anonymous: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>            Flags: <span style="color:#50fa7b">self</span>.flags,
+</span></span><span style="display:flex;"><span>        };
+</span></span></code></pre></div><h2 id="module-state--pe-image-capture">module state + PE image capture</h2>
+<p>the module capturing system records the state of loaded modules (DLLs and EXEs) in the target process. this involves more than just recording names and addresses - we&rsquo;ll need to capture the base address where the module is loaded, the size of the module in memory, the full module content from memory (might differ from disk), full path + name information, version, and debug data locations.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpModuleR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) base: <span style="color:#8be9fd">u64</span>,           <span style="color:#6272a4">// Module&#39;s base address in process space
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) size: <span style="color:#8be9fd">u64</span>,           <span style="color:#6272a4">// Size of loaded module
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) bytes: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,      <span style="color:#6272a4">// Actual module content from memory
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) name: <span style="color:#8be9fd;font-style:italic">String</span>,        <span style="color:#6272a4">// Module&#39;s full path
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_offset: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_MODULE<span style="color:#ff79c6">&gt;</span>,  <span style="color:#6272a4">// Location in dump file
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the module data is serialized through a complex process that preserves Windows PE format requirements:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_mod <span style="color:#ff79c6">=</span> MINIDUMP_MODULE {
+</span></span><span style="display:flex;"><span>        BaseOfImage: <span style="color:#50fa7b">self</span>.base,
+</span></span><span style="display:flex;"><span>        SizeOfImage: <span style="color:#50fa7b">self</span>.size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>        CheckSum: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        TimeDateStamp: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        ModuleNameRva: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        VersionInfo: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        CvRecord: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        MiscRecord: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        Reserved0: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        Reserved1: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>this serialization process writes the module information in a format that Windows debugging tools expect. the <code>ModuleNameRva</code> field is particularly important - it&rsquo;s fixed up after writing the name data:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_mod <span style="color:#ff79c6">=</span> self.start_offset.get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.name;
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// convert name to UTF-16 for Windows compatibility
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>        utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><h2 id="memory-range-capture-system">memory range capture system</h2>
+<p>the memory range system implements the actual process memory capture mechanism. this involves tracking both the virtual address space layout and the actual memory content.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpMemory64ListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _base_rva: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY_DESCRIPTOR64<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) memory_ranges: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>MinidumpMemoryDescriptor64R<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) list_ptr: <span style="color:#8be9fd;font-style:italic">Option</span><span style="color:#ff79c6">&lt;*</span><span style="color:#ff79c6">mut</span> MINIDUMP_MEMORY64_LIST<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>each memory range represents a contiguous block of memory in the process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpMemoryDescriptor64R</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_of_memory_range: <span style="color:#8be9fd">u64</span>,  <span style="color:#6272a4">// Virtual address in process
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) data_size: <span style="color:#8be9fd">u64</span>,              <span style="color:#6272a4">// Size of memory block
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) bytes: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,              <span style="color:#6272a4">// Actual memory content
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the memory capture process involves sophisticated filtering of memory regions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (mem_info.State <span style="color:#ff79c6">&amp;</span> MEM_COMMIT.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">==</span> MEM_COMMIT.<span style="color:#bd93f9">0</span> 
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Type <span style="color:#ff79c6">&amp;</span> MEM_MAPPED.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> MEM_MAPPED.<span style="color:#bd93f9">0</span> 
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&amp;&amp;</span> ((mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// region accepted for capture
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>this filtering ensures we&rsquo;ll only capture committed memory pages (i.e. those actually backing physical memory). it&rsquo;ll also skip memory-mapped files to avoid capturing disk content, and respect memory protection (skip inaccessible pages, avoid executable memory that might trigger security mechanisms and handle guard pages that can cause exceptions).</p>
+<p>when memory is read, we use <code>ReadProcessMemory</code> with careful error handling.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> res <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    ReadProcessMemory(
+</span></span><span style="display:flex;"><span>        h_target_proc,
+</span></span><span style="display:flex;"><span>        mem_info.BaseAddress <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> _,
+</span></span><span style="display:flex;"><span>        buffer.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _,
+</span></span><span style="display:flex;"><span>        mem_info.RegionSize,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> read),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h2 id="memory-range-serialization">memory range serialization</h2>
+<p>the memory range serialization process is complex because it must maintain proper alignment and ordering while handling variable-sized data. the process begins with the stream header.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> offset_start <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> number_of_ranges <span style="color:#ff79c6">=</span> self.memory_ranges.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> total_size <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">16</span> <span style="color:#ff79c6">+</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY_DESCRIPTOR64<span style="color:#ff79c6">&gt;</span>() <span style="color:#ff79c6">*</span> number_of_ranges;
+</span></span></code></pre></div><p>the size calculation (16 + descriptor size * range count) has to account for 8 bytes for <code>NumberOfMemoryRanges</code>, 8 bytes for <code>BaseRva</code>, and the size of each memory descriptor structure.</p>
+<p>the actual memory data is written sequentially after all descriptors.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> mem_dmp_start <span style="color:#ff79c6">=</span> offset_start <span style="color:#ff79c6">+</span> total_size;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> first_e <span style="color:#ff79c6">=</span> self.memory_ranges[<span style="color:#bd93f9">0</span>].get();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> minidump_mem_list <span style="color:#ff79c6">=</span> MINIDUMP_MEMORY64_LIST {
+</span></span><span style="display:flex;"><span>    NumberOfMemoryRanges: <span style="color:#50fa7b">number_of_ranges</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>    BaseRva: <span style="color:#50fa7b">mem_dmp_start</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>    MemoryRanges: [first_e; <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>this structure is critical because Windows debuggers use the <code>BaseRva</code> field to locate the actual memory contents. the memory ranges are written in two phases: descriptor and content.</p>
+<h3 id="descriptor-phase">descriptor phase</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">for</span> idx <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">1</span><span style="color:#ff79c6">..</span>self.memory_ranges.len() {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> mem <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self.memory_ranges[idx];
+</span></span><span style="display:flex;"><span>    mem.serialize(buf);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="content-phase">content phase</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#f1fa8c">&#34;Memory dmp start actually is </span><span style="color:#f1fa8c">{:#x}</span><span style="color:#f1fa8c">&#34;</span>, buf.len());
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> idx <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">0</span><span style="color:#ff79c6">..</span>self.memory_ranges.len() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> mem <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.memory_ranges[idx];
+</span></span><span style="display:flex;"><span>        buf.extend_from_slice(mem.bytes.as_slice());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>this two-phase approach ensures that all memory descriptors are contiguous in the file, followed by all memory contents, making the dump file efficiently parseable.</p>
+<h2 id="system-information-capture">system information capture</h2>
+<p>the system information capture process is more complex than simply querying API functions. to avoid detection and API hooks, we directly query the registry.</p>
+<h3 id="minidumpsysteminfor-directly-querying-registry"><code>MinidumpSystemInfoR</code>: directly querying registry</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpSystemInfoR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_architecture: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_level: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_revision: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) number_of_processors: <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) product_type: <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) major_version: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) minor_version: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) build_number: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) platform_id: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) csd_version_rva: <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_STRING<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// ... additional fields
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the version information is obtained through direct registry access.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get_likely_os_ver</span>() -&gt; <span style="color:#50fa7b">OSVERSIONINFOEXW</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> hkey <span style="color:#ff79c6">=</span> HKEY::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> ntstat <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>        RegOpenKeyExA(
+</span></span><span style="display:flex;"><span>            HKEY_LOCAL_MACHINE,
+</span></span><span style="display:flex;"><span>            PCSTR::from_raw(<span style="color:#f1fa8c">&#34;SOFTWARE</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">Microsoft</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">Windows NT</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">CurrentVersion</span><span style="color:#f1fa8c">\0</span><span style="color:#f1fa8c">&#34;</span>.as_ptr()),
+</span></span><span style="display:flex;"><span>            <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>            KEY_READ <span style="color:#ff79c6">|</span> KEY_QUERY_VALUE,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> hkey,
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>we read multiple values to construct accurate version information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> major_version <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> major_version_size <span style="color:#ff79c6">=</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u32</span><span style="color:#ff79c6">&gt;</span>();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> ntstat <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    RegQueryValueExA(
+</span></span><span style="display:flex;"><span>        hkey,
+</span></span><span style="display:flex;"><span>        PCSTR::from_raw(<span style="color:#f1fa8c">&#34;CurrentMajorVersionNumber</span><span style="color:#f1fa8c">\0</span><span style="color:#f1fa8c">&#34;</span>.as_ptr()),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">None</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> REG_DWORD),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> major_version <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">u32</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> major_version_size <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>this direct registry access approach serves several purposes. for one, it bypassess potential API hooks and gets the actual installed version. it also accesses additional version details that aren&rsquo;t available via standard APIs.</p>
+<h2 id="directory-stream-management">directory stream management</h2>
+<p>the directory stream system maintains the relationship between different data streams in the dump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpDirectoryListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) directory: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>MinidumpDirectoryR<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpDirectoryR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) stream_type: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _location: <span style="color:#50fa7b">MINIDUMP_LOCATION_DESCRIPTOR</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_offset: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_DIRECTORY<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>each directory entry points to a specific type of data in the dump. the stream types include:</p>
+<p><code>ModuleListStream (0x4)</code>: list of loaded modules</p>
+<p><code>Memory64ListStream (0x9)</code>: 64-bit memory ranges</p>
+<p><code>SystemInfoStream (0x7)</code>: system information</p>
+<p><code>ThreadListStream (0x3)</code>: thread information</p>
+<p>the directory serialization process maintains these relationships.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize_directories</span>(
+</span></span><span style="display:flex;"><span>    buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    header: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpHeaderR,
+</span></span><span style="display:flex;"><span>) -&gt; <span style="color:#50fa7b">MinidumpDirectoryListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> dirs <span style="color:#ff79c6">=</span> MinidumpDirectoryListR::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_header <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> <span style="color:#ff79c6">*</span>header.minidump_header_rva };
+</span></span><span style="display:flex;"><span>    minidump_header.StreamDirectoryRva <span style="color:#ff79c6">=</span> buf.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span></code></pre></div><p>each directory entry maintains a stream type identifier, a location descriptor (offset and size), and the RVA to the actual stream data.</p>
+<h2 id="rva-relative-virtual-address-implementation">RVA (Relative Virtual Address) implementation</h2>
+<p>the RVA system is fundamental to both PE files and minidump formats. our implementation uses generic types to provide type safety and proper pointer arithmetic.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[derive(Copy, Clone, Default)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[repr(transparent)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#ff79c6">?</span><span style="color:#8be9fd;font-style:italic">Sized</span><span style="color:#ff79c6">&gt;</span>(<span style="color:#ff79c6">pub</span> <span style="color:#8be9fd">u32</span>, <span style="color:#ff79c6">pub</span> core::marker::PhantomData<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[derive(Copy, Clone, Default)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[repr(transparent)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#ff79c6">?</span><span style="color:#8be9fd;font-style:italic">Sized</span><span style="color:#ff79c6">&gt;</span>(<span style="color:#ff79c6">pub</span> <span style="color:#8be9fd">u64</span>, <span style="color:#ff79c6">pub</span> core::marker::PhantomData<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span></code></pre></div><p>the <code>PhantomData</code> marker is crucial here - it provides type information without affecting the memory layout. this enables the compiler to enforce type safety when dereferencing RVAs. the implementation provides safe access methods.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> RVA32<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get</span>(<span style="color:#ff79c6">&amp;</span>self, base_address: <span style="color:#8be9fd">usize</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;*</span>((base_address <span style="color:#ff79c6">+</span> self.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>) <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> T) }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get_mut</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, base_address: <span style="color:#8be9fd">usize</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> T {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> <span style="color:#ff79c6">*</span>((base_address <span style="color:#ff79c6">+</span> self.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>) <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> T) }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>this system ensures that:</p>
+<ol>
+<li>
+<p>RVAs can only be dereferenced with the correct base address</p>
+</li>
+<li>
+<p>type information is preserved through the dereference operation</p>
+</li>
+<li>
+<p>mutable and immutable access is properly controlled</p>
+</li>
+<li>
+<p>memory alignment requirements are maintained</p>
+</li>
+</ol>
+<h2 id="memory-reading--validation">memory reading + validation</h2>
+<p>the actual process memory reading involves careful handling of Windows memory protection and state.</p>
+<h3 id="reading-process-memory">reading process memory</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">create_memory_desc64_list</span>(h_proc: <span style="color:#50fa7b">HPSS</span>, h_target_proc: <span style="color:#50fa7b">HANDLE</span>) -&gt; <span style="color:#50fa7b">MinidumpMemory64ListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> memory_desc64_list <span style="color:#ff79c6">=</span> MinidumpMemory64ListR::default();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">loop</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> mem_info <span style="color:#ff79c6">=</span> PSS_VA_SPACE_ENTRY::default();
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> memory_entry_slice <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>            std::slice::from_raw_parts_mut(
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> mem_info <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> PSS_VA_SPACE_ENTRY <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>                std::mem::size_of::<span style="color:#ff79c6">&lt;</span>PSS_VA_SPACE_ENTRY<span style="color:#ff79c6">&gt;</span>(),
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        };
+</span></span></code></pre></div><h3 id="validating-memory">validating memory</h3>
+<p>the memory validation process checks multiple attributes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (mem_info.State <span style="color:#ff79c6">&amp;</span> MEM_COMMIT.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">==</span> MEM_COMMIT.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>   (mem_info.Type <span style="color:#ff79c6">&amp;</span> MEM_MAPPED.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> MEM_MAPPED.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>   ((mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>    (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>    (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span></code></pre></div><p>each check serves a specific purpose:</p>
+<ul>
+<li>
+<p><code>MEM_COMMIT</code> ensures the page has physical storage allocated</p>
+</li>
+<li>
+<p><code>MEM_MAPPED</code> check avoids reading memory-mapped files</p>
+</li>
+<li>
+<p><code>PAGE_NOACCESS</code> check prevents access violations</p>
+</li>
+<li>
+<p><code>PAGE_EXECUTE</code> check avoids potential security triggers</p>
+</li>
+<li>
+<p><code>PAGE_GUARD</code> check prevents stack guard page exceptions</p>
+</li>
+</ul>
+<h3 id="reading-validated-memory-regions">reading validated memory regions</h3>
+<p>when reading validated memory regions</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> buffer: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::with_capacity(mem_info.RegionSize <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">for</span> _ <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">0</span><span style="color:#ff79c6">..</span>mem_info.RegionSize {
+</span></span><span style="display:flex;"><span>    buffer.push(<span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> read <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> res <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    ReadProcessMemory(
+</span></span><span style="display:flex;"><span>        h_target_proc,
+</span></span><span style="display:flex;"><span>        mem_info.BaseAddress <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> _,
+</span></span><span style="display:flex;"><span>        buffer.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _,
+</span></span><span style="display:flex;"><span>        mem_info.RegionSize,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> read),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>the reading process becomes:</p>
+<ol>
+<li>pre-allocate a buffer to avoid reallocations</li>
+<li>maintain proper alignment for the target memory</li>
+<li>track actual bytes read vs requested</li>
+<li>handle partial reads correctly</li>
+</ol>
+<h2 id="string-handling--unicode-support">string handling + unicode support</h2>
+<p>string handling in minidumps requires careful attention to Windows Unicode requirements.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.name;
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> target_name.trim_end_matches(<span style="color:#f1fa8c">&#39;\0&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>        utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>the <code>MINIDUMP_STRING</code> structure requires specific handling.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> minidump_str <span style="color:#ff79c6">=</span> MINIDUMP_STRING {
+</span></span><span style="display:flex;"><span>    Length: <span style="color:#50fa7b">target_len</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    Buffer: [<span style="color:#bd93f9">0</span>; <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>buf.extend_from_slice(<span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    std::slice::from_raw_parts(
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&amp;</span>minidump_str.Length <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> <span style="color:#8be9fd">u32</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>        std::mem::size_of::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u32</span><span style="color:#ff79c6">&gt;</span>(),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>now: string length is properly recorded, buffer is properly aligned, the format matches Windows debugger expectations, and Unicode strings are properly terminated.</p>
+<h2 id="stream-directory-organization">stream directory organization</h2>
+<p>the minidump format organizes data through a stream directory system. each stream represents a different type of process information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> dir_info <span style="color:#ff79c6">=</span> dir_info.directory
+</span></span><span style="display:flex;"><span>    .iter_mut()
+</span></span><span style="display:flex;"><span>    .find(<span style="color:#ff79c6">|</span>x<span style="color:#ff79c6">|</span> x.stream_type <span style="color:#ff79c6">==</span> ModuleListStream.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>)
+</span></span><span style="display:flex;"><span>    .unwrap();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> target_dir <span style="color:#ff79c6">=</span> dir_info
+</span></span><span style="display:flex;"><span>    .start_offset
+</span></span><span style="display:flex;"><span>    .get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _ <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span></code></pre></div><p>the stream directory maintains crucial offset information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>target_dir.Location.DataSize <span style="color:#ff79c6">=</span> module_list_size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span><span style="display:flex;"><span>target_dir.Location.Rva <span style="color:#ff79c6">=</span> current_offset <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span></code></pre></div><p>this organization serves several purposes:</p>
+<ul>
+<li>
+<p>allows random access to specific data types</p>
+</li>
+<li>
+<p>maintains proper alignment of all data</p>
+</li>
+<li>
+<p>enables stream size validation</p>
+</li>
+<li>
+<p>facilitates proper memory mapping when loaded by debuggers</p>
+</li>
+</ul>
+<h2 id="module-list-serialization">module list serialization</h2>
+<p>the module list stream requires careful ordering and alignment.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> current_offset <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> module_list_size <span style="color:#ff79c6">=</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MODULE<span style="color:#ff79c6">&gt;</span>() <span style="color:#ff79c6">*</span> 
+</span></span><span style="display:flex;"><span>                          self.modules.len() <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">4</span>;  <span style="color:#6272a4">// +4 for NumberOfModules
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> module_list <span style="color:#ff79c6">=</span> MINIDUMP_MODULE_LIST {
+</span></span><span style="display:flex;"><span>        NumberOfModules: <span style="color:#50fa7b">self</span>.modules.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>        Modules: [MINIDUMP_MODULE::default(); <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>the serialization process maintains crucial PE metadata:</p>
+<ul>
+<li>
+<p>base addresses of modules</p>
+</li>
+<li>
+<p>module sizes in memory</p>
+</li>
+<li>
+<p>module names and paths</p>
+</li>
+<li>
+<p>time stamps and checksums</p>
+</li>
+<li>
+<p>debug information references</p>
+</li>
+<li>
+<p>each module requires specific fixups:</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> module <span style="color:#ff79c6">in</span> <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self.modules {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> target_mod <span style="color:#ff79c6">=</span> module.start_offset.get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">// Module name handling
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>module.name;
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>            utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><h2 id="memory-list-organization">memory list organization</h2>
+<p>the memory list stream requires careful organization to maintain proper memory mapping capabilities.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> offset_start <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> mem_dmp_start <span style="color:#ff79c6">=</span> offset_start <span style="color:#ff79c6">+</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY64_LIST<span style="color:#ff79c6">&gt;</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_mem_list <span style="color:#ff79c6">=</span> MINIDUMP_MEMORY64_LIST {
+</span></span><span style="display:flex;"><span>        NumberOfMemoryRanges: <span style="color:#50fa7b">self</span>.memory_ranges.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>        BaseRva: <span style="color:#50fa7b">mem_dmp_start</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>        MemoryRanges: [self.memory_ranges[<span style="color:#bd93f9">0</span>].get(); <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>the memory organization process:</p>
+<ol>
+<li>
+<p>records the number of memory ranges</p>
+</li>
+<li>
+<p>calculates proper RVAs for memory content</p>
+</li>
+<li>
+<p>maintains proper alignment for all memory blocks</p>
+</li>
+<li>
+<p>preserves memory protection information</p>
+</li>
+<li>
+<p>orders memory ranges for efficient access</p>
+</li>
+</ol>
+<h2 id="final-dump-assembly">final dump assembly</h2>
+<p>now, the final dump assembly process brings all streams together.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">create_custom_minidump</span>(h_proc: <span style="color:#50fa7b">HPSS</span>) -&gt; <span style="color:#8be9fd;font-style:italic">Result</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, ()<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> clone_info <span style="color:#ff79c6">=</span> PSS_VA_CLONE_INFORMATION::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> header <span style="color:#ff79c6">=</span> create_header();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> sysinfo_stream <span style="color:#ff79c6">=</span> create_sysinfo_stream();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> module_list <span style="color:#ff79c6">=</span> create_module_list(h_proc, h_target_proc);
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> memory_desc64_list <span style="color:#ff79c6">=</span> create_memory_desc64_list(h_proc, h_target_proc);
+</span></span></code></pre></div><p>the assembly process follows a specific order:</p>
+<ol>
+<li>
+<p>header serialization</p>
+</li>
+<li>
+<p>directory creation</p>
+</li>
+<li>
+<p>system information stream</p>
+</li>
+<li>
+<p>module list stream</p>
+</li>
+<li>
+<p>memory descriptor list</p>
+</li>
+<li>
+<p>actual memory content</p>
+</li>
+</ol>
+<p>the ordering is crucial because the header must point to valid stream directories. the streams must also maintain proper RVA chains and the memory content must align with descriptors. and finally, all offsets must be calculable from the header.</p>
+<p>the final validation process includes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify header signature
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">if</span> header.signature <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">0x504d444d</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify stream count matches directory
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">if</span> header.number_of_streams <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">!=</span> dir_info.directory.len() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify memory range consistency
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">for</span> range <span style="color:#ff79c6">in</span> <span style="color:#ff79c6">&amp;</span>memory_desc64_list.memory_ranges {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> range.data_size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">!=</span> range.bytes.len() {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>now we can be sure that the dump file is properly formatted, all streams are correctly referenced, memory ranges are consistent, string data is properly encoded, and the dump can be loaded by Windows debuggers!</p>
+</main>
+
+
+    <br>
+    <hr>
+    
+      Next: <a href="//localhost:1313/posts/new_post21/">credential access in macOS</a>
+    
+
+
+
+
+<footer>
+  <div class="footer-nav">
+     
+    <a class="previous" href="/posts/new_post21/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script><!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="advanced evasions, part 2: implementing minidump structures">
+
+    
+        <title>advanced evasions, part 2: implementing minidump structures | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.6f40ec7b8baa6b4858deb6d2433606e0c74c60aa022d42f0d84457862cc005f3.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    advanced evasions, part 2: implementing minidump structures
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 25, 2024 &nbsp;&nbsp; m. jan 1, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+<aside class="toc" id="tableOfContentContainer">
+  <nav id="TableOfContents">
+  <ul>
+    <li><a href="#data-types">data types</a>
+      <ul>
+        <li><a href="#minidump_type"><code>MINIDUMP_TYPE</code></a></li>
+        <li><a href="#minidump_header"><code>MINIDUMP_HEADER</code></a></li>
+        <li><a href="#minidump_directory"><code>MINIDUMP_DIRECTORY</code></a></li>
+        <li><a href="#minidump_memory_descriptor"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></a></li>
+        <li><a href="#minidump_thread"><code>MINIDUMP_THREAD</code></a></li>
+        <li><a href="#minidump_module"><code>MINIDUMP_MODULE</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#data-serialization">data serialization</a></li>
+    <li><a href="#streams">streams</a></li>
+    <li><a href="#structure-design">structure design</a></li>
+    <li><a href="#module-state--pe-image-capture">module state + PE image capture</a></li>
+    <li><a href="#memory-range-capture-system">memory range capture system</a></li>
+    <li><a href="#memory-range-serialization">memory range serialization</a>
+      <ul>
+        <li><a href="#descriptor-phase">descriptor phase</a></li>
+        <li><a href="#content-phase">content phase</a></li>
+      </ul>
+    </li>
+    <li><a href="#system-information-capture">system information capture</a>
+      <ul>
+        <li><a href="#minidumpsysteminfor-directly-querying-registry"><code>MinidumpSystemInfoR</code>: directly querying registry</a></li>
+      </ul>
+    </li>
+    <li><a href="#directory-stream-management">directory stream management</a></li>
+    <li><a href="#rva-relative-virtual-address-implementation">RVA (Relative Virtual Address) implementation</a></li>
+    <li><a href="#memory-reading--validation">memory reading + validation</a>
+      <ul>
+        <li><a href="#reading-process-memory">reading process memory</a></li>
+        <li><a href="#validating-memory">validating memory</a></li>
+        <li><a href="#reading-validated-memory-regions">reading validated memory regions</a></li>
+      </ul>
+    </li>
+    <li><a href="#string-handling--unicode-support">string handling + unicode support</a></li>
+    <li><a href="#stream-directory-organization">stream directory organization</a></li>
+    <li><a href="#module-list-serialization">module list serialization</a></li>
+    <li><a href="#memory-list-organization">memory list organization</a></li>
+    <li><a href="#final-dump-assembly">final dump assembly</a></li>
+  </ul>
+</nav>
+</aside>
+
+
+<main><p><a href="https://www.bsssq.xyz/posts/2024/10/advanced-evasions-part-1-pe-maps-custom-minidumpers/"  target="_blank" rel="noreferrer nofollow">previously,</a>
+ we discussed/mapped all the fundamental Windows PE structures and parsing capabilities needed by every other component for our custom minidumper tool. in this part, we&rsquo;ll define the minidump format structures that build upon the PE definitions. following that, we&rsquo;ll learn how to implement the actual dumping logic using the types defined.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/minidumpstreams.png" alt="alt text"  />
+</p>
+</p>
+<h2 id="data-types">data types</h2>
+<p>in the context of minidumps, data types refer to the structured representations of various elements within the dump file. these types are defined to mirror the Windows minidump format specs. an example of this is the <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ne-minidumpapiset-minidump_type?redirectedfrom=MSDN"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_TYPE</code> enumeration</a>
+, aka <code>minidumpapiset.h</code>. this enum identifies the type of information written to the minidump file by the <a href="https://learn.microsoft.com/en-us/windows/desktop/api/minidumpapiset/nf-minidumpapiset-minidumpwritedump"  target="_blank" rel="noreferrer nofollow"><code>MiniDumpWriteDump</code> function</a>
+.</p>
+<h3 id="minidump_type"><code>MINIDUMP_TYPE</code></h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">enum</span> <span style="color:#50fa7b">_MINIDUMP_TYPE</span> {
+</span></span><span style="display:flex;"><span>  MiniDumpNormal <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithDataSegs <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000001</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000002</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithHandleData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000004</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000008</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpScanMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000010</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithUnloadedModules <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000020</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithIndirectlyReferencedMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000040</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterModulePaths <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000080</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithProcessThreadData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000100</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithPrivateReadWriteMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000200</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithoutOptionalData <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000400</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullMemoryInfo <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00000800</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithThreadInfo <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00001000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithCodeSegs <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00002000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithoutAuxiliaryState <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00004000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithFullAuxiliaryState <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00008000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithPrivateWriteCopyMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00010000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpIgnoreInaccessibleMemory <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00020000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithTokenInformation <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00040000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithModuleHeaders <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00080000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterTriage <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00100000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithAvxXStateContext <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00200000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpWithIptTrace <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00400000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpScanInaccessiblePartialPages <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x00800000</span>,
+</span></span><span style="display:flex;"><span>  MiniDumpFilterWriteCombinedMemory,
+</span></span><span style="display:flex;"><span>  MiniDumpValidTypeFlags <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0x01ffffff</span>
+</span></span><span style="display:flex;"><span>} MINIDUMP_TYPE;
+</span></span></code></pre></div><h3 id="minidump_header"><code>MINIDUMP_HEADER</code></h3>
+<p>the main header structure that appears at the beginning of every minidump file is <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_header"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_HEADER</code></a>
+. it contains the signature (<code>MINIDUMP_SIGNATURE = 0x504d444d</code> or &ldquo;MDMP&rdquo; in ascii), version, the number of streams, timestamp, and flags (seen above).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_HEADER</span> {
+</span></span><span style="display:flex;"><span>  ULONG32 Signature;
+</span></span><span style="display:flex;"><span>  ULONG32 Version;
+</span></span><span style="display:flex;"><span>  ULONG32 NumberOfStreams;
+</span></span><span style="display:flex;"><span>  RVA     StreamDirectoryRva;
+</span></span><span style="display:flex;"><span>  ULONG32 CheckSum;
+</span></span><span style="display:flex;"><span>  <span style="color:#ff79c6">union</span> {
+</span></span><span style="display:flex;"><span>    ULONG32 Reserved;
+</span></span><span style="display:flex;"><span>    ULONG32 TimeDateStamp;
+</span></span><span style="display:flex;"><span>  };
+</span></span><span style="display:flex;"><span>  ULONG64 Flags;
+</span></span><span style="display:flex;"><span>} MINIDUMP_HEADER, <span style="color:#ff79c6">*</span>PMINIDUMP_HEADER;
+</span></span></code></pre></div><h3 id="minidump_directory"><code>MINIDUMP_DIRECTORY</code></h3>
+<p><a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_directory"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_DIRECTORY</code></a>
+ contains the information needed to access a specific data stream in a minidump file. it defines the location + type of each stream in the minidump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_DIRECTORY</span> {
+</span></span><span style="display:flex;"><span>  ULONG32                      StreamType;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR Location;
+</span></span><span style="display:flex;"><span>} MINIDUMP_DIRECTORY, <span style="color:#ff79c6">*</span>PMINIDUMP_DIRECTORY;
+</span></span></code></pre></div><h3 id="minidump_memory_descriptor"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></h3>
+<p>the <a href="https://learn.microsoft.com/en-us/windows/win32/api/minidumpapiset/ns-minidumpapiset-minidump_memory_descriptor"  target="_blank" rel="noreferrer nofollow"><code>MINIDUMP_MEMORY_DESCRIPTOR</code></a>
+ defines a region (range) of memory in the minidump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_MEMORY_DESCRIPTOR</span> {
+</span></span><span style="display:flex;"><span>  ULONG64                      StartOfMemoryRange;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR Memory;
+</span></span><span style="display:flex;"><span>} MINIDUMP_MEMORY_DESCRIPTOR, <span style="color:#ff79c6">*</span>PMINIDUMP_MEMORY_DESCRIPTOR;
+</span></span></code></pre></div><h3 id="minidump_thread"><code>MINIDUMP_THREAD</code></h3>
+<p><code>MINIDUMP_THREAD</code> contains information about a thread, including its ID, stack information, and context.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_THREAD</span> {
+</span></span><span style="display:flex;"><span>  ULONG32                      ThreadId;
+</span></span><span style="display:flex;"><span>  ULONG32                      SuspendCount;
+</span></span><span style="display:flex;"><span>  ULONG32                      PriorityClass;
+</span></span><span style="display:flex;"><span>  ULONG32                      Priority;
+</span></span><span style="display:flex;"><span>  ULONG64                      Teb;
+</span></span><span style="display:flex;"><span>  MINIDUMP_MEMORY_DESCRIPTOR   Stack;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR ThreadContext;
+</span></span><span style="display:flex;"><span>} MINIDUMP_THREAD, <span style="color:#ff79c6">*</span>PMINIDUMP_THREAD;
+</span></span></code></pre></div><h3 id="minidump_module"><code>MINIDUMP_MODULE</code></h3>
+<p><code>MINIDUMP_MODULE</code> represents a loaded module (DLL or an EXE) in the process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-cpp" data-lang="cpp"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">typedef</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">_MINIDUMP_MODULE</span> {
+</span></span><span style="display:flex;"><span>  ULONG64                      BaseOfImage;
+</span></span><span style="display:flex;"><span>  ULONG32                      SizeOfImage;
+</span></span><span style="display:flex;"><span>  ULONG32                      CheckSum;
+</span></span><span style="display:flex;"><span>  ULONG32                      TimeDateStamp;
+</span></span><span style="display:flex;"><span>  RVA                          ModuleNameRva;
+</span></span><span style="display:flex;"><span>  VS_FIXEDFILEINFO             VersionInfo;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR CvRecord;
+</span></span><span style="display:flex;"><span>  MINIDUMP_LOCATION_DESCRIPTOR MiscRecord;
+</span></span><span style="display:flex;"><span>  ULONG64                      Reserved0;
+</span></span><span style="display:flex;"><span>  ULONG64                      Reserved1;
+</span></span><span style="display:flex;"><span>} MINIDUMP_MODULE, <span style="color:#ff79c6">*</span>PMINIDUMP_MODULE;
+</span></span></code></pre></div><h2 id="data-serialization">data serialization</h2>
+<p>data serialization is the process of converting in-memory data structures into a format that can be written to disk or transmitted over a network. the minidump file itself is a container, which contains a number of typed &ldquo;streams&rdquo;, which contain some data according to its type attribute.</p>
+<p>minidumps preserve the endianness (little- or big-) of the platform they were generated on, since they contain lots of raw memory from the process. the serialization process must handle this to ensure cross-platform compatibility.</p>
+<p>some structures in the minidump format require specific alignment. serialization must account for this as well, by adding padding wherever necessary.</p>
+<p>since we&rsquo;re going to be writing this in rust, there needs to be type conversion between native rust types and the binary representation required by the minidump format.</p>
+<h2 id="streams">streams</h2>
+<p>streams are the core organizational units within a minidump file. each stream contains a specific type of data about the dumped process.</p>
+<p><strong>stream types</strong>, identified by a unique integer, basically describe the type of stream. for example:
+<code>3: ThreadListStream</code>, <code>4: ModuleListStream</code>, <code>5: MemoryListStream</code>, <code>6: ExceptionStream</code> or <code>7: SystemInfoStream</code>.</p>
+<p>the minidump file <a href="https://github.com/libyal/libmdmp/blob/main/documentation/Minidump%20%28MDMP%29%20format.asciidoc"  target="_blank" rel="noreferrer nofollow">contains a directory of streams</a>
+, allowing quick access to specific data without parsing the entire file.</p>
+<p>many streams follow a common &ldquo;List&rdquo; format, consisting of a count followed by an array of entries, like <code>MinidumpMemoryList</code> (maps the crashing program’s runtime addresses, such as <code>$rsp</code> to ranges of memory in the minidump), <code>MinidumpModuleList</code> (includes info on all the modules/libraries that were linked into the crashing program; this enables symbolication, as you can map instruction addresses back to offsets in a specific library’s binary), or <code>MinidumpThreadList</code> (includes the registers and stack memory of every thread in the program at the time of the crash; this enables generating backtraces for every thread).</p>
+<p>the minidump format also allows for custom stream types, enabling extensions to the format without breaking compatibility.</p>
+<p>to sum it up, we&rsquo;ll need to refine rust structures that accurately represent these different data types, implement serialization logic for each type, organize the captured data into appropriate streams, and create a stream directory that allows efficient access to each stream.</p>
+<h2 id="structure-design">structure design</h2>
+<p>recalling that the minidump format is a structured representation of process memory and state, our format begins with a header that Windows debugging engines use to validate and parse dump files.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpHeaderR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) signature: <span style="color:#8be9fd">u32</span>,      <span style="color:#6272a4">// &#39;MDMP&#39; (0x504d444d) in ASCII
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) version: <span style="color:#8be9fd">u32</span>,        <span style="color:#6272a4">// Format version identifier
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) number_of_streams: <span style="color:#8be9fd">u32</span>,  <span style="color:#6272a4">// Count of data streams
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) stream_directory_rva: <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_DIRECTORY<span style="color:#ff79c6">&gt;</span>,  <span style="color:#6272a4">// Pointer to stream listings
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) checksum: <span style="color:#8be9fd">u32</span>,       <span style="color:#6272a4">// Optional error checking value
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _time_date_stamp: <span style="color:#8be9fd">u32</span>,  <span style="color:#6272a4">// UNIX timestamp of dump creation
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) flags: <span style="color:#8be9fd">u64</span>,          <span style="color:#6272a4">// Dump content indicators
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) minidump_header_rva: <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> MINIDUMP_HEADER,  <span style="color:#6272a4">// Self-reference for validation
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the signature field contains &lsquo;MDMP&rsquo; in ASCII (<code>0x504d444d</code>), which debuggers use as a magic number to identify valid dump files. the version field indicates the minidump format version - our implementation uses version <code>0x0000000A</code>, corresponding to Windows 10 and later formats.</p>
+<p>when this header is serialized, it&rsquo;s written to the start of the dump file.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span> MinidumpHeaderR {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> minidump_header <span style="color:#ff79c6">=</span> MINIDUMP_HEADER {
+</span></span><span style="display:flex;"><span>            Signature: <span style="color:#50fa7b">self</span>.signature,
+</span></span><span style="display:flex;"><span>            Version: <span style="color:#50fa7b">self</span>.version,
+</span></span><span style="display:flex;"><span>            NumberOfStreams: <span style="color:#50fa7b">self</span>.number_of_streams,
+</span></span><span style="display:flex;"><span>            StreamDirectoryRva: <span style="color:#50fa7b">self</span>.stream_directory_rva.<span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>            CheckSum: <span style="color:#50fa7b">self</span>.checksum,
+</span></span><span style="display:flex;"><span>            Anonymous: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>            Flags: <span style="color:#50fa7b">self</span>.flags,
+</span></span><span style="display:flex;"><span>        };
+</span></span></code></pre></div><h2 id="module-state--pe-image-capture">module state + PE image capture</h2>
+<p>the module capturing system records the state of loaded modules (DLLs and EXEs) in the target process. this involves more than just recording names and addresses - we&rsquo;ll need to capture the base address where the module is loaded, the size of the module in memory, the full module content from memory (might differ from disk), full path + name information, version, and debug data locations.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpModuleR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) base: <span style="color:#8be9fd">u64</span>,           <span style="color:#6272a4">// Module&#39;s base address in process space
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) size: <span style="color:#8be9fd">u64</span>,           <span style="color:#6272a4">// Size of loaded module
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) bytes: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,      <span style="color:#6272a4">// Actual module content from memory
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) name: <span style="color:#8be9fd;font-style:italic">String</span>,        <span style="color:#6272a4">// Module&#39;s full path
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_offset: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_MODULE<span style="color:#ff79c6">&gt;</span>,  <span style="color:#6272a4">// Location in dump file
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the module data is serialized through a complex process that preserves Windows PE format requirements:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_mod <span style="color:#ff79c6">=</span> MINIDUMP_MODULE {
+</span></span><span style="display:flex;"><span>        BaseOfImage: <span style="color:#50fa7b">self</span>.base,
+</span></span><span style="display:flex;"><span>        SizeOfImage: <span style="color:#50fa7b">self</span>.size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>        CheckSum: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        TimeDateStamp: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        ModuleNameRva: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        VersionInfo: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        CvRecord: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        MiscRecord: <span style="color:#8be9fd;font-style:italic">Default</span>::default(),
+</span></span><span style="display:flex;"><span>        Reserved0: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>        Reserved1: <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>this serialization process writes the module information in a format that Windows debugging tools expect. the <code>ModuleNameRva</code> field is particularly important - it&rsquo;s fixed up after writing the name data:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_mod <span style="color:#ff79c6">=</span> self.start_offset.get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.name;
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// convert name to UTF-16 for Windows compatibility
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>        utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><h2 id="memory-range-capture-system">memory range capture system</h2>
+<p>the memory range system implements the actual process memory capture mechanism. this involves tracking both the virtual address space layout and the actual memory content.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpMemory64ListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _base_rva: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY_DESCRIPTOR64<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) memory_ranges: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>MinidumpMemoryDescriptor64R<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) list_ptr: <span style="color:#8be9fd;font-style:italic">Option</span><span style="color:#ff79c6">&lt;*</span><span style="color:#ff79c6">mut</span> MINIDUMP_MEMORY64_LIST<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>each memory range represents a contiguous block of memory in the process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpMemoryDescriptor64R</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_of_memory_range: <span style="color:#8be9fd">u64</span>,  <span style="color:#6272a4">// Virtual address in process
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) data_size: <span style="color:#8be9fd">u64</span>,              <span style="color:#6272a4">// Size of memory block
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) bytes: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,              <span style="color:#6272a4">// Actual memory content
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the memory capture process involves sophisticated filtering of memory regions.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (mem_info.State <span style="color:#ff79c6">&amp;</span> MEM_COMMIT.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">==</span> MEM_COMMIT.<span style="color:#bd93f9">0</span> 
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Type <span style="color:#ff79c6">&amp;</span> MEM_MAPPED.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> MEM_MAPPED.<span style="color:#bd93f9">0</span> 
+</span></span><span style="display:flex;"><span>   <span style="color:#ff79c6">&amp;&amp;</span> ((mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>
+</span></span><span style="display:flex;"><span>       <span style="color:#ff79c6">&amp;&amp;</span> (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// region accepted for capture
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>this filtering ensures we&rsquo;ll only capture committed memory pages (i.e. those actually backing physical memory). it&rsquo;ll also skip memory-mapped files to avoid capturing disk content, and respect memory protection (skip inaccessible pages, avoid executable memory that might trigger security mechanisms and handle guard pages that can cause exceptions).</p>
+<p>when memory is read, we use <code>ReadProcessMemory</code> with careful error handling.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> res <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    ReadProcessMemory(
+</span></span><span style="display:flex;"><span>        h_target_proc,
+</span></span><span style="display:flex;"><span>        mem_info.BaseAddress <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> _,
+</span></span><span style="display:flex;"><span>        buffer.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _,
+</span></span><span style="display:flex;"><span>        mem_info.RegionSize,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> read),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><h2 id="memory-range-serialization">memory range serialization</h2>
+<p>the memory range serialization process is complex because it must maintain proper alignment and ordering while handling variable-sized data. the process begins with the stream header.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> offset_start <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> number_of_ranges <span style="color:#ff79c6">=</span> self.memory_ranges.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> total_size <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">16</span> <span style="color:#ff79c6">+</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY_DESCRIPTOR64<span style="color:#ff79c6">&gt;</span>() <span style="color:#ff79c6">*</span> number_of_ranges;
+</span></span></code></pre></div><p>the size calculation (16 + descriptor size * range count) has to account for 8 bytes for <code>NumberOfMemoryRanges</code>, 8 bytes for <code>BaseRva</code>, and the size of each memory descriptor structure.</p>
+<p>the actual memory data is written sequentially after all descriptors.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> mem_dmp_start <span style="color:#ff79c6">=</span> offset_start <span style="color:#ff79c6">+</span> total_size;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> first_e <span style="color:#ff79c6">=</span> self.memory_ranges[<span style="color:#bd93f9">0</span>].get();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> minidump_mem_list <span style="color:#ff79c6">=</span> MINIDUMP_MEMORY64_LIST {
+</span></span><span style="display:flex;"><span>    NumberOfMemoryRanges: <span style="color:#50fa7b">number_of_ranges</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>    BaseRva: <span style="color:#50fa7b">mem_dmp_start</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>    MemoryRanges: [first_e; <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>this structure is critical because Windows debuggers use the <code>BaseRva</code> field to locate the actual memory contents. the memory ranges are written in two phases: descriptor and content.</p>
+<h3 id="descriptor-phase">descriptor phase</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">for</span> idx <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">1</span><span style="color:#ff79c6">..</span>self.memory_ranges.len() {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> mem <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self.memory_ranges[idx];
+</span></span><span style="display:flex;"><span>    mem.serialize(buf);
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h3 id="content-phase">content phase</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    println!(<span style="color:#f1fa8c">&#34;Memory dmp start actually is </span><span style="color:#f1fa8c">{:#x}</span><span style="color:#f1fa8c">&#34;</span>, buf.len());
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> idx <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">0</span><span style="color:#ff79c6">..</span>self.memory_ranges.len() {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> mem <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.memory_ranges[idx];
+</span></span><span style="display:flex;"><span>        buf.extend_from_slice(mem.bytes.as_slice());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>this two-phase approach ensures that all memory descriptors are contiguous in the file, followed by all memory contents, making the dump file efficiently parseable.</p>
+<h2 id="system-information-capture">system information capture</h2>
+<p>the system information capture process is more complex than simply querying API functions. to avoid detection and API hooks, we directly query the registry.</p>
+<h3 id="minidumpsysteminfor-directly-querying-registry"><code>MinidumpSystemInfoR</code>: directly querying registry</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpSystemInfoR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_architecture: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_level: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) processor_revision: <span style="color:#8be9fd">u16</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) number_of_processors: <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) product_type: <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) major_version: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) minor_version: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) build_number: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) platform_id: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) csd_version_rva: <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_STRING<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4">// ... additional fields
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>}
+</span></span></code></pre></div><p>the version information is obtained through direct registry access.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get_likely_os_ver</span>() -&gt; <span style="color:#50fa7b">OSVERSIONINFOEXW</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> hkey <span style="color:#ff79c6">=</span> HKEY::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> ntstat <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>        RegOpenKeyExA(
+</span></span><span style="display:flex;"><span>            HKEY_LOCAL_MACHINE,
+</span></span><span style="display:flex;"><span>            PCSTR::from_raw(<span style="color:#f1fa8c">&#34;SOFTWARE</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">Microsoft</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">Windows NT</span><span style="color:#f1fa8c">\\</span><span style="color:#f1fa8c">CurrentVersion</span><span style="color:#f1fa8c">\0</span><span style="color:#f1fa8c">&#34;</span>.as_ptr()),
+</span></span><span style="display:flex;"><span>            <span style="color:#bd93f9">0</span>,
+</span></span><span style="display:flex;"><span>            KEY_READ <span style="color:#ff79c6">|</span> KEY_QUERY_VALUE,
+</span></span><span style="display:flex;"><span>            <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> hkey,
+</span></span><span style="display:flex;"><span>        )
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>we read multiple values to construct accurate version information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> major_version <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> major_version_size <span style="color:#ff79c6">=</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u32</span><span style="color:#ff79c6">&gt;</span>();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> ntstat <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    RegQueryValueExA(
+</span></span><span style="display:flex;"><span>        hkey,
+</span></span><span style="display:flex;"><span>        PCSTR::from_raw(<span style="color:#f1fa8c">&#34;CurrentMajorVersionNumber</span><span style="color:#f1fa8c">\0</span><span style="color:#f1fa8c">&#34;</span>.as_ptr()),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">None</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> REG_DWORD),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> major_version <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">u32</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _),
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> major_version_size <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>this direct registry access approach serves several purposes. for one, it bypassess potential API hooks and gets the actual installed version. it also accesses additional version details that aren&rsquo;t available via standard APIs.</p>
+<h2 id="directory-stream-management">directory stream management</h2>
+<p>the directory stream system maintains the relationship between different data streams in the dump.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpDirectoryListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) directory: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span>MinidumpDirectoryR<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">MinidumpDirectoryR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) stream_type: <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) _location: <span style="color:#50fa7b">MINIDUMP_LOCATION_DESCRIPTOR</span>,
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) start_offset: <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>MINIDUMP_DIRECTORY<span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>each directory entry points to a specific type of data in the dump. the stream types include:</p>
+<p><code>ModuleListStream (0x4)</code>: list of loaded modules</p>
+<p><code>Memory64ListStream (0x9)</code>: 64-bit memory ranges</p>
+<p><code>SystemInfoStream (0x7)</code>: system information</p>
+<p><code>ThreadListStream (0x3)</code>: thread information</p>
+<p>the directory serialization process maintains these relationships.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize_directories</span>(
+</span></span><span style="display:flex;"><span>    buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>,
+</span></span><span style="display:flex;"><span>    header: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpHeaderR,
+</span></span><span style="display:flex;"><span>) -&gt; <span style="color:#50fa7b">MinidumpDirectoryListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> dirs <span style="color:#ff79c6">=</span> MinidumpDirectoryListR::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_header <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> <span style="color:#ff79c6">*</span>header.minidump_header_rva };
+</span></span><span style="display:flex;"><span>    minidump_header.StreamDirectoryRva <span style="color:#ff79c6">=</span> buf.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span></code></pre></div><p>each directory entry maintains a stream type identifier, a location descriptor (offset and size), and the RVA to the actual stream data.</p>
+<h2 id="rva-relative-virtual-address-implementation">RVA (Relative Virtual Address) implementation</h2>
+<p>the RVA system is fundamental to both PE files and minidump formats. our implementation uses generic types to provide type safety and proper pointer arithmetic.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[derive(Copy, Clone, Default)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[repr(transparent)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">RVA32</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#ff79c6">?</span><span style="color:#8be9fd;font-style:italic">Sized</span><span style="color:#ff79c6">&gt;</span>(<span style="color:#ff79c6">pub</span> <span style="color:#8be9fd">u32</span>, <span style="color:#ff79c6">pub</span> core::marker::PhantomData<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[derive(Copy, Clone, Default)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">#[repr(transparent)]</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">struct</span> <span style="color:#50fa7b">RVA64</span><span style="color:#ff79c6">&lt;</span>T: <span style="color:#ff79c6">?</span><span style="color:#8be9fd;font-style:italic">Sized</span><span style="color:#ff79c6">&gt;</span>(<span style="color:#ff79c6">pub</span> <span style="color:#8be9fd">u64</span>, <span style="color:#ff79c6">pub</span> core::marker::PhantomData<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span>);
+</span></span></code></pre></div><p>the <code>PhantomData</code> marker is crucial here - it provides type information without affecting the memory layout. this enables the compiler to enforce type safety when dereferencing RVAs. the implementation provides safe access methods.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">impl</span><span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> RVA32<span style="color:#ff79c6">&lt;</span>T<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get</span>(<span style="color:#ff79c6">&amp;</span>self, base_address: <span style="color:#8be9fd">usize</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">T</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;*</span>((base_address <span style="color:#ff79c6">+</span> self.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>) <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> T) }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">get_mut</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, base_address: <span style="color:#8be9fd">usize</span>) -&gt; <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> T {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">unsafe</span> { <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> <span style="color:#ff79c6">*</span>((base_address <span style="color:#ff79c6">+</span> self.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>) <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> T) }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>this system ensures that:</p>
+<ol>
+<li>
+<p>RVAs can only be dereferenced with the correct base address</p>
+</li>
+<li>
+<p>type information is preserved through the dereference operation</p>
+</li>
+<li>
+<p>mutable and immutable access is properly controlled</p>
+</li>
+<li>
+<p>memory alignment requirements are maintained</p>
+</li>
+</ol>
+<h2 id="memory-reading--validation">memory reading + validation</h2>
+<p>the actual process memory reading involves careful handling of Windows memory protection and state.</p>
+<h3 id="reading-process-memory">reading process memory</h3>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">create_memory_desc64_list</span>(h_proc: <span style="color:#50fa7b">HPSS</span>, h_target_proc: <span style="color:#50fa7b">HANDLE</span>) -&gt; <span style="color:#50fa7b">MinidumpMemory64ListR</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> memory_desc64_list <span style="color:#ff79c6">=</span> MinidumpMemory64ListR::default();
+</span></span><span style="display:flex;"><span>    
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">loop</span> {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> mem_info <span style="color:#ff79c6">=</span> PSS_VA_SPACE_ENTRY::default();
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> memory_entry_slice <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>            std::slice::from_raw_parts_mut(
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> mem_info <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> PSS_VA_SPACE_ENTRY <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>                std::mem::size_of::<span style="color:#ff79c6">&lt;</span>PSS_VA_SPACE_ENTRY<span style="color:#ff79c6">&gt;</span>(),
+</span></span><span style="display:flex;"><span>            )
+</span></span><span style="display:flex;"><span>        };
+</span></span></code></pre></div><h3 id="validating-memory">validating memory</h3>
+<p>the memory validation process checks multiple attributes.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (mem_info.State <span style="color:#ff79c6">&amp;</span> MEM_COMMIT.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">==</span> MEM_COMMIT.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>   (mem_info.Type <span style="color:#ff79c6">&amp;</span> MEM_MAPPED.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> MEM_MAPPED.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>   ((mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_NOACCESS.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>    (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_EXECUTE.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">&amp;&amp;</span>
+</span></span><span style="display:flex;"><span>    (mem_info.Protect <span style="color:#ff79c6">&amp;</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>) <span style="color:#ff79c6">!=</span> PAGE_GUARD.<span style="color:#bd93f9">0</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span></code></pre></div><p>each check serves a specific purpose:</p>
+<ul>
+<li>
+<p><code>MEM_COMMIT</code> ensures the page has physical storage allocated</p>
+</li>
+<li>
+<p><code>MEM_MAPPED</code> check avoids reading memory-mapped files</p>
+</li>
+<li>
+<p><code>PAGE_NOACCESS</code> check prevents access violations</p>
+</li>
+<li>
+<p><code>PAGE_EXECUTE</code> check avoids potential security triggers</p>
+</li>
+<li>
+<p><code>PAGE_GUARD</code> check prevents stack guard page exceptions</p>
+</li>
+</ul>
+<h3 id="reading-validated-memory-regions">reading validated memory regions</h3>
+<p>when reading validated memory regions</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> buffer: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::with_capacity(mem_info.RegionSize <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">for</span> _ <span style="color:#ff79c6">in</span> <span style="color:#bd93f9">0</span><span style="color:#ff79c6">..</span>mem_info.RegionSize {
+</span></span><span style="display:flex;"><span>    buffer.push(<span style="color:#bd93f9">0</span>);
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> read <span style="color:#ff79c6">=</span> <span style="color:#bd93f9">0</span>;
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> res <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    ReadProcessMemory(
+</span></span><span style="display:flex;"><span>        h_target_proc,
+</span></span><span style="display:flex;"><span>        mem_info.BaseAddress <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> _,
+</span></span><span style="display:flex;"><span>        buffer.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _,
+</span></span><span style="display:flex;"><span>        mem_info.RegionSize,
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">Some</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> read),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>};
+</span></span></code></pre></div><p>the reading process becomes:</p>
+<ol>
+<li>pre-allocate a buffer to avoid reallocations</li>
+<li>maintain proper alignment for the target memory</li>
+<li>track actual bytes read vs requested</li>
+<li>handle partial reads correctly</li>
+</ol>
+<h2 id="string-handling--unicode-support">string handling + unicode support</h2>
+<p>string handling in minidumps requires careful attention to Windows Unicode requirements.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>self.name;
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> target_name.trim_end_matches(<span style="color:#f1fa8c">&#39;\0&#39;</span>);
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>        utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>    }
+</span></span></code></pre></div><p>the <code>MINIDUMP_STRING</code> structure requires specific handling.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> minidump_str <span style="color:#ff79c6">=</span> MINIDUMP_STRING {
+</span></span><span style="display:flex;"><span>    Length: <span style="color:#50fa7b">target_len</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>    Buffer: [<span style="color:#bd93f9">0</span>; <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>};
+</span></span><span style="display:flex;"><span>buf.extend_from_slice(<span style="color:#ff79c6">unsafe</span> {
+</span></span><span style="display:flex;"><span>    std::slice::from_raw_parts(
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&amp;</span>minidump_str.Length <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> <span style="color:#8be9fd">u32</span> <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">const</span> <span style="color:#8be9fd">u8</span>,
+</span></span><span style="display:flex;"><span>        std::mem::size_of::<span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u32</span><span style="color:#ff79c6">&gt;</span>(),
+</span></span><span style="display:flex;"><span>    )
+</span></span><span style="display:flex;"><span>});
+</span></span></code></pre></div><p>now: string length is properly recorded, buffer is properly aligned, the format matches Windows debugger expectations, and Unicode strings are properly terminated.</p>
+<h2 id="stream-directory-organization">stream directory organization</h2>
+<p>the minidump format organizes data through a stream directory system. each stream represents a different type of process information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> dir_info <span style="color:#ff79c6">=</span> dir_info.directory
+</span></span><span style="display:flex;"><span>    .iter_mut()
+</span></span><span style="display:flex;"><span>    .find(<span style="color:#ff79c6">|</span>x<span style="color:#ff79c6">|</span> x.stream_type <span style="color:#ff79c6">==</span> ModuleListStream.<span style="color:#bd93f9">0</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>)
+</span></span><span style="display:flex;"><span>    .unwrap();
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> target_dir <span style="color:#ff79c6">=</span> dir_info
+</span></span><span style="display:flex;"><span>    .start_offset
+</span></span><span style="display:flex;"><span>    .get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#ff79c6">*</span><span style="color:#ff79c6">mut</span> _ <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span></code></pre></div><p>the stream directory maintains crucial offset information.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>target_dir.Location.DataSize <span style="color:#ff79c6">=</span> module_list_size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span><span style="display:flex;"><span>target_dir.Location.Rva <span style="color:#ff79c6">=</span> current_offset <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>;
+</span></span></code></pre></div><p>this organization serves several purposes:</p>
+<ul>
+<li>
+<p>allows random access to specific data types</p>
+</li>
+<li>
+<p>maintains proper alignment of all data</p>
+</li>
+<li>
+<p>enables stream size validation</p>
+</li>
+<li>
+<p>facilitates proper memory mapping when loaded by debuggers</p>
+</li>
+</ul>
+<h2 id="module-list-serialization">module list serialization</h2>
+<p>the module list stream requires careful ordering and alignment.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> current_offset <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> module_list_size <span style="color:#ff79c6">=</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MODULE<span style="color:#ff79c6">&gt;</span>() <span style="color:#ff79c6">*</span> 
+</span></span><span style="display:flex;"><span>                          self.modules.len() <span style="color:#ff79c6">+</span> <span style="color:#bd93f9">4</span>;  <span style="color:#6272a4">// +4 for NumberOfModules
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> module_list <span style="color:#ff79c6">=</span> MINIDUMP_MODULE_LIST {
+</span></span><span style="display:flex;"><span>        NumberOfModules: <span style="color:#50fa7b">self</span>.modules.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u32</span>,
+</span></span><span style="display:flex;"><span>        Modules: [MINIDUMP_MODULE::default(); <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>the serialization process maintains crucial PE metadata:</p>
+<ul>
+<li>
+<p>base addresses of modules</p>
+</li>
+<li>
+<p>module sizes in memory</p>
+</li>
+<li>
+<p>module names and paths</p>
+</li>
+<li>
+<p>time stamps and checksums</p>
+</li>
+<li>
+<p>debug information references</p>
+</li>
+<li>
+<p>each module requires specific fixups:</p>
+</li>
+</ul>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">fixup</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>) {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">for</span> module <span style="color:#ff79c6">in</span> <span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self.modules {
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> target_mod <span style="color:#ff79c6">=</span> module.start_offset.get_mut(buf.as_mut_ptr() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span>);
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4">// Module name handling
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span>        <span style="color:#8be9fd;font-style:italic">let</span> target_name <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">&amp;</span>module.name;
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> utf16_buf: <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span> <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">Vec</span>::new();
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">for</span> c <span style="color:#ff79c6">in</span> target_name.encode_utf16() {
+</span></span><span style="display:flex;"><span>            utf16_buf.extend_from_slice(<span style="color:#ff79c6">&amp;</span>c.to_le_bytes());
+</span></span><span style="display:flex;"><span>        }
+</span></span></code></pre></div><h2 id="memory-list-organization">memory list organization</h2>
+<p>the memory list stream requires careful organization to maintain proper memory mapping capabilities.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span>(<span style="color:#ff79c6">crate</span>) <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">serialize</span>(<span style="color:#ff79c6">&amp;</span><span style="color:#ff79c6">mut</span> self, buf: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> <span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, dir_info: <span style="color:#ff79c6">&amp;</span><span style="color:#50fa7b">mut</span> MinidumpDirectoryListR) {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> offset_start <span style="color:#ff79c6">=</span> buf.len();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> mem_dmp_start <span style="color:#ff79c6">=</span> offset_start <span style="color:#ff79c6">+</span> std::mem::size_of::<span style="color:#ff79c6">&lt;</span>MINIDUMP_MEMORY64_LIST<span style="color:#ff79c6">&gt;</span>();
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> minidump_mem_list <span style="color:#ff79c6">=</span> MINIDUMP_MEMORY64_LIST {
+</span></span><span style="display:flex;"><span>        NumberOfMemoryRanges: <span style="color:#50fa7b">self</span>.memory_ranges.len() <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>        BaseRva: <span style="color:#50fa7b">mem_dmp_start</span> <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">u64</span>,
+</span></span><span style="display:flex;"><span>        MemoryRanges: [self.memory_ranges[<span style="color:#bd93f9">0</span>].get(); <span style="color:#bd93f9">1</span>],
+</span></span><span style="display:flex;"><span>    };
+</span></span></code></pre></div><p>the memory organization process:</p>
+<ol>
+<li>
+<p>records the number of memory ranges</p>
+</li>
+<li>
+<p>calculates proper RVAs for memory content</p>
+</li>
+<li>
+<p>maintains proper alignment for all memory blocks</p>
+</li>
+<li>
+<p>preserves memory protection information</p>
+</li>
+<li>
+<p>orders memory ranges for efficient access</p>
+</li>
+</ol>
+<h2 id="final-dump-assembly">final dump assembly</h2>
+<p>now, the final dump assembly process brings all streams together.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">pub</span> <span style="color:#ff79c6">fn</span> <span style="color:#50fa7b">create_custom_minidump</span>(h_proc: <span style="color:#50fa7b">HPSS</span>) -&gt; <span style="color:#8be9fd;font-style:italic">Result</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd;font-style:italic">Vec</span><span style="color:#ff79c6">&lt;</span><span style="color:#8be9fd">u8</span><span style="color:#ff79c6">&gt;</span>, ()<span style="color:#ff79c6">&gt;</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> clone_info <span style="color:#ff79c6">=</span> PSS_VA_CLONE_INFORMATION::default();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> header <span style="color:#ff79c6">=</span> create_header();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> sysinfo_stream <span style="color:#ff79c6">=</span> create_sysinfo_stream();
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> module_list <span style="color:#ff79c6">=</span> create_module_list(h_proc, h_target_proc);
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">let</span> <span style="color:#ff79c6">mut</span> memory_desc64_list <span style="color:#ff79c6">=</span> create_memory_desc64_list(h_proc, h_target_proc);
+</span></span></code></pre></div><p>the assembly process follows a specific order:</p>
+<ol>
+<li>
+<p>header serialization</p>
+</li>
+<li>
+<p>directory creation</p>
+</li>
+<li>
+<p>system information stream</p>
+</li>
+<li>
+<p>module list stream</p>
+</li>
+<li>
+<p>memory descriptor list</p>
+</li>
+<li>
+<p>actual memory content</p>
+</li>
+</ol>
+<p>the ordering is crucial because the header must point to valid stream directories. the streams must also maintain proper RVA chains and the memory content must align with descriptors. and finally, all offsets must be calculable from the header.</p>
+<p>the final validation process includes:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-rust" data-lang="rust"><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify header signature
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">if</span> header.signature <span style="color:#ff79c6">!=</span> <span style="color:#bd93f9">0x504d444d</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify stream count matches directory
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">if</span> header.number_of_streams <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">!=</span> dir_info.directory.len() {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4">// Verify memory range consistency
+</span></span></span><span style="display:flex;"><span><span style="color:#6272a4"></span><span style="color:#ff79c6">for</span> range <span style="color:#ff79c6">in</span> <span style="color:#ff79c6">&amp;</span>memory_desc64_list.memory_ranges {
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">if</span> range.data_size <span style="color:#ff79c6">as</span> <span style="color:#8be9fd">usize</span> <span style="color:#ff79c6">!=</span> range.bytes.len() {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">return</span> <span style="color:#8be9fd;font-style:italic">Err</span>(());
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><p>now we can be sure that the dump file is properly formatted, all streams are correctly referenced, memory ranges are consistent, string data is properly encoded, and the dump can be loaded by Windows debuggers!</p>
+</main>
+
+
+    <br>
+    <hr>
+    
+      Next: <a href="//localhost:1313/posts/new_post21/">credential access in macOS</a>
+    
+
+
+
+
+<footer>
+  <div class="footer-nav">
+     
+    <a class="previous" href="/posts/new_post21/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

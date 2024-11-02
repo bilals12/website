@@ -1,15 +1,43 @@
-{{ define "main" }}
-<div id="content-area" data-page-type="single">
-    <button id="back-button"></button>
-    <article id="post">
-        <h1 id="post-title">{{ .Title }}</h1>
-        <time datetime="{{ .Date.Format "2006-01-02T15:04:05Z07:00" }}" class="post-date-time">
-            {{ .Date.Format "Jan 2, 2006" }}
-        </time>
-        <div id="post-content" class="markdown-content">
-            {{ .Content }}
-        </div>
-    </article>
-    <div id="bottom-back-button-placeholder"></div>
+{{ partial "header.html" . }}
+
+{{ if not .Params.notitle }}
+<div id="single-header">
+  <h1>
+    {{ .Title | markdownify }}
+  </h1>
+  <div id="single-meta">
+    {{ if .Params.subtitle }}
+        <p id="subtitle">{{ .Params.subtitle }}</p>
+    {{ end }}
+    {{ if .Params.date }}
+        <span class="datesub">{{ .Date.Format "jan 2, 2006" }}{{ if .GitInfo }} &nbsp;&nbsp; m. {{
+            .Lastmod.Format "jan 2, 2006" }}{{ end }}</span>
+    {{ end }} {{ partial "tags.html" .}}
+  </div>
 </div>
+{{ else }}
+<div style="padding-bottom: 1px;"></div>
 {{ end }}
+
+<div class="content-container">
+  {{ if .Params.toc }}
+  <aside class="toc" id="tableOfContentContainer">
+    {{ .TableOfContents }}
+  </aside>
+  {{ end }}
+
+  <main>{{ .Content }}</main>
+</div>
+
+{{ if .Params.Next }}
+    <br>
+    <hr>
+    {{ with .PrevInSection }}
+      Next: <a href="{{ .Permalink }}">{{ .Title }}</a>
+    {{ end }}
+{{ end }}
+
+{{ if .Params.math }}
+    {{ partial "math.html" . }}
+{{ end }}
+{{ partial "footer.html" . }}

@@ -1,12 +1,19 @@
 <?xml version="1.0" encoding="utf-8" standalone="yes"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
-    <title>༧</title>
-    <link>/cv/</link>
-    <description>Recent content on ༧</description>
-    <generator>Hugo -- gohugo.io</generator>
-    <language>en</language>
+    <title>Cvs on ༧</title>
+    <link>//localhost:61668/cv/</link>
+    <description>Recent content in Cvs on ༧</description>
+    <generator>Hugo</generator>
+    <language>en-us</language>
     <lastBuildDate>Thu, 16 Nov 2023 00:00:00 +0000</lastBuildDate>
-    <atom:link href="/cv/index.xml" rel="self" type="application/rss+xml" />
+    <atom:link href="//localhost:61668/cv/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title></title>
+      <link>//localhost:61668/cv/cv/</link>
+      <pubDate>Thu, 16 Nov 2023 00:00:00 +0000</pubDate>
+      <guid>//localhost:61668/cv/cv/</guid>
+      <description>&lt;h2 id=&#34;tldr&#34;&gt;&lt;strong&gt;tl;dr&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;p&gt;all things security: OffSec, InfraSec, AppSec/ProdSec, CloudSec, etc.&#xA;i&amp;rsquo;m also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career.&lt;/p&gt;&#xA;&lt;h2 id=&#34;experience&#34;&gt;&lt;strong&gt;experience&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;h3 id=&#34;nov-2024---present&#34;&gt;nov 2024 - present&lt;/h3&gt;&#xA;&lt;p&gt;&lt;strong&gt;staff security engineer&lt;/strong&gt; @ &lt;a href=&#34;https://turo.com/&#34;  target=&#34;_blank&#34; rel=&#34;noreferrer nofollow&#34;&gt;Turo&lt;/a&gt;&#xA;&lt;/p&gt;&#xA;&lt;p&gt;head engineer for infrastructure security, detection + response, application security.&lt;/p&gt;&#xA;&lt;h3 id=&#34;jul-2024---nov-2024&#34;&gt;jul 2024 - nov 2024&lt;/h3&gt;&#xA;&lt;p&gt;&lt;strong&gt;senior security engineer&lt;/strong&gt; @ &lt;a href=&#34;https://www.numerator.com/&#34;  target=&#34;_blank&#34; rel=&#34;noreferrer nofollow&#34;&gt;Numerator&lt;/a&gt;&#xA;&lt;/p&gt;&#xA;&lt;p&gt;focal point between SecOps, DevOps, IT, Platform, and Data teams.&lt;/p&gt;</description>
+    </item>
   </channel>
 </rss>

@@ -1,0 +1,52 @@
+baseURL: "/"
+languageCode: en-us
+title: "༧"
+enableGitInfo: true
+permalinks:
+  about: "/"
+
+menu:
+  main:
+    - identifier: "about"
+      name: "about"
+      url: "/about/"
+      weight: 1
+    - identifier: "posts"
+      name: "posts"
+      url: "/posts/"
+      weight: 3
+    - identifier: "cv"
+      name: "cv"
+      url: "/cv/"
+      weight: 2
+    - identifier: "photography"
+      name: "photography"
+      url: "/photography/"
+      weight: 4
+
+markup:
+  tableOfContents:
+    endLevel: 3
+    ordered: false
+    startLevel: 2
+  highlight:
+    codeFences: true
+    guessSyntax: true
+    style: dracula
+    lineNumbersInTable: false
+    noClasses: true
+  goldmark:
+    renderer:
+      unsafe: true
+
+outputs:
+  home:
+    - html
+    - rss
+    - json
+  page:
+    - html
+
+module:
+  imports:
+    - path: github.com/barklan/hugo-dead-simple

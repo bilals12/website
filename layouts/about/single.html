@@ -1,0 +1,30 @@
+{{ partial "header.html" . }}
+
+{{ if not .Params.notitle }}
+<div id="single-header">
+  <h1>
+    {{ .Title | markdownify }}
+  </h1>
+  <div id="single-meta">
+    {{ if .Params.subtitle }}
+        <p id="subtitle">{{ .Params.subtitle }}</p>
+    {{ end }}
+    {{ if .Params.date }}
+        <span class="datesub">{{ .Date.Format "Jan 2, 2006" }}{{ if .GitInfo }} &nbsp;&nbsp; m. {{
+            .Lastmod.Format "Jan 2, 2006" }}{{ end }}</span>
+    {{ end }} {{ partial "tags.html" .}}
+  </div>
+</div>
+{{ else }}
+<div style="padding-bottom: 1px;"></div>
+{{ end }}
+
+<main>{{ .Content }}</main>
+
+<div class="social-links" style="margin-top: 2em;">
+  <a href="https://github.com/bilals12" target="_blank" style="margin-right: 1em; color: var(--link);">github</a>
+  <a href="https://linkedin.com/in/bilal-s-b857601a" target="_blank" style="margin-right: 1em; color: var(--link);">linkedin</a>
+  <!-- Add more social links as needed -->
+</div>
+
+{{ partial "footer.html" . }}

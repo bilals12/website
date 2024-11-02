@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head><script src="/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=livereload" data-no-instant defer></script>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <meta http-equiv="cache-control" content="max-age=0" />
+    <meta http-equiv="cache-control" content="no-cache" />
+    <meta http-equiv="expires" content="0" />
+    <meta http-equiv="expires" content="Tue, 01 Jan 1980 1:00:00 GMT" />
+    <meta http-equiv="pragma" content="no-cache" />
+
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png">
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png">
+    <link rel="manifest" href="/site.webmanifest">
+
+    <meta name="theme-color" media="(prefers-color-scheme: light)" content="#ffffff" />
+    <meta name="theme-color" media="(prefers-color-scheme: dark)" content="#000000" />
+
+    <meta name="description" content="gdbExtract">
+
+    
+        <title>gdbExtract | ༧</title>
+    
+
+    
+    <link rel="stylesheet" type="text/css" href="/style.min.50e5dce6bdbdda9c021bb01730b34c1639e90db55e0fd1ed0f37771832d1ce47.css" media="all">
+  </head>
+
+  <body>
+        
+        <nav>
+          <ul class="menu">
+            
+                <li><a tabindex="-1" class="menu-link" href="/about/">about</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/cv/">cv</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/posts/">posts</a></li>
+            
+                <li><a tabindex="-1" class="menu-link" href="/photography/">photography</a></li>
+            
+          </ul>
+        </nav>
+        
+
+
+
+<div id="single-header">
+  <h1>
+    gdbExtract
+  </h1>
+  <div id="single-meta">
+    
+    
+        <span class="datesub">jan 27, 2023 &nbsp;&nbsp; m. jan 10, 2024</span>
+      
+
+  </div>
+</div>
+
+
+<div class="content-container">
+  
+
+  <main><p>over the past few days, i&rsquo;ve been writing tools that automate cumbersome manual tasks and make my workflow/toolchain cleaner and pushing them to my personal github. the latest one in this series is a tool i call <strong><a href="https://github.com/bilals12/gdbExtract"  target="_blank" rel="noreferrer nofollow">gdbExtract</a>
+</strong>.</p>
+<p>as a security researcher, i spend a lot of time diving deep into the worlds of software security and system analysis. in these domains, binary analysis and reverse engineering are critical tasks, but their challenging and complex nature can come across as intimidating. hackers rely on this fact to conceal a myriad of functions inside binaries that perform unwanted actions, but this tool can help shed some light on them. it&rsquo;s not exactly a replacement for popular and powerful applications like IDA Pro, but it&rsquo;s a quick way to reveal hidden and integral information about binaries.</p>
+<p><strong>gdbExtract</strong> is, first and foremost, an automation tool. it was created to streamline the tedious process of binary analysis. manually examining binaries using tools like <code>GDB</code> requires significant effort and expertise. <code>gdbExtract</code> automates the extraction of crucial function information, transforming a potentially labour-intensive task into a quicker and more reliable process.</p>
+<ul>
+<li>efficiency: automating the extraction process saves time but also ensures consistent results (crucial when dealing with multiple or large binaries).</li>
+<li>structured output: by outputting data in a JSON format, the script turns raw, hard-to-parse information into a structured form, paving the way for more advanced analysis techniques.</li>
+<li>versatility and accessibility: the script is designed to be noob-friendly but can also help seasoned professionals.</li>
+</ul>
+<h1 id="core-functionalities">core functionalities</h1>
+<p><strong>note</strong>: before running, edit the script to point to your specific binary file and output file. there&rsquo;s also a list of &ldquo;unsafe&rdquo; function strings, that you can edit to fit your criteria.</p>
+<p>here&rsquo;s the script in its entirety.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-python" data-lang="python"><span style="display:flex;"><span><span style="color:#ff79c6">import</span> os
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> sys
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> json
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> subprocess
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">import</span> logging
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">from</span> typing <span style="color:#ff79c6">import</span> List, Dict
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># configure basic logging to display errors and info</span>
+</span></span><span style="display:flex;"><span>logging<span style="color:#ff79c6">.</span>basicConfig(level<span style="color:#ff79c6">=</span>logging<span style="color:#ff79c6">.</span>INFO)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># constants for file paths and binary to be analyzed</span>
+</span></span><span style="display:flex;"><span>BINARY_PATH <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;/path/to/binary&#34;</span>
+</span></span><span style="display:flex;"><span>DATA_FILE <span style="color:#ff79c6">=</span> <span style="color:#f1fa8c">&#34;path/to/file.json&#34;</span>
+</span></span><span style="display:flex;"><span>riskyFunctions <span style="color:#ff79c6">=</span> [<span style="color:#f1fa8c">&#39;strcpy&#39;</span>, <span style="color:#f1fa8c">&#39;strncpy&#39;</span>, <span style="color:#f1fa8c">&#39;memcpy&#39;</span>, <span style="color:#f1fa8c">&#39;memset&#39;</span>, <span style="color:#f1fa8c">&#39;send&#39;</span>, <span style="color:#f1fa8c">&#39;recv&#39;</span>]
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># GDB command to list all functions in binary</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># returns output from GDB as string</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">run_gdb_command</span>(binary_path: <span style="color:#8be9fd;font-style:italic">str</span>) <span style="color:#ff79c6">-&gt;</span> <span style="color:#8be9fd;font-style:italic">str</span>:
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">return</span> subprocess<span style="color:#ff79c6">.</span>check_output([<span style="color:#f1fa8c">&#34;gdb&#34;</span>, <span style="color:#f1fa8c">&#34;-batch&#34;</span>, <span style="color:#f1fa8c">&#34;-ex&#34;</span>, <span style="color:#f1fa8c">&#34;info functions&#34;</span>, binary_path])
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">except</span> subprocess<span style="color:#ff79c6">.</span>CalledProcessError <span style="color:#ff79c6">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;GDB command failed: </span><span style="color:#f1fa8c">{</span>e<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>		sys<span style="color:#ff79c6">.</span>exit(<span style="color:#bd93f9">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># parse output from GDB to extract function info</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># returns list of dicts, each containing details of single function</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">parse_gdb_output</span>(gdb_output: <span style="color:#8be9fd;font-style:italic">str</span>) <span style="color:#ff79c6">-&gt;</span> List[Dict]:
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> []
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> line <span style="color:#ff79c6">in</span> gdb_output<span style="color:#ff79c6">.</span>splitlines():
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">if</span> <span style="color:#ff79c6">not</span> line<span style="color:#ff79c6">.</span>startswith(<span style="color:#f1fa8c">&#34;0x&#34;</span>): <span style="color:#ff79c6">continue</span>
+</span></span><span style="display:flex;"><span>		address, name, signature <span style="color:#ff79c6">=</span> line<span style="color:#ff79c6">.</span>strip()<span style="color:#ff79c6">.</span>split()
+</span></span><span style="display:flex;"><span>		json_data<span style="color:#ff79c6">.</span>append({<span style="color:#f1fa8c">&#34;address&#34;</span>: address, <span style="color:#f1fa8c">&#34;name&#34;</span>: name, <span style="color:#f1fa8c">&#34;signature&#34;</span>: signature})
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">return</span> json_data
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># reads json file and returns content</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">read_json_file</span>(file_path: <span style="color:#8be9fd;font-style:italic">str</span>) <span style="color:#ff79c6">-&gt;</span> List[Dict]:
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">with</span> <span style="color:#8be9fd;font-style:italic">open</span>(file_path, <span style="color:#f1fa8c">&#34;r&#34;</span>) <span style="color:#ff79c6">as</span> file:
+</span></span><span style="display:flex;"><span>			<span style="color:#ff79c6">return</span> json<span style="color:#ff79c6">.</span>load(file)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">except</span> IOError <span style="color:#ff79c6">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;error reading file </span><span style="color:#f1fa8c">{</span>file_path<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">: </span><span style="color:#f1fa8c">{</span>e<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">return</span> []
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">except</span> json<span style="color:#ff79c6">.</span>JSONDecodeError <span style="color:#ff79c6">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;error decoding JSON from file </span><span style="color:#f1fa8c">{</span>file_path<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">: </span><span style="color:#f1fa8c">{</span>e<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># writes list of dicts to json file</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">write_json_file</span>(file_path: <span style="color:#8be9fd;font-style:italic">str</span>, data: List[Dict]):
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">try</span>:
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">with</span> <span style="color:#8be9fd;font-style:italic">open</span>(file_path, <span style="color:#f1fa8c">&#34;w&#34;</span>) <span style="color:#ff79c6">as</span> file:
+</span></span><span style="display:flex;"><span>			json<span style="color:#ff79c6">.</span>dump(data, file, indent<span style="color:#ff79c6">=</span><span style="color:#bd93f9">4</span>) <span style="color:#6272a4"># indentation for readability</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">except</span> IOError <span style="color:#ff79c6">as</span> e:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;error writing to file </span><span style="color:#f1fa8c">{</span>file_path<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">: </span><span style="color:#f1fa8c">{</span>e<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># main function that extracts function info from binary via GDB</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">main_search_code</span>():
+</span></span><span style="display:flex;"><span>	gdb_output <span style="color:#ff79c6">=</span> run_gdb_command(BINARY_PATH)
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> parse_gdb_output(gdb_output)
+</span></span><span style="display:flex;"><span>	write_json_file(DATA_FILE, json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># filters out functions deemed &#34;safe&#34; and writes the rest to new json file</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">remove_safe_functions</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	filtered_json_data <span style="color:#ff79c6">=</span> [func <span style="color:#ff79c6">for</span> func <span style="color:#ff79c6">in</span> json_data <span style="color:#ff79c6">if</span> func[<span style="color:#f1fa8c">&#39;name&#39;</span>] <span style="color:#ff79c6">not</span> <span style="color:#ff79c6">in</span> riskyFunctions]
+</span></span><span style="display:flex;"><span>	write_json_file(<span style="color:#f1fa8c">&#34;filtered_file.json&#34;</span>, filtered_json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># combines multiple entries of the same function into a single record</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># tracks number of occurrences of each function</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">combine_data_for_same_function</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> read_json_file(<span style="color:#f1fa8c">&#34;filtered_file.json&#34;</span>)
+</span></span><span style="display:flex;"><span>	combined_json_data <span style="color:#ff79c6">=</span> {}
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> func <span style="color:#ff79c6">in</span> json_data:
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">if</span> func[<span style="color:#f1fa8c">&#34;name&#34;</span>] <span style="color:#ff79c6">not</span> <span style="color:#ff79c6">in</span> combined_json_data:
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#f1fa8c">&#34;name&#34;</span>]] <span style="color:#ff79c6">=</span> {
+</span></span><span style="display:flex;"><span>			<span style="color:#f1fa8c">&#34;addresses&#34;</span>: [func[<span style="color:#f1fa8c">&#34;address&#34;</span>]],
+</span></span><span style="display:flex;"><span>			<span style="color:#f1fa8c">&#34;signature&#34;</span>: func[<span style="color:#f1fa8c">&#34;signature&#34;</span>],
+</span></span><span style="display:flex;"><span>			<span style="color:#f1fa8c">&#34;count&#34;</span>: <span style="color:#bd93f9">1</span>,
+</span></span><span style="display:flex;"><span>			}
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">else</span>:
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#f1fa8c">&#34;name&#34;</span>]][<span style="color:#f1fa8c">&#34;addresses&#34;</span>]<span style="color:#ff79c6">.</span>append(func[<span style="color:#f1fa8c">&#34;address&#34;</span>])
+</span></span><span style="display:flex;"><span>			combined_json_data[func[<span style="color:#f1fa8c">&#34;name&#34;</span>]][<span style="color:#f1fa8c">&#34;count&#34;</span>] <span style="color:#ff79c6">+=</span> <span style="color:#bd93f9">1</span>
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span>	write_json_file(<span style="color:#f1fa8c">&#34;combined_file.json&#34;</span>, combined_json_data)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># lists all functions in json data file</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">list_functions</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> func <span style="color:#ff79c6">in</span> json_data:
+</span></span><span style="display:flex;"><span>		<span style="color:#8be9fd;font-style:italic">print</span>(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;</span><span style="color:#f1fa8c">{</span>func[<span style="color:#f1fa8c">&#39;address&#39;</span>]<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">: </span><span style="color:#f1fa8c">{</span>func[<span style="color:#f1fa8c">&#39;name&#39;</span>]<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># searches for specific function in json data file by address or name</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">search_function</span>():
+</span></span><span style="display:flex;"><span>	json_data <span style="color:#ff79c6">=</span> read_json_file(DATA_FILE)
+</span></span><span style="display:flex;"><span>	func_addr_name <span style="color:#ff79c6">=</span> <span style="color:#8be9fd;font-style:italic">input</span>(<span style="color:#f1fa8c">&#34;enter a function address or name: &#34;</span>)
+</span></span><span style="display:flex;"><span>	found <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">False</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">for</span> func <span style="color:#ff79c6">in</span> json_data:
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">if</span> func[<span style="color:#f1fa8c">&#34;address&#34;</span>] <span style="color:#ff79c6">==</span> func_addr_name <span style="color:#ff79c6">or</span> func[<span style="color:#f1fa8c">&#34;name&#34;</span>] <span style="color:#ff79c6">==</span> func_addr_name:
+</span></span><span style="display:flex;"><span>			<span style="color:#8be9fd;font-style:italic">print</span>(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;found </span><span style="color:#f1fa8c">{</span>func[<span style="color:#f1fa8c">&#39;address&#39;</span>]<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">: </span><span style="color:#f1fa8c">{</span>func[<span style="color:#f1fa8c">&#39;name&#39;</span>]<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#34;</span>)
+</span></span><span style="display:flex;"><span>			found <span style="color:#ff79c6">=</span> <span style="color:#ff79c6">True</span>
+</span></span><span style="display:flex;"><span>			<span style="color:#ff79c6">break</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">if</span> <span style="color:#ff79c6">not</span> found:
+</span></span><span style="display:flex;"><span>		<span style="color:#8be9fd;font-style:italic">print</span>(<span style="color:#f1fa8c">f</span><span style="color:#f1fa8c">&#34;could not find function with address or name &#39;</span><span style="color:#f1fa8c">{</span>func_addr_name<span style="color:#f1fa8c">}</span><span style="color:#f1fa8c">&#39;.&#34;</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># main entry point</span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># handles cli args and calls corresponding functions</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">def</span> <span style="color:#50fa7b">main</span>():
+</span></span><span style="display:flex;"><span>	<span style="color:#6272a4"># check if correct number of args are passed</span>
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">if</span> <span style="color:#8be9fd;font-style:italic">len</span>(sys<span style="color:#ff79c6">.</span>argv) <span style="color:#ff79c6">==</span> <span style="color:#bd93f9">2</span>:
+</span></span><span style="display:flex;"><span>		command <span style="color:#ff79c6">=</span> sys<span style="color:#ff79c6">.</span>argv[<span style="color:#bd93f9">1</span>]
+</span></span><span style="display:flex;"><span>		<span style="color:#6272a4"># execute function based on arg</span>
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">if</span> command <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;search&#34;</span>:
+</span></span><span style="display:flex;"><span>			main_search_code()
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">elif</span> command <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;remove-safe&#34;</span>:
+</span></span><span style="display:flex;"><span>			remove_safe_functions()
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">elif</span> command <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;combine&#34;</span>:
+</span></span><span style="display:flex;"><span>			combine_data_for_same_function()
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">elif</span> command <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;list&#34;</span>:
+</span></span><span style="display:flex;"><span>			list_functions()
+</span></span><span style="display:flex;"><span>		<span style="color:#ff79c6">else</span>:
+</span></span><span style="display:flex;"><span>			logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">&#34;unknown command. please enter a valid option.&#34;</span>)
+</span></span><span style="display:flex;"><span>			sys<span style="color:#ff79c6">.</span>exit(<span style="color:#bd93f9">1</span>)
+</span></span><span style="display:flex;"><span>	<span style="color:#ff79c6">else</span>:
+</span></span><span style="display:flex;"><span>		logging<span style="color:#ff79c6">.</span>error(<span style="color:#f1fa8c">&#34;incorrect number of args.&#34;</span>)
+</span></span><span style="display:flex;"><span>		sys<span style="color:#ff79c6">.</span>exit(<span style="color:#bd93f9">1</span>)
+</span></span><span style="display:flex;"><span>
+</span></span><span style="display:flex;"><span><span style="color:#6272a4"># run script only if script is executed as main program</span>
+</span></span><span style="display:flex;"><span><span style="color:#ff79c6">if</span> __name__ <span style="color:#ff79c6">==</span> <span style="color:#f1fa8c">&#34;__main__&#34;</span>:
+</span></span><span style="display:flex;"><span>	main()
+</span></span></code></pre></div><h2 id="analysis">analysis</h2>
+<p>the script is great for quickly sifting through binaries to identify potential vulnerabilities.</p>
+<ol>
+<li>run <code>python gdbExtract.py search</code> to extract a comprehensive list of functions from the binary.</li>
+<li>running <code>python gdbExtract.py remove-safe</code> afterwards will filter out the &ldquo;known&rdquo; safe functions, narrowing the focus toward more critical areas.</li>
+</ol>
+<p>extracted data might look something like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>[
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;address&#34;</span>: <span style="color:#f1fa8c">&#34;0x00401350&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;name&#34;</span>: <span style="color:#f1fa8c">&#34;main&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;signature&#34;</span>: <span style="color:#f1fa8c">&#34;int main()&#34;</span>
+</span></span><span style="display:flex;"><span>    },
+</span></span><span style="display:flex;"><span>    {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;address&#34;</span>: <span style="color:#f1fa8c">&#34;0x00401390&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;name&#34;</span>: <span style="color:#f1fa8c">&#34;helper_function&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;signature&#34;</span>: <span style="color:#f1fa8c">&#34;void helper_function(int)&#34;</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>]
+</span></span></code></pre></div><h2 id="reverse-engineering">reverse engineering</h2>
+<p>it can also dissect a binary so the user can understand its behavior or uncover hidden functionalities.</p>
+<p>after extracting function data, run <code>python gdbExtract.py combine</code> to identify duplicate functions, which might indicate areas of complexity or reuse of code worth exploring.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-json" data-lang="json"><span style="display:flex;"><span>{
+</span></span><span style="display:flex;"><span>    <span style="color:#ff79c6">&#34;helper_function&#34;</span>: {
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;addresses&#34;</span>: [<span style="color:#f1fa8c">&#34;0x00401390&#34;</span>, <span style="color:#f1fa8c">&#34;0x00401500&#34;</span>],
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;signature&#34;</span>: <span style="color:#f1fa8c">&#34;void helper_function(int)&#34;</span>,
+</span></span><span style="display:flex;"><span>        <span style="color:#ff79c6">&#34;count&#34;</span>: <span style="color:#bd93f9">2</span>
+</span></span><span style="display:flex;"><span>    }
+</span></span><span style="display:flex;"><span>}
+</span></span></code></pre></div><h2 id="education">education</h2>
+<p>it can aid instructors or teachers in explaining the structure and intricacies of binaries in a practical manner.</p>
+<ol>
+<li>run <code>python gdbExtract.py list</code> to explore the different functions within a binary.</li>
+</ol>
+<p>the output can look something like this.</p>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>0x00401350: main
+</span></span><span style="display:flex;"><span>0x00401390: helper_function
+</span></span></code></pre></div><ol start="2">
+<li>run <code>python gdbExtract.py find</code> to search for specific functions. this can demonstrate how functions relate to each other.</li>
+</ol>
+<div class="highlight"><pre tabindex="0" style="color:#f8f8f2;background-color:#282a36;-moz-tab-size:4;-o-tab-size:4;tab-size:4;"><code class="language-bash" data-lang="bash"><span style="display:flex;"><span>enter a <span style="color:#ff79c6">function</span> address or name: main
+</span></span><span style="display:flex;"><span>found 0x00401350: main
+</span></span></code></pre></div><h1 id="corner-cases">corner cases</h1>
+<p>every tool has its limitations. <code>gdbExtract</code> might not effectively parse binaries that utilize heavily obfuscated code. also, its reliance on GDB means it inherits any limitations present within GDB, such as handling certain types of binaries or specific configs.</p>
+<h1 id="thought-experiment">thought experiment</h1>
+<p>let&rsquo;s say i&rsquo;m a security researcher (i am lol), and i want to assess the security of a legacy communications software that my organization has been using for over a decade. i suspect that the software might contain undiscovered vulnerabilities.</p>
+<ol>
+<li>running the script</li>
+</ol>
+<ul>
+<li>i quickly run <code>python gdbExtract.py search</code> to analyze the binary (specified in <code>BINARY_PATH</code>).</li>
+<li>it will output a comprehensive list of all functions within the binary, complete with their memory addresses and signatures.</li>
+<li>i now have a clear and structured overview of the binary&rsquo;s functions + hours of saved time.</li>
+</ul>
+<ol start="2">
+<li>filtering safe functions</li>
+</ol>
+<ul>
+<li>run <code>python gdbExtract.py remove-safe</code> to streamline the dataset.</li>
+<li>this will isolate functions that warrant closer scrutiny.</li>
+<li>it filters out functions that were pre-identified as &ldquo;safe&rdquo;, based on individual critieria (in this case, i&rsquo;ve excluded standard library functions and those without direct external input handling).</li>
+<li>i now have a manageable list of functions that are labeled &ldquo;high-risk&rdquo; (related to network data handling, memory manipulation, etc).</li>
+</ul>
+<ol start="3">
+<li>identification</li>
+</ol>
+<ul>
+<li>i come across a function called <code>processClientRequest</code>.</li>
+<li>this function handles incoming data packets from network clients, interacting directly with external data.</li>
+</ul>
+<p>diving into the source code of the <code>processClientRequest</code> function, i discover that it uses <code>strcpy</code> to data from the network buffer to a local buffer. this is an immediate red flag, as <code>strcpy</code> doesn&rsquo;t check the size of the destination buffer, making it vulnerable to buffer overflow attacks if the source data exceeds the buffer&rsquo;s capacity. even worse, <code>processClientRequest</code> lacked any checks on the size of the incoming data, meaning it blindly copied whatever was sent over the network into the local buffer.</p>
+<ol start="4">
+<li>constructing a proof-of-concept</li>
+</ol>
+<ul>
+<li>i create a network packet with data significantly larger than the buffer size inside the <code>processClientRequest</code> function (have it contain a specific pattern that&rsquo;s easily identifiable in the memory if it overflows, like <code>AAAAAAAA</code>).</li>
+<li>i then send the packet to a controlled environment (VM) using the legacy software and monitor the memory state of the software as it processes the packet (Immunity Debugger is great for this).</li>
+<li>as expected, the packet causes a buffer overflow and overwrites the adjacent memory.</li>
+<li>this can be confirmed by checking for the pattern in memory locations outside the buffer.</li>
+<li>the packet can be modified to include a simple payload that would then write itself into the program memory.</li>
+</ul>
+<ol start="5">
+<li>remediation</li>
+</ol>
+<ul>
+<li>replace <code>strcpy</code> with <code>strncpy</code>, which includes buffer size as an argument, ensuring copied data does not exceed buffer limit.</li>
+<li>use checks to validate the size of incoming data before processing it.</li>
+<li>review the code with the help of 1 or more code reviewers, and test it using various packet sizes.</li>
+</ul>
+<p>hope this tool finds you well! feel free to leave comments on my <a href="https://github.com/bilals12"  target="_blank" rel="noreferrer nofollow">github</a>
+ and explore some of my other programs as well.</p>
+</main>
+</div>
+
+
+
+
+
+<footer>
+  <div class="footer-nav">
+    
+    <a class="next" href="/posts/tcpsack/" style="float: right"
+      >next: tcpSACK</a
+    >
+     
+    <a class="previous" href="/posts/gatekeeper/">previous</a>
+    
+  </div>
+</footer>
+
+
+
+<script defer>
+  document.addEventListener("keydown", function (e) {
+    if (document.activeElement.isContentEditable) {
+      return false;
+    }
+    if (document.activeElement.tagName == "INPUT") {
+      return false;
+    }
+    if (e.altKey || e.ctrlKey || e.shiftKey) {
+      return false;
+    }
+    var key = e.key;
+    if (key === "h") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = "/";
+    } else if (key === "t") {
+      e.preventDefault();
+      e.stopPropagation();
+      window.location.href = `https://${location.hostname}/tags`;
+    } else if (key === "i") {
+      e.preventDefault();
+      e.stopPropagation();
+      const inputs = document.querySelectorAll("input");
+      for (let i = 0; i < inputs.length; i++) {
+        if (inputs[i].offsetParent !== null) {
+          inputs[i].selectionStart = inputs[i].selectionEnd =
+            inputs[i].value.length;
+          inputs[i].focus();
+          break;
+        }
+      }
+    }
+    return false;
+  });
+</script>
+
+
+<script defer>
+  function throttle(fn, wait) {
+    var time = Date.now();
+    return function () {
+      var now = Date.now()
+      if (time + wait - now < 0) {
+        fn();
+        time = now;
+      }
+    };
+  }
+
+  function scrollHandler() {
+    const anchors = Array.from(document.querySelectorAll("body h2, body h3"));
+
+    function scrollCallback() {
+      var scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+
+      
+      for (var i = 0; i < anchors.length; i++) {
+        var anchorId = anchors[i].getAttribute("id");
+        var link = document.querySelector(
+          'nav ul li a[href="#' + anchorId + '"]',
+        );
+        if (link) {
+          link.classList.remove("active-toc");
+        }
+      }
+
+      
+      for (var i = anchors.length - 1; i >= 0; i--) {
+        var offsetTop = anchors[i].offsetTop;
+        if (scrollTop > offsetTop - 75) {
+          var anchorId = anchors[i].getAttribute("id");
+          var link = document.querySelector(
+            'nav ul li a[href="#' + anchorId + '"]',
+          );
+          if (link) {
+            link.classList.add("active-toc");
+            break;
+          }
+        }
+      }
+    }
+
+    window.addEventListener(
+      "scroll",
+      throttle(scrollCallback, 300),
+    );
+  }
+  setTimeout(scrollHandler, 100);
+</script>
+
+<script defer>
+  function addCopyButtonToCodeBlocks() {
+    
+    const codeBlocks = document.querySelectorAll('code[class^="language-"]');
+
+    codeBlocks.forEach((codeBlock) => {
+      const copyButton = document.createElement("button");
+      copyButton.classList.add("copy-code-button");
+      copyButton.innerHTML = "copy";
+
+      
+      copyButton.addEventListener("click", () => {
+        
+        const elements = codeBlock.querySelectorAll(".cl");
+        let codeToCopy = "";
+        elements.forEach((element) => {
+          codeToCopy += element.innerText;
+        });
+        navigator.clipboard.writeText(codeToCopy);
+
+        
+        copyButton.innerHTML = "copied!";
+        setTimeout(() => {
+          copyButton.innerHTML = "copy";
+        }, 1500);
+      });
+
+      
+      codeBlock.parentNode.before(copyButton);
+    });
+  }
+  setTimeout(function () {
+    addCopyButtonToCodeBlocks();
+  }, 100);
+</script>
