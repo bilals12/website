@@ -224,14 +224,6 @@ th {
   visibility: visible !important;
 }
 
-/* Make images responsive */
-img {
-  max-width: 100%;
-  height: auto;
-  display: block;
-  margin: 1em auto;
-}
-
 /* Make code blocks responsive */
 pre {
   max-width: 100%;
