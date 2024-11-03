@@ -8,7 +8,7 @@ nomenu: false
 notitle: false
 ---
 
-[previously,](https://www.bsssq.xyz/posts/2024/10/advanced-evasions-part-1-pe-maps-custom-minidumpers/) we discussed/mapped all the fundamental Windows PE structures and parsing capabilities needed by every other component for our custom minidumper tool. in this part, we'll define the minidump format structures that build upon the PE definitions. following that, we'll learn how to implement the actual dumping logic using the types defined.
+[previously,](https://bsssq.xyz/posts/minidump-pe/) we discussed/mapped all the fundamental Windows PE structures and parsing capabilities needed by every other component for our custom minidumper tool. in this part, we'll define the minidump format structures that build upon the PE definitions. following that, we'll learn how to implement the actual dumping logic using the types defined.
 
 ![alt text](/minidumpstreams.png)
 
