@@ -6,8 +6,7 @@
   </h1>
   <div id="single-meta">
     {{ if .Params.date }}
-        <span class="datesub">{{ .Date.Format "Jan 2, 2006" }}{{ if .GitInfo }} &nbsp;&nbsp; m. {{
-            .Lastmod.Format "Jan 2, 2006" }}{{ end }}</span>
+        <span class="datesub">{{ .Date.Format "Jan 2, 2006" }}</span>
     {{ end }}
   </div>
 </div>
