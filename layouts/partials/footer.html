@@ -1,12 +1,11 @@
 {{ if not .IsHome }}
 <footer>
   <div class="footer-nav">
+    {{ if .PrevInSection }}
+    <a class="previous" href="{{ .PrevInSection.RelPermalink }}" style="float: left">previous</a>
+    {{ end }}
     {{ if .NextInSection }}
-    <a class="next" href="{{ .NextInSection.RelPermalink }}" style="float: right"
-      >next: {{ .NextInSection.Title }}</a
-    >
-    {{ end }} {{ if .PrevInSection }}
-    <a class="previous" href="{{ .PrevInSection.RelPermalink }}">previous</a>
+    <a class="next" href="{{ .NextInSection.RelPermalink }}" style="float: right">next: {{ .NextInSection.Title }}</a>
     {{ end }}
   </div>
 </footer>

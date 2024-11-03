@@ -10,7 +10,7 @@
         <p id="subtitle">{{ .Params.subtitle }}</p>
     {{ end }}
     {{ if .Params.date }}
-      <span class="datesub">{{ .Date.Format "Jan 2, 2006" }}</span>
+      <span class="datesub">{{ .Date.Format "january 2, 2006" }}</span>
     {{ end }} {{ partial "tags.html" .}}
   </div>
 </div>
@@ -27,14 +27,6 @@
 
   <main>{{ .Content }}</main>
 </div>
-
-{{ if .Params.Next }}
-    <br>
-    <hr>
-    {{ with .PrevInSection }}
-      Next: <a href="{{ .Permalink }}">{{ .Title }}</a>
-    {{ end }}
-{{ end }}
 
 {{ if .Params.math }}
     {{ partial "math.html" . }}

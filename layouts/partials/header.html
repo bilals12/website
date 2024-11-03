@@ -35,18 +35,15 @@
             background-color: var(--background);
         }
     </style>
-    {{ $CSS := slice
-        (resources.Get "css/main.css")
-        (resources.Get "css/menu.css")
-        (resources.Get "css/toc.css")
-        (resources.Get "css/images.css")
-        (resources.Get "css/post_meta.css")
-        (resources.Get "css/search.css")
-        (resources.Get "css/code.css")
-        (resources.Get "css/tables.css")
-        (resources.Get "css/misc.css")
-    | resources.Concat "style.css" | minify | fingerprint }}
-    <link rel="stylesheet" type="text/css" href="{{ $CSS.RelPermalink }}" media="all">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/main.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/menu.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/toc.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/images.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/post_meta.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/search.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/code.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/tables.css").RelPermalink }}">
+    <link rel="stylesheet" type="text/css" href="{{ (resources.Get "css/misc.css").RelPermalink }}">
   </head>
   <body>
         {{ if not .Params.nomenu }}
