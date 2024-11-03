@@ -1,7 +1,7 @@
 <li>
     {{ if not .CurrentSection.Params.nodate }}
         <div style="display: grid; grid-template-columns: 7em auto">
-          <span class="date" style="color: var(--text);">{{ .Date.Format "jan 2, 2006" | lower }}</span>
+          <span class="date" style="color: var(--text);">{{ .Date.Format "Jan 2, 2006" | lower }}</span>
           {{ if .Params.bold }}
           <a class="bold-post-in-list" href="{{ .RelPermalink }}"
             >{{ .Page.Title | markdownify }}</a

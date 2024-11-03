@@ -10,7 +10,7 @@
         <p id="subtitle">{{ .Params.subtitle }}</p>
     {{ end }}
     {{ if .Params.date }}
-      <span class="datesub">{{ .Date.Format "jan 2, 2006" }}</span>
+    <span class="datesub">{{ .Date.Format "Monday, January 2, 2006" | lower }}</span>
     {{ end }} {{ partial "tags.html" .}}
   </div>
 </div>
