@@ -1,7 +1,7 @@
-/* TOC */
-/* Hide TOC by default (mobile) */
-#tableOfContentContainer {
-  display: none;
+
+#tableOfContentContainer,
+.toc {
+  display: none !important;
 }
 
 .toc a {
@@ -19,12 +19,16 @@
 
 @media screen and (min-width: 1150px) {
   #tableOfContentContainer {
+    display: block !important;
     position: fixed;
     left: 20px;
     top: 46px;
     max-width: 15vw;
     width: 15vw;
   }
+  
+  .toc {
+    display: table !important;
 
   #TableOfContents {
     opacity: 0.8;
