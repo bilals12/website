@@ -36,7 +36,7 @@ SIP is enabled by default, but it can be disabled (or bypassed). to check its st
 
 for (legitimate) app developers, the method to get access to credentials is simple: prompts. however, this method isn't ideal for adversaries because it requires some level of elevated credentials. as always, we might be able to use this to our advantage. 
 
-![alt text](image-prompt.png)
+![alt text](/image-prompt.png)
 
 
 ## credential acces via prompts
