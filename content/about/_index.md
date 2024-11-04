@@ -3,6 +3,26 @@ type: about
 layout: single
 ---
 
+<pre style="background: transparent; border: none; color: inherit; font-family: monospace; line-height: 1.2; font-size: 2em;">
+.              +   .                .   . .     .  .
+                   .                    .       .     *
+  .       *                        . . . .  .   .  + .
+            you are here            .   .  +  . . .
+.                 |             .  .   .    .    . .
+                  |           .     .     . +.    +  .
+                 \|/            .       .   . .
+        . .       V          .    * . . .  .  +   .
+           +      .           .   .      +
+                            .       . +  .+. .
+  .                      .     . + .  . .     .      .
+           .      .    .     . .   . . .        ! /
+      *             .    . .  +    .  .       - O -
+          .     .    .  +   . .  *  .       . / |
+               . + .  .  .  .. +  .
+.      .  .  .  *   .  *  . +..  .            *
+ .      .   . .   .   .   . .  +   .    .            +
+</pre>
+
 i'm bilal.
 
 i'm a security engineer, researcher, and penetration tester, with a background in electrical + computer engineering. needless to say, technology plays a big part in my life and i spend every day making bits of it less inscrutable.
