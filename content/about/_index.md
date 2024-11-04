@@ -3,7 +3,7 @@ type: about
 layout: single
 ---
 
-<pre style="background: transparent; border: none; color: inherit; font-family: monospace; line-height: 1.2; font-size: 2em;">
+<pre style="background: transparent; border: none; color: inherit; font-family: monospace; line-height: 1.2; font-size: 1.2em;">
 .              +   .                .   . .     .  .
                    .                    .       .     *
   .       *                        . . . .  .   .  + .
