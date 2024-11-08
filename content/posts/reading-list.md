@@ -2,7 +2,6 @@
 title: "reading list [updated]"
 date: 2024-10-07
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

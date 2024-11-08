@@ -2,7 +2,6 @@
 title: "advanced evasions, part 1: PE maps + custom minidumpers"
 date: 2024-10-07T13:36:59-04:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

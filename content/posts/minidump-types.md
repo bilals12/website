@@ -2,7 +2,6 @@
 title: "advanced evasions, part 2: implementing minidump structures"
 date: 2024-10-25T14:04:04-04:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

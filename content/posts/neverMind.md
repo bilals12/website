@@ -2,7 +2,6 @@
 title: "neverMind"
 date: 2024-01-18T11:05:32-05:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

@@ -2,7 +2,7 @@
 title: "cookieJar"
 date: 2024-01-02T10:11:43-05:00
 toc: true
-bold: true
+<!-- bold: true -->
 next: true
 nomenu: false
 notitle: false

@@ -2,7 +2,6 @@
 title: "cosmos, part 2: domain + forest compromise"
 date: 2024-09-27T12:30:34-04:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

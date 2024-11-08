@@ -4,7 +4,6 @@ date: 2024-09-19T10:56:20-04:00
 draft: false
 type: "post"
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

@@ -2,7 +2,6 @@
 title: "violaTor"
 date: 2023-12-21T11:17:54-05:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

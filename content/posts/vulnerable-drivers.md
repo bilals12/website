@@ -3,7 +3,6 @@ title: "exploiting driver-based vulnerabilities"
 date: 2024-11-06T09:38:48-05:00
 draft: false
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

@@ -2,7 +2,6 @@
 title: "credential access in macOS"
 date: 2024-10-08T15:50:14-04:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false

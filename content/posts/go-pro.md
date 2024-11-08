@@ -2,7 +2,6 @@
 title: "goPro: detecting process hollowing with Go"
 date: 2024-08-12T14:25:48-05:00
 toc: true
-bold: true
 next: true
 nomenu: false
 notitle: false
