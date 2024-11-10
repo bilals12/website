@@ -132,7 +132,7 @@ BOOL __stdcall SymGetSymFromName(HANDLE hProcess, PCSTR Name, PIMAGEHLP_SYMBOL S
 
 next, cross-reference the API to see where else it's referenced. in this case, it's used only once in the code [you can jump to the basic block where the API is invoked].
 
-```assembly
+```asm
 0000000000057E946 call    ds:__imp_SymSetOptions@4      ; SymSetOptions(x)
 0000000000057E94C push    1                             ; fInvadeProcess
 0000000000057E94E push    0                             ; UserSearchPath
@@ -206,7 +206,7 @@ the `__cdecl` calling convention means the **caller cleans up the stack** (impor
 
 cross-referencing `_FXCLI_DebugDispatch` shows that a single function calls it: `FXCLI_OraBR_Exec_Command`. we can confirm this by going through the assembly sequence.
 
-```assembly
+```asm
 loc_573807:
 lea     edx, [ebp+var_C36C]    ; Prepare third parameter
 push    edx                     ; int parameter
@@ -219,7 +219,7 @@ call    _FXCLI_DebugDispatch   ; Our target function
 
 now we have to find which opcode triggers the correct code path. moving up a block shows this.
 
-```assembly
+```asm
 cmp     [ebp+var_61B30], 2000h  ; Check for opcode 0x2000
 jz      loc_573807              ; If match, call DebugDispatch
 ```
@@ -372,7 +372,7 @@ if you recall the graph view of the dispatch function `FXCLI_DebugDispatch`, the
 
 checking out the first basic block, we can break it down to see what's happening under the hood.
 
-```assembly
+```asm
 00000000057DB80 push    ebp                    ; Standard prologue
 00000000057DB81 mov     ebp, esp
 00000000057DB83 sub     esp, 8E4h              ; Large stack frame (0x8E4 bytes)
@@ -384,7 +384,7 @@ this bit sets up the function and defines the size of the stack frame (`0x8E4` b
 
 the function then implements a series of command checks via string comparisons. the first one is the "help" check.
 
-```assembly
+```asm
 00000000057DB97 push    offset $SG111228       ; Push "help" string
 00000000057DB9C call    _ml_strbytelen         ; Get length
 00000000057DBA1 add     esp, 4                 ; Clean stack
@@ -502,7 +502,7 @@ the next two string comparisons (`DumpMemoryPools`, `ReadRepositorySectors`) are
 
 the block just before the `SymGetSymFromName` call performs a comparison as well.
 
-```assembly
+```asm
 loc_57E833:
 push    offset $SG114411_0     ; "SymbolOperation"
 call    _ml_strbytelen         ; Get length
@@ -678,7 +678,7 @@ eip=0057e98a esp=0db5da3c ebp=0db5e320
 
 the next instruction stores the return value.
 
-```assembly
+```asm
 0057e98a 898574f9ffff    mov dword ptr [ebp-68Ch], eax  ; Store return value
 ```
 
@@ -710,7 +710,7 @@ eax=00000001    ; SymGetSymFromName successful return
 
 checking out the string manipulations on output (handled by `sprintf`) in this block.
 
-```assembly
+```asm
 mov     edx, [ebp+Symbol]          ; Get symbol structure
 mov     eax, [edx+4]              ; Get resolved address
 push    eax                       ; Push as sprintf arg
@@ -723,7 +723,7 @@ call    _ml_sprintf               ; Format address string
 
 the output of `sprintf` is stored on the stack at an offset from `EBP+arg_0`. to find out what `arg_0` is, we'll have to check out the variable declarations at the start of the `FXCLI_DebugDispatch` function.
 
-```assembly
+```asm
 00057DB80 var_10        = dword ptr -10h
 00057DB80 var_C         = dword ptr -0Ch
 00057DB80 var_8         = dword ptr -8
@@ -752,7 +752,7 @@ we can now view the contents of the buffer!
 
 at this point, the execution leads us to the end of the function where we return to `FXCLI_OraBR_Exec_Command` (@ `0x57381`) just after the call to `FXCLI_DebugDispatch`.
 
-```assembly
+```asm
 00573807 loc_573807:
 00573807     lea     edx, [ebp+var_C36C]
 0057380D     push    edx                 ; int
@@ -775,14 +775,14 @@ i'll sum up the execution flow analysis at this point:
 
 - execution flows through multiple paths, and all converge at the address below.
 
-```assembly
+```asm
 00575a62 cmp     [ebp-1251Ch], 0    ; Check status
 00575a69 jz      loc_575B5B         ; Branch taken
 ```
 
 stepping through the function, we reach another block.
 
-```assembly
+```asm
 00575B68 lea     ecx, [ebp+var_12550]
 00575B6E push    ecx
 00575B6F lea     edx, [ebp+var_61BC]
@@ -893,7 +893,7 @@ TCP 192.168.120.10:11460 192.168.119.120:53280 CLOSE_WAIT   # Our connection
 
 so, there's a function that connects to the network. there must also be a function that sends data over the network. this next block focuses on the `FXCLI_IF_Buffer_Send` function.
 
-```assembly
+```asm
 00575D0F mov     edx, [ebp+var_12548]
 00575D15 push    edx
 00575D16 mov     eax, [ebp+var_C370]
