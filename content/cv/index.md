@@ -29,7 +29,7 @@ scouring and securing engineering architecture and infrastructure: cross-stack v
 
 ### dec 2021 - dec 2023
 
-**software security engineer + researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
+**security researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
 
 
 investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.

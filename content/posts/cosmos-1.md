@@ -2,7 +2,6 @@
 title: "cosmos, part 1: red-teaming corporate active directory forests"
 date: 2024-09-19T10:56:20-04:00
 draft: false
-type: "post"
 toc: true
 next: true
 nomenu: false
