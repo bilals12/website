@@ -1,0 +1,225 @@
+:root {
+    --background: #000000;
+    --text: #d8d8d8;
+    --code: #cbcbcb;
+    --text-dim: #a7a7a7;
+    --link: #00ff00;
+    --link-visited: #00b100;
+    --code-background: #000000;
+    --code-border: #333333;
+    --code-hl: #1a1a1a;
+    --border-general: #333333;
+    --table-th: #1a1a1a;
+    --table-tr: #000000;
+    --toc-background: #000000;
+    --toc-border: #333333;
+    --complimentary: #815205;
+}
+
+#gitinfo-date {
+  color: var(--text-dim);
+  filter: opacity(40%);
+  font-style: italic;
+  font-size: 0.9em;
+  white-space: nowrap;
+}
+
+@media screen and (min-width: 760px) {
+  #gitinfo-date {
+    margin-left: 30px;
+  }
+}
+
+/* TODO: add iframe margins */
+
+/* HTML & BODY */
+html, body {
+  background-color: var(--background);
+  color: var(--text);
+}
+
+body {
+  margin: auto;
+  padding: 0em 1em 2em 1em;
+  background-color: var(--background);
+  color: var(--text);
+  font-family:
+    "Inter",
+    -apple-system,
+    BlinkMacSystemFont,
+    "Roboto",
+    Helvetica,
+    sans-serif;
+  line-height: 1.54;
+  text-align: justify;
+}
+
+@media screen and (min-width: 760px) {
+  body {
+    margin: auto;
+    max-width: 68vw;
+  }
+}
+
+@media screen and (min-width: 1150px) {
+  body {
+    margin: auto;
+    max-width: 62vw;
+  }
+}
+
+main {
+  hyphens: none;
+}
+
+/* BASIC HTML ELEMENTS */
+p {
+  margin: 1em 0;
+}
+
+h1 {
+  font-weight: normal;
+  margin-bottom: 0px;
+  font-size: 2em;
+  margin-top: 0;
+}
+
+h2 {
+  border-bottom: 1px solid;
+  border-color: var(--text-dim);
+  margin-bottom: 0.5em;
+  margin-top: 1.2em;
+  font-weight: normal;
+  font-size: 1.65em;
+}
+
+h3 {
+  font-size: 1.25em;
+  font-weight: 600;
+  margin-bottom: 0.5em;
+  padding-bottom: 0;
+}
+
+h4 {
+  font-size: 1.1em;
+  margin-bottom: 0;
+  padding-bottom: 0;
+  font-style: oblique;
+  font-weight: normal;
+}
+
+a, a:link {
+    color: var(--link);
+    text-decoration: none;
+}
+
+a:visited {
+    color: var(--link-visited);
+}
+
+a:hover {
+    text-decoration: underline;
+}
+
+hr {
+  border-style: dashed;
+  color: var(--text-dim);
+}
+
+blockquote {
+  border-left: 0.3rem solid var(--complimentary);
+  font-style: oblique;
+  margin: 1.6rem 0;
+  padding: 0 1.4rem 0 1rem;
+  line-height: 1.6;
+}
+
+blockquote p {
+  margin: 0;
+}
+
+details {
+  padding: 0 0 0 14px;
+  border-left: 2px dashed var(--border-general);
+}
+
+mark {
+  padding: 0 2px 0 2px;
+}
+
+ul {
+  padding-left: 2rem;
+}
+
+/* NOTE: fix for Inter font. */
+strong {
+  font-weight: 600;
+}
+
+/* NOTE: fix for Inter font. */
+th {
+  font-weight: 500;
+}
+
+/* MISC */
+.section-title {
+  border: 0;
+}
+
+.post-list {
+  color: var(--complimentary);
+  padding-left: 1em;
+}
+
+@media screen and (min-width: 760px) {
+  .post-list {
+    max-width: 60vw;
+  }
+}
+
+.bold-post-in-list {
+  font-weight: 600;
+}
+
+@media screen and (max-width: 760px) {
+  .katex {
+    font-size: 1.05em !important;
+  }
+}
+
+.footnotes {
+  margin-top: 60px;
+}
+
+.terms {
+  padding-left: 16px;
+}
+
+.footer-nav {
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  margin: 2em 0;
+}
+
+.footer-nav a.previous {
+  margin-right: auto;
+}
+
+.footer-nav a.next {
+  margin-left: auto;
+}
+
+.toc {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+  position: fixed !important;
+  left: 20px !important;
+  top: 46px !important;
+}
+
+#tableOfContentContainer {
+  display: block !important;
+  visibility: visible !important;
+}

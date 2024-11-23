@@ -61,8 +61,6 @@ data warehousing, ETL, automations, etc.
 majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. 
 aduated in 2018. 
 
-
-
 ## **languages**
 
 english: native
