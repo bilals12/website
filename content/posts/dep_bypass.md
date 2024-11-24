@@ -14,6 +14,8 @@ in [part 1](https://bsssq.xyz/posts/aslr_rop/), i talked about bypassing ASLR vi
 
 this post breaks down the internals of a Windows exploitation technique that leverages `WriteProcessMemory` and PE section manipulation to bypass memory protections. through careful ROP chain construction and code cave utilization in executable memory, we achieve reliable code execution while maintaining minimal forensic footprint. the analysis covers stack pivot mechanics, parameter chain validation, and the nuances of DLL memory layout - elements critical for both offensive development and defensive understanding of Windows memory corruption.
 
+![exploit](/codereuse.png)
+
 ## `WriteProcessMemory`
 
 using `WriteProcessMemory` provides a very powerful advantage: it takes advantage of Windows memory protection granularity, specifically at the page-level rather than the byte-level.
@@ -151,6 +153,8 @@ they're less predictable, and can sometimes contain **non-null** data.
 these are usually platform or version dependent.
 
 in the '90s, code caves were used for **simple shellcode injection**, and they had fixed addresses. you could artificially inflate your high-score in a game by storing a basic payload inside memory.
+
+![space cadet](/codecave0.png)
 
 today, code caves are used for multi-stage payloads, position-independent code, [evasion techniques](https://github.com/JavierYuste/Optimization-of-code-caves-in-malware-binaries-to-evade-Machine-Learning-detectors), and [complex exploit chains](https://web3.arxiv.org/pdf/2403.06428).
 
