@@ -3,7 +3,7 @@ type: about
 layout: single
 ---
 
-<pre style="font-size: max(0.7vw, 4px); background: linear-gradient(to right, #0088ff, #00cccc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border: none; color: #00dd00; font-family: monospace; line-height: 1.3; white-space: pre; margin: 0 auto; overflow: hidden; text-align: center;">
+<pre style="font-size: max(0.6vw, 4px); background: linear-gradient(to right, #0088ff, #00cccc); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border: none; color: #00dd00; font-family: monospace; line-height: 1.3; white-space: pre; margin: 0 auto; overflow: hidden; text-align: center;">
       *,/***********///((((((((((((((////******,,,,,,,.........,,,**//(/(((////**,,....,....,//,,*,*****//(((#########(((#((((((((((((((((((((//,,,,,,
      ,,***************///(/(((((((///**,.......... . .   ..........***//////**,,,....,.,,...............**/(((((#########((((((((((((((((((((((/(,.,,,
     ,,*********,,,......./*///////**,........,.......     .........,**//*/****,,.......................,.,/*((((((####((((((//***//(((((((((((((((,,,,
