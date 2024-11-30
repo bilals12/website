@@ -32,8 +32,8 @@ markup:
   highlight:
     codeFences: true
     guessSyntax: true
-    style: dracula
-    lineNumbersInTable: false
+    style: rrt
+    lineNumbersInTable: true
     noClasses: true
   goldmark:
     renderer:
