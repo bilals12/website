@@ -1,6 +1,6 @@
 ---
 title: "hooking functions to hide system artifacts"
-date: 2024-12-01T21:24:02-05:00
+date: 2024-12-01
 draft: false
 toc: true
 next: true
