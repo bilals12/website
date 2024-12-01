@@ -20,7 +20,7 @@ the power comes from where it operates - at the Native API level (`ntdll.dll`), 
 
 - below most security tools.
 - before system calls enter kernel mode.
--t he foundation that higher-level Windows APIs rely on.
+- the foundation that higher-level Windows APIs rely on.
 
 what makes this particularly threatening:
 
