@@ -10,7 +10,7 @@ notitle: false
 
 ## tl;dr
 
-rootkit-style code that uses the Microsoft `Detours` library to perform system call hooking. this tool us to:
+rootkit-style code that uses the Microsoft `Detours` library to perform system call hooking. this tool allows us to:
 
 - hide malicious processes (like backdoors) from Task Manager and security tools.
 - conceal files and directories from file explorers and system utilities.
@@ -25,11 +25,8 @@ the power comes from where it operates - at the Native API level (`ntdll.dll`), 
 what makes this particularly threatening:
 
 - it doesn't patch kernel code or drivers (avoiding many detections).
-
 - using `Detours` makes it relatively stable and reliable
-
 - the hiding is comprehensive (files + processes + registry).
-
 - it's hard to detect because it modifies data as it's being read, rather than modifying the data itself.
 
 ## system calls (syscalls)
