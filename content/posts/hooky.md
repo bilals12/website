@@ -1,6 +1,6 @@
 ---
 title: "hooking functions to hide system artifacts"
-date: 2024-11-30T21:24:02-05:00
+date: 2024-12-01T21:24:02-05:00
 draft: false
 toc: true
 next: true
@@ -123,7 +123,7 @@ void idt_init() {
 
 the CPU then jumps into the interrupt handler retrieved from the IDT. this handler is `KiSystemService` in Windows.
 
-`KiSystemService` reads the syscall number from `EAX`.
+`KiSystemService` reads the syscall number from `EAX`. 
 
 the syscall entry point is pointed to by the IDT.
 
@@ -223,7 +223,7 @@ BOOL HookIAT(LPCSTR szModuleName, LPCSTR szFunctionName, PVOID pHookFunction)
 
 #### inline hooking
 
-inline hooking (aka hot patching) is when the first few instructions of a function are modified to redirect execution to a hook function. to do this, you'd save the first few bytes of the target function, overwrite the beginning of the function with a jump (`JMP`) to your hook, and then perform your operations inside the hook before jumping back to the original function. this can hook pretty much any function, not just imported ones, and it works in both user- and kernel-mode. however, this is also more complex to implement, and you'd need to handle varying instruction lengths.
+inline hooking (aka [hot patching](https://learn.microsoft.com/en-us/windows-server/get-started/hotpatch)) is when the first few instructions of a function are modified to redirect execution to a hook function. to do this, you'd save the first few bytes of the target function, overwrite the beginning of the function with a jump (`JMP`) to your hook, and then perform your operations inside the hook before jumping back to the original function. this can hook pretty much any function, not just imported ones, and it works in both user- and kernel-mode. however, this is also more complex to implement, and you'd need to handle varying instruction lengths.
 
 ```c
 #define HOOK_SIZE 5
@@ -519,7 +519,7 @@ this prevents race conditions and makes sure the hook installation across all th
 
 - **thread suspension**:
 
-`Detours` suspends all threads in the process during hook installation, which. prevents threads from executing partially-modified code.
+`Detours` suspends all threads in the process during hook installation, which prevents threads from executing partially-modified code.
 
 - **context management**:
 
