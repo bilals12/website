@@ -223,7 +223,7 @@ BOOL HookIAT(LPCSTR szModuleName, LPCSTR szFunctionName, PVOID pHookFunction)
 
 #### inline hooking
 
-inline hooking (aka [hot patching](https://learn.microsoft.com/en-us/windows-server/get-started/hotpatch)) is when the first few instructions of a function are modified to redirect execution to a hook function. to do this, you'd save the first few bytes of the target function, overwrite the beginning of the function with a jump (`JMP`) to your hook, and then perform your operations inside the hook before jumping back to the original function. this can hook pretty much any function, not just imported ones, and it works in both user- and kernel-mode. however, this is also more complex to implement, and you'd need to handle varying instruction lengths.
+inline hooking (aka [hot-patching](https://learn.microsoft.com/en-us/windows-server/get-started/hotpatch)) is when the first few instructions of a function are modified to redirect execution to a hook function. to do this, you'd save the first few bytes of the target function, overwrite the beginning of the function with a jump (`JMP`) to your hook, and then perform your operations inside the hook before jumping back to the original function. this can hook pretty much any function, not just imported ones, and it works in both user- and kernel-mode. however, this is also more complex to implement, and you'd need to handle varying instruction lengths.
 
 ```c
 #define HOOK_SIZE 5
@@ -310,7 +310,7 @@ by replacing the first few instructions of a target function with a jump to a us
 
 ### implementation
 
-we'll need to include `detours.h` and link it with `detours.lib`. we'll also need to include the core "transaction" functions, `DetourAttach` and `DetourDetach`. this can then all be packaged in a DLL for insertion into existing applications.
+we'll need to include [`detours.h`](https://github.com/Microsoft/Detours/blob/main/src/detours.h) and link it with `detours.lib`. we'll also need to include the core "transaction" functions, `DetourAttach` and `DetourDetach`. this can then all be packaged in a DLL for insertion into existing applications.
 
 ```cpp
 // core hooking transaction functions
@@ -491,7 +491,7 @@ the trampoline saves the original prologue instructions, and allows the hook fun
 
 ### memory protection management
 
-`Detours` needs to modify code in memory, which requires changing the memory protection.here's a quick (and simplified) version of how it does this:
+`Detours` needs to modify code in memory, which requires changing the memory protection. here's a quick (and simplified) version of how it does this:
 
 ```cpp
 BOOL DetourCopyInstruction(
@@ -511,7 +511,7 @@ BOOL DetourCopyInstruction(
 }
 ```
 
-it uses `VirtualProtect` to make the target memory writable before copying the instruction from source to destination. it also fixes up the instruction if necessary (like for adjusting relative addresses). finally, it returns the memory to its original protection state.
+it uses [`VirtualProtect`](https://learn.microsoft.com/en-us/windows/win32/api/memoryapi/nf-memoryapi-virtualprotect) to make the target memory writable before copying the instruction from source to destination. it also fixes up the instruction if necessary (like for adjusting relative addresses). finally, it returns the memory to its original protection state.
 
 ### thread synchronization
 
@@ -607,7 +607,7 @@ typedef enum _KEY_VALUE_INFORMATION_CLASS {
 
 these are enumerations. `KEY_INFORMATION_CLASS` specifies what type of information to retrieve about a registry key. `KEY_VALUE_INFORMATION_CLASS` specifies what type of information to retrieve about a registry value. 
 
-these are used as parameters in functions like `NtEnumerateKey` and `NtEnumerateValueKey`.
+these are used as parameters in functions like [`NtEnumerateKey`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwenumeratekey) and [`NtEnumerateValueKey`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/wdm/nf-wdm-zwenumeratevaluekey).
 
 we then need to define structures. these structures hold information about registry keys and values. 
 
@@ -651,11 +651,11 @@ typedef struct _KEY_VALUE_FULL_INFORMATION {
 
 finally, we'll need to define the function pointer types for NT API functions. we're going to define function pointer types that allow for dynamic loading of the functions from `ntdll.dll`. this is necessary because the functions aren't part of the standard [Win32 API](https://yuval0x92.wordpress.com/2020/03/09/native-api-win32-api/), and their addresses may change between Windows versions.
 
-- `NtQueryDirectoryFile_t`: queries information about files in a directory.
+- [`NtQueryDirectoryFile_t`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerydirectoryfile): queries information about files in a directory.
 
-- `NtQueryDirectoryFileEx_t`: extended version of `NtQueryDirectoryFile`, with additional flags.
+- [`NtQueryDirectoryFileEx_t`](https://learn.microsoft.com/en-us/windows-hardware/drivers/ddi/ntifs/nf-ntifs-ntquerydirectoryfileex): extended version of `NtQueryDirectoryFile`, with additional flags.
 
-- `NtQuerySystemInformation_t`: queries various types of system information. 
+- [`NtQuerySystemInformation_t`](https://learn.microsoft.com/en-us/windows/win32/api/winternl/nf-winternl-ntquerysysteminformation): queries various types of system information. 
 
 - `NtEnumerateKey_t`: enumerates subkeys of a registry key.
 
@@ -772,7 +772,7 @@ NTSTATUS NTAPI HookedNtQueryDirectoryFile(
 }
 ```
 
-it uses `GetFinalPathNameByHandleW` to resolve the actual file path being queried. `StrStrIW` performs a case-insensitive comparison to check if the path contains `HIDE_PATH`. if the path matches, it zero-fills the `FileInformation` buffer (effectively hiding the entry). for non-hidden paths, it calls the original `NtQueryDirectoryFile` function. it returns `STATUS_NO_MORE_FILES` for hidden items, simulating an empty directory.
+it uses [`GetFinalPathNameByHandleW`](https://learn.microsoft.com/en-us/windows/win32/api/fileapi/nf-fileapi-getfinalpathnamebyhandlew) to resolve the actual file path being queried. [`StrStrIW`](https://learn.microsoft.com/en-us/windows/win32/api/shlwapi/nf-shlwapi-strstriw) performs a case-insensitive comparison to check if the path contains `HIDE_PATH`. if the path matches, it zero-fills the `FileInformation` buffer (effectively hiding the entry). for non-hidden paths, it calls the original `NtQueryDirectoryFile` function. it returns `STATUS_NO_MORE_FILES` for hidden items, simulating an empty directory.
 
 #### hiding the process
 
@@ -911,7 +911,7 @@ BOOL hooky(void) {
 }
 ```
 
-this uses `GetProcAddress` to perform a single-phase function resolution from `ntdll.dll`. it stores these addresses in global function pointers, like `origNtQueryDirectoryFile`.
+this uses [`GetProcAddress`](https://learn.microsoft.com/en-us/windows/win32/api/libloaderapi/nf-libloaderapi-getprocaddress) to perform a single-phase function resolution from `ntdll.dll`. it stores these addresses in global function pointers, like `origNtQueryDirectoryFile`.
 
 it calls `DetourRestoreAfterWith()` to set prepare a clean state for hooking, then initiates a `Detour` transaction with `DetourTransactionBegin()`. it updates the current thread with `DetourUpdateThread()`.
 

@@ -9,17 +9,19 @@ notitle: false
 
 ## **currently reading**
 
-[*] [eye of the chickenhawk by simon dovey](https://www.goodreads.com/book/show/199391047-eye-of-the-chickenhawk)
+[*] [there is no antimemetics division by qntm](https://www.goodreads.com/book/show/54870256-there-is-no-antimemetics-division)
 
-[*] [topology of violence by byung chul han](https://mitpress.mit.edu/9780262534956/topology-of-violence/)
+[*] [structure and interpretation of computer programs by sussman + abelson](https://en.wikipedia.org/wiki/Structure_and_Interpretation_of_Computer_Programs)
 
-[*] [blue fox: ARM assembly internals and reverse engineering by maria azeria markstedter](https://leg-assembly.com/)
+[*] [poc or gtfo by manul laphroaig](https://www.penguinrandomhouse.ca/books/589671/poc-or-gtfo-volume-2-by-manul-laphroaig/9781593279349)
+
+[*] [an inventory of losses by judith schalansky](https://www.ndbooks.com/book/an-inventory-of-losses/)
 
 [*] [applied cryptography: protocols, algorithms, and source code in C by bruce schneier](https://www.schneier.com/books/applied-cryptography/)
 
 ## **queue**
 
-[+] [an inventory of losses by judith schalansky](https://www.ndbooks.com/book/an-inventory-of-losses/)
+[+] [blue fox: ARM assembly internals and reverse engineering by maria azeria markstedter](https://leg-assembly.com/)
 
 [+] [dark deleuze by andrew culp](https://theanarchistlibrary.org/library/andrew-culp-dark-deleuze)
 
@@ -52,6 +54,10 @@ notitle: false
 [+] [the ladder of lights by william g. gray](https://www.goodreads.com/book/show/1360219.The_Ladder_of_Lights?ref=nav_sb_ss_1_16)
 
 ## **completed [2024]**
+
+[-] [eye of the chickenhawk by simon dovey](https://www.goodreads.com/book/show/199391047-eye-of-the-chickenhawk)
+
+[-] [topology of violence by byung chul han](https://mitpress.mit.edu/9780262534956/topology-of-violence/)
 
 [-] [the wretched of the earth by frantz fanon](https://en.wikipedia.org/wiki/The_Wretched_of_the_Earth)
 
