@@ -32,7 +32,7 @@ markup:
   highlight:
     codeFences: true
     guessSyntax: true
-    style: github-dark
+    style: fruity
     lineNumbersInTable: true
     noClasses: true
   goldmark:
