@@ -32,7 +32,7 @@ markup:
   highlight:
     codeFences: true
     guessSyntax: true
-    style: fruity
+    style: darcula
     lineNumbersInTable: true
     noClasses: true
   goldmark:
