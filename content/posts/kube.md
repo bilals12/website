@@ -10,7 +10,7 @@ notitle: false
 
 ## tl;dr
 
-clusterfuck is a multi-stage attack simulation against k8s environments. it performs executing privilege escalation, container escape, credential theft, lateral movement, and crypto mining techniques. it's designed to validate detection capabilities in your cloud security posture management (CSPM) and endpoint detection and response (EDR) tools. when successful, it triggers 20+ high-severity security alerts across the attack chain, helping security teams test their defenses, improve detection coverage, and practice incident response. 
+[clusterfuck](https://github.com/bilals12/clusterfuck) is a multi-stage attack simulation against k8s environments. it performs executing privilege escalation, container escape, credential theft, lateral movement, and crypto mining techniques. it's designed to validate detection capabilities in your cloud security posture management (CSPM) and endpoint detection and response (EDR) tools. when successful, it triggers 20+ high-severity security alerts across the attack chain, helping security teams test their defenses, improve detection coverage, and practice incident response. 
 
 ## cluster security 101
 
