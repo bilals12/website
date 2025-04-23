@@ -7,153 +7,129 @@ bold: true
 
 ## **tl;dr**
 
-all things security: OffSec, InfraSec, AppSec/ProdSec, CloudSec, etc. 
-i'm also into reverse engineering, malware analysis/development, AI-boosted pentesting, and pretty much all kinds of tech mischief i can integrate into my professional career. 
+i've been interested in computers for much longer than i've been working with them. i love security and engineering, and i enjoy learning a lot about both those things. 
 
-## **experience**
+## **jobs**
 
-### nov 2024 - present
+{{< timeline >}}
 
-**staff security engineer** @ [Turo](https://turo.com/)
+{{< timeline_item
+    title="staff security engineer"
+    company="Turo"
+    url="https://turo.com/"
+    period="nov 24 - "
+    current="true" >}}
+leading platform + infrastructure security: runtime security research, container/cluster hardening, red-teaming automations.
+{{< /timeline_item >}}
 
-head engineer for infrastructure security, detection + response, application security.
+{{< timeline_item
+    title="senior security engineer"
+    company="Numerator"
+    url="https://www.numerator.com/"
+    period="jul 2024 - nov 2024" >}}
+scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response.
+{{< /timeline_item >}}
 
-### jul 2024 - nov 2024
+{{< timeline_item
+    title="security researcher"
+    company="Trustwave SpiderLabs"
+    url="https://www.trustwave.com/en-us/company/about-us/spiderlabs/"
+    period="dec 2021 - dec 2023" >}}
+investigated attacks and vulnerabilities for key clients in telecommunications, energy, and national security + lots of deep research and red teaming (offensive security), specifically around database security, to build up threat intelligence.
+{{< /timeline_item >}}
 
-**senior security engineer** @ [Numerator](https://www.numerator.com/)
-
-focal point between SecOps, DevOps, IT, Platform, and Data teams.
-
-scouring and securing engineering architecture and infrastructure: cross-stack vulnerability management (discovery, triage, reporting, remediation, tracking), identity + access management, API security, Terraform guardrails, container + cluster security, incident response. 
-
-
-### dec 2021 - dec 2023
-
-**security researcher** @ [Trustwave SpiderLabs](https://www.trustwave.com/en-us/company/about-us/spiderlabs/)
-
-
-investigated **attacks and vulnerabilities** for key clients in telecommunications, energy, and national security.
-
-
-lots of deep research and red teaming (offensive security), specifically around database security, to build up **threat intelligence**. 
-
-
-built **sensors** based on collected intelligence (attacker + malware behaviour, OSINT, dark net markets, shadow channels, 
-c) to keep clients up-to-date and protected. 
-
-
-### jun 2018 - dec 2021
-
-**lead database developer** @ [Veryon](https://veryon.com/)
-
-
+{{< timeline_item
+    title="lead database developer"
+    company="Veryon"
+    url="https://veryon.com/"
+    period="jun 2018 - nov 2021" >}}
 entry-level software + database development. 
-
-
 data warehousing, ETL, automations, etc. 
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="retail associate and genius"
+    company="Apple Store"
+    url="https://www.apple.com/ca/retail/masonville/"
+    period="sep 2016 - may 2018" >}}
+tech support, troubleshooting, etc.
+
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="lab tech"
+    company="University Mechatronics Lab"
+    url="https://www.eng.uwo.ca/electrical/research/labs/arm/index.html"
+    period="jun 2016 - oct 2016" >}}
+helped with various projects over the summer and did a bunch of microcontroller programming. 
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="deboning"
+    company="Cargill"
+    url="https://www.cargill.ca/en/home"
+    period="apr 2016 - may 2016" >}}
+deboning chickens at the cargill chicken processing plant.
+
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="retail associate"
+    company="RW&Co"
+    url="https://www.rw-co.com/"
+    period="sep 2015 - jan 2016" >}}
+just helping folks pick out suits and ties.
+
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="notetaker"
+    company="University Academic Support"
+    period="sep 2015 - jan 2018"
+    url="https://academicsupport.uwo.ca/accessible_education/interpretation_and_notetaking.html" >}}
+took class notes for students who were hard-of-hearing.
+
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="dishwasher"
+    company="Mandarin Restaurant"
+    period="oct 2013 - oct 2014"
+    url="http://www.mandarinrestaurant.com/" >}}
 
 
-## **education**
+{{< /timeline_item >}}
 
-### **bachelor of engineering** @ [Western U](https://www.eng.uwo.ca/)
-
-
-majored in electrical and computer engineering, with a specialization in information theory and wireless transmission. 
-aduated in 2018. 
-
-## **languages**
-
-english: native
+{{< /timeline >}}
 
 
-hindi: native
+## **formal education**
 
 
-urdu: native
+{{< timeline >}}
+{{< timeline_item
+    title="bachelor of engineering"
+    company="Western University"
+    url="https://www.eng.uwo.ca/"
+    period="sep 2011 - feb 2018"
+    >}}
+    majored in electrical and computer engineering, with a specialization in information theory and wireless transmission.
 
-
-french: intermediate
-
-
-arabic: intermediate
-
-
-mandarin: rudimentary
-
+{{< /timeline_item >}}
+{{< /timeline >}}
 
 ## **interests**
 
-homelab
+<pre style="font-size: 1.5em; background: linear-gradient(to right, #00cccc, #0088ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border: none; color: #00dd00; font-family: monospace; line-height: 1; white-space: pre; margin: 0 auto; overflow: hidden; text-align: left;">
+homelab         cryptography
+             
+philosophy      reverse engineering
 
+reading         software archaeology
 
-philosophy
+photography     malware analysis + discovery
 
+dancing         containers + clusters
 
-reading
-
-
-photography
-
-
-dancing
-
-
-basketball
-
-
-## **tech + skills**
-
-### **frontend** 
-
-React • Angular • Vue.js • JavaScript • TypeScript
-
-
-### **backend** 
-
-Java • Python • C/C++/C# • Node.js • Ruby • Go • Ruby on Rails • .NET • Express.js • Flask • Django • Spring 
-ot • RESTful + GraphQL APIs • Docker • Kubernetes • gRPC
-
-
-### **databases**
-
-PostgreSQL • MySQL • MS SQL Server Oracle • MongoDB • Cassandra • Redis • Elasticsearch • Snowflake
-
-
-### **devops + infra**
-
-AWS • Azure • Jenkins • GitLab CI • GitHub Actions • Docker • Kubernetes • OpenShift • Ansible • Terraform • Puppet • Chef
-
-
-### **AI/ML + data**
-
-TensorFlow • PyTorch • Pandas • NumPy • Matplotlib • Tableau • Deep Learning (RNN/CNN) • ETL
-
-
-### **insights**
-
-Prometheus • Grafana • Datadog • ELK • Splunk • Git • Jira • Confluence
-
-
-### **penetration testing**
-
-Metasploit • Burp Suite • nmap • Nessus • ZAP 
-
-
-### **network security**
-
-ASA/Palo Alto • Snort/Suricata• VPN • NAC • SSL/TLS • TCP/IP/UDP • SSH
-
-
-### **application security**
-
-Snyk • Semgrep • Socket • Burp Suite • OWASP Top 10 • CIS Controls • ST SP 800-53 • Vanta • GitHub Advanced Security (CodeQL) • JupiterOne
-
-
-### **IAM + cryptography**
-
-Okta • Auth0 • AD • AWS IAM • OAuth2.0 • OIDC • SAML • AES • RSA • ECC • SHA-256 • MD5 • OpenSSL
-
-
-### **reverse engineering**
-
-IDA Pro • Ghidra • Immunity Debugger • Decompilation • GDB • WinDBG • x64dbg • gdbExtract
+basketball      networks
+</pre>

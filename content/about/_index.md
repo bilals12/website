@@ -65,4 +65,7 @@ a few years ago, i had the idea of creating this website, in honour of the inter
 
 thanks for coming!
 
-![salmon](/IMG_5040.JPG)
+<figure>
+  <img loading="lazy" style="max-height: 70vh;" src="/IMG_5040.JPG" />
+  <figcaption>salmon the cat</figcaption>
+</figure>

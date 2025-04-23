@@ -248,3 +248,49 @@ p code {
   word-wrap: break-word;
   color: #8ec07c;
 }
+
+.timeline {
+  position: relative;
+  padding-left: 20px;
+}
+
+.timeline::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 1px;
+  background-color: #a7a7a7;
+}
+
+.timeline-item {
+  margin-bottom: 1rem;
+  position: relative;
+}
+
+.timeline-item::before {
+  content: "";
+  position: absolute;
+  left: -24px;
+  top: 6px;
+  width: 8px;
+  height: 8px;
+  background-color: #c07c7c;
+}
+
+.timeline-item.current::before {
+  background-color: #8ec07c;
+}
+
+.timeline-item h3 {
+  margin: 0;
+  font-size: 1rem;
+  color: var(--text-headings);
+}
+
+.timeline-item p {
+  margin: 0.2rem 0 0;
+  font-size: 0.9rem;
+  color: var(--text-muted);
+}

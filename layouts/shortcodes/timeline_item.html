@@ -1,0 +1,16 @@
+<div class="timeline-item {{ with .Get "current" }}current{{ end }}">
+    <h3>{{ .Get "title" }}</h3>
+    <p>
+      {{ $company := .Get "company" }}
+      {{ $url := .Get "url" }}
+      {{ if and $company $url }}
+        <a href="{{ $url }}" target="_blank" rel="noopener noreferrer">{{ $company }}</a>
+      {{ else }}
+        {{ $company }}
+      {{ end }}
+      • {{ .Get "period" }}
+    </p>
+    <div class="content">
+      {{ .Inner }}
+    </div>
+</div>
