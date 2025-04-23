@@ -31,7 +31,6 @@ pre {
 
 code {
   font-family: 'Source Code Pro', monospace;
-  color: var(--code);
 
   /* For Iosevka */
   /* font-stretch: expanded; */

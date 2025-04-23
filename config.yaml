@@ -32,7 +32,7 @@ markup:
   highlight:
     codeFences: true
     guessSyntax: true
-    style: zenburn
+    style: catppuccin-mocha
     lineNumbersInTable: true
     noClasses: true
   goldmark:

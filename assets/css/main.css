@@ -44,12 +44,8 @@ body {
   background-color: var(--background);
   color: var(--text);
   font-family:
-    "Inter",
-    -apple-system,
-    BlinkMacSystemFont,
-    "Roboto",
-    Helvetica,
-    sans-serif;
+    "IBM Plex Mono",
+    monospace;
   line-height: 1.54;
   text-align: justify;
 }
@@ -250,4 +246,5 @@ code {
 p code {
   white-space: normal;
   word-wrap: break-word;
+  color: #8ec07c;
 }
