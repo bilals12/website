@@ -17,7 +17,7 @@ i've been interested in computers for much longer than i've been working with th
     title="staff security engineer"
     company="Turo"
     url="https://turo.com/"
-    period="nov 24 - "
+    period="nov 2024 - "
     current="true" >}}
 leading platform + infrastructure security: runtime security research, container/cluster hardening, red-teaming automations.
 {{< /timeline_item >}}
