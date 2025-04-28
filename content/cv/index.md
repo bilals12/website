@@ -146,15 +146,4 @@ basketball
 networks
 </pre>
 
-{{% columns %}}
-
-Title 1
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s.
-
-<--->
-
-Title 2
-Lorem Ipsum is simply dummy text of the printing and typesetting industry. Lorem Ipsum has been the industry's standard dummy text ever since the 1500s
-
-{{% /columns %}}
 
