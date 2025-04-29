@@ -1,50 +1,7 @@
-{{ define "main" }}
-<div class="about-content">
-    {{ .Content }}
-    
-    <!-- Add the visualization container -->
-    <div id="activity-visualization">
-        <div id="stats"></div>
-        <div id="chart"></div>
-    </div>
-</div>
+{{ partial "header.html" . }}
 
-<!-- Add D3.js -->
-<script src="https://d3js.org/d3.v6.min.js"></script>
-<!-- Add your visualization script -->
-<script src="/viz/visualization.js"></script>
+<main>
+  {{ .Content }}
+</main>
 
-<style>
-    #activity-visualization {
-        width: 100%;
-        margin: 2rem 0;
-    }
-
-    #stats {
-        display: flex;
-        justify-content: space-around;
-        margin-bottom: 1rem;
-    }
-
-    #chart {
-        width: 100%;
-        height: 400px;
-    }
-
-    .tooltip {
-        position: absolute;
-        pointer-events: none;
-        background: rgba(0, 255, 0, 0.1);
-        border: 1px solid #0f0;
-        color: #0f0;
-        padding: 8px;
-        border-radius: 4px;
-        font-family: monospace;
-    }
-
-    .grid line {
-        stroke: #0f0;
-        stroke-opacity: 0.1;
-    }
-</style>
-{{ end }}
+{{ partial "footer.html" . }}

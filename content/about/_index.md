@@ -65,53 +65,9 @@ a few years ago, i had the idea of creating this website, in honour of the inter
 
 thanks for coming!
 
-<!-- Add visualization section -->
-<div id="activity-visualization">
-    <div id="stats"></div>
-    <div id="chart"></div>
-</div>
+{{< activity-viz >}}
 
-<!-- Add required scripts -->
-<script src="https://d3js.org/d3.v6.min.js"></script>
-<script src="/viz/visualization.js"></script>
 
-<!-- Add visualization styles -->
-<style>
-#activity-visualization {
-    width: 100%;
-    margin: 2rem 0;
-    background: rgba(0, 0, 0, 0.1);
-    padding: 1rem;
-    border-radius: 4px;
-}
-
-#stats {
-    display: flex;
-    justify-content: space-around;
-    margin-bottom: 1rem;
-}
-
-#chart {
-    width: 100%;
-    height: 400px;
-}
-
-.tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: rgba(0, 255, 0, 0.1);
-    border: 1px solid #0f0;
-    color: #0f0;
-    padding: 8px;
-    border-radius: 4px;
-    font-family: monospace;
-}
-
-.grid line {
-    stroke: #0f0;
-    stroke-opacity: 0.1;
-}
-</style>
 
 <figure>
   <img loading="lazy" style="max-height: 70vh;" src="/IMG_5040.JPG" />

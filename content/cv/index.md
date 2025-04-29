@@ -7,6 +7,10 @@ bold: true
 
 ## **tl;dr**
 
+[github](https://github.com/bilals12)
+
+[linkedin](https://linkedin.com/in/bilal-s-b857601a)
+
 i've been interested in computers for much longer than i've been working with them. i love security and engineering, and i enjoy learning a lot about both those things. 
 
 ## **jobs**
