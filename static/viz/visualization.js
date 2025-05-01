@@ -166,20 +166,20 @@ function renderChart(data) {
             if (diffMinutes > MAX_GAP_MINUTES) {
                 dataWithGaps.push({
                     timestamp: new Date(currentTime + 60000),
-                    keypresses: null, 
-                    mousemoves: null,
-                    leftclicks: null,
-                    rightclicks: null,
-                    middleclicks: null
+                    keypresses: 0, 
+                    mousemoves: 0,
+                    leftclicks: 0,
+                    rightclicks: 0,
+                    middleclicks: 0
                 });
                 // insert null at next time - 1
                 dataWithGaps.push({
                     timestamp: new Date(nextTime - 60000),
-                    keypresses: null,
-                    mousemoves: null,
-                    leftclicks: null,
-                    rightclicks: null,
-                    middleclicks: null
+                    keypresses: 0,
+                    mousemoves: 0,
+                    leftclicks: 0,
+                    rightclicks: 0,
+                    middleclicks: 0
                 });
             }
         }
