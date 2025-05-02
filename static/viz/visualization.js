@@ -154,7 +154,7 @@ function renderChart(data) {
     const MAX_GAP_MINUTES = 15;
     let dataWithGaps = [];
 
-    // insert nulls to break
+    // find gaps + insert 0 (not null) to make lines go to 0
     for (let i = 0; i < data.length; i++) {
         dataWithGaps.push(data[i]);
 
@@ -164,6 +164,7 @@ function renderChart(data) {
             const diffMinutes = (nextTime - currentTime) / (1000 * 60);
 
             if (diffMinutes > MAX_GAP_MINUTES) {
+                // insert 0 point right after current time 
                 dataWithGaps.push({
                     timestamp: new Date(currentTime + 60000),
                     keypresses: 0, 
@@ -186,16 +187,73 @@ function renderChart(data) {
     }
     
     // setup scales (with gaps)
-    const x = d3.scaleTime()
-        .domain(d3.extent(dataWithGaps, d => d.timestamp))
-        .range([0, width]);
-    
-    //const now = new Date();
-    //const hoursToShow = 6;
-    //const startTime = new Date(now.getTime() - (hoursToShow * 60 * 60 * 1000));
     //const x = d3.scaleTime()
-    //    .domain([startTime, now])
+    //    .domain(d3.extent(dataWithGaps, d => d.timestamp))
     //    .range([0, width]);
+    
+    // this part handles missing data
+    // use a fixed time range for the last ROLLING_WINDOW_HOURS
+    const now = new Date();
+    const startTime = new Date(now.getTime() - (ROLLING_WINDOW_HOURS * 60 * 60 * 1000));
+
+    // if no data or limited date
+    // we should have 0 points at boundaries
+    if (dataWithGaps < 2) {
+        // 0 point at window start
+        dataWithGaps.push({
+            timestamp: startTime,
+            keypresses: 0,
+            mousemoves: 0,
+            leftclicks: 0,
+            rightclicks: 0,
+            middleclicks: 0
+        });
+
+        // 0 point at current time
+        dataWithGaps.push({
+            timestamp: now,
+            keypresses: 0,
+            mousemoves: 0,
+            leftclicks: 0,
+            rightclicks: 0,
+            middleclicks: 0
+        });
+    } else {
+        // time boundaries by adding 0s if needed
+        const earliestTime = dataWithGaps[0].timestamp;
+        const latestTime = dataWithGaps[dataWithGaps.length - 1].timestamp;
+
+        // if earliest data point is after window start
+        // add 0 point
+        if (earliestTime > startTime) {
+            dataWithGaps.unshift({
+                timestamp: startTime,
+                keypresses: 0,
+                mousemoves: 0,
+                leftclicks: 0,
+                rightclicks: 0,
+                middleclicks: 0
+            });
+        }
+
+        // if latest data point is before current time
+        // add 0 point
+        if (latestTime < now) {
+            dataWithGaps.push({
+                timestamp: now,
+                keypresses: 0,
+                mousemoves: 0,
+                leftclicks: 0,
+                rightclicks: 0,
+                middleclicks: 0
+            });
+        }
+    }
+
+    // set x scale with fixed boundaries
+    const x = d3.scaleTime()
+        .domain([startTime, now])
+        .range([0, width]);
 
     const y = d3.scaleLinear()
         .domain([0, d3.max(dataWithGaps, d => 
@@ -280,6 +338,7 @@ function renderChart(data) {
                 .y(d => y(d[metric] || 0))
                 .defined(d => d[metric] !== null) // skip null values
                 .curve(SMOOTH_CURVES ? d3.curveMonotoneX : d3.curveLinear);
+                //.curve(d3.curveLinear);
 
             svg.append('path')
                 .datum(dataWithGaps)
