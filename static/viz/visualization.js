@@ -482,3 +482,4 @@ window.addEventListener('resize', () => {
         renderChart(currentData);
     }, 250);
 });
+
