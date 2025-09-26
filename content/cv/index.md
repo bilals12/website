@@ -23,7 +23,10 @@ bold: true
     url="https://turo.com/"
     period="nov 2024 - "
     current="true" >}}
-leading platform + infrastructure security: runtime security research, container/cluster hardening, red-teaming automations.
+platform security:
+core platform, backend, frontend, devX.
+
+plus: runtime security research, container/cluster hardening, red-teaming automations, AI security, pipeline security, application security, secrets management, secure design/architecture reviews.
 {{< /timeline_item >}}
 
 {{< timeline_item
