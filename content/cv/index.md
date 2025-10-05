@@ -24,12 +24,12 @@ bold: true
     period="oct 2025 - "
     current="true" >}}
 {{< /timeline_item >}}
+
 {{< timeline_item
     title="staff security engineer"
     company="Turo"
     url="https://turo.com/"
-    period="nov 2024 - oct 2025 "
-    current="true" >}}
+    period="nov 2024 - oct 2025 ">}}
 platform security:
 core platform, backend, frontend, devX.
 
