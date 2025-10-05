@@ -19,7 +19,7 @@ bold: true
 
 {{< timeline_item
     title="engineering manager, security"
-    company"Turo"
+    company="Turo"
     url="https://turo.com/"
     period="oct 2025 - "
     current="true" >}}
