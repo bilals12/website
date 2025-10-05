@@ -29,7 +29,8 @@ bold: true
     title="staff security engineer"
     company="Turo"
     url="https://turo.com/"
-    period="nov 2024 - oct 2025 ">}}
+    period="nov 2024 - oct 2025 "
+    current="true" >}}
 platform security:
 core platform, backend, frontend, devX.
 
@@ -37,7 +38,7 @@ plus: runtime security research, container/cluster hardening, red-teaming automa
 {{< /timeline_item >}}
 
 {{< timeline_item
-    title="senior security engineer"
+    title="security engineer"
     company="Numerator"
     url="https://www.numerator.com/"
     period="jul 2024 - nov 2024" >}}
@@ -111,6 +112,15 @@ took class notes for students who were hard-of-hearing.
     period="oct 2013 - oct 2014"
     url="http://www.mandarinrestaurant.com/" >}}
 
+
+{{< /timeline_item >}}
+
+{{< timeline_item
+    title="archiving intern"
+    company="Evergreen Review"
+    period="apr 2010 - sep 2011"
+    url="https://evergreenreview.com/"
+helped the founder of evergreen review, barney rosset, archive and preserve his life's work and various odds and ends.
 
 {{< /timeline_item >}}
 
