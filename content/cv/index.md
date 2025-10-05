@@ -119,7 +119,7 @@ took class notes for students who were hard-of-hearing.
     title="archiving intern"
     company="Evergreen Review"
     period="apr 2010 - sep 2011"
-    url="https://evergreenreview.com/"
+    url="https://evergreenreview.com/" >}}
 helped the founder of evergreen review, barney rosset, archive and preserve his life's work and various odds and ends.
 
 {{< /timeline_item >}}
