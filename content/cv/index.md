@@ -18,10 +18,17 @@ bold: true
 {{< timeline >}}
 
 {{< timeline_item
+    title="engineering manager, security"
+    company"Turo"
+    url="https://turo.com/"
+    period="oct 2025 - "
+    current="true" >}}
+{{< /timeline_item >}}
+{{< timeline_item
     title="staff security engineer"
     company="Turo"
     url="https://turo.com/"
-    period="nov 2024 - "
+    period="nov 2024 - oct 2025 "
     current="true" >}}
 platform security:
 core platform, backend, frontend, devX.
