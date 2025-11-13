@@ -18,7 +18,7 @@ bold: true
 {{< timeline >}}
 
 {{< timeline_item
-    title="engineering manager, security"
+    title="engineering manager, platform security"
     company="Turo"
     url="https://turo.com/"
     period="oct 2025 - "
