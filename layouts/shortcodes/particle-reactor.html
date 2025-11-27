@@ -1,4 +1,4 @@
-<div id="particle-reactor-container">
+<div id="particle-reactor-container" class="desktop-only">
     <div id="sceneContainer"></div>
 </div>
 
@@ -64,6 +64,12 @@
     height: 100%;
     position: relative;
     z-index: 1;
+}
+
+@media screen and (max-width: 768px) {
+    .desktop-only {
+        display: none !important;
+    }
 }
 </style>
 
