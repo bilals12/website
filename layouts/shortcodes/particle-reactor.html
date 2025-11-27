@@ -1,0 +1,420 @@
+<div id="particle-reactor-container">
+    <div id="sceneContainer"></div>
+</div>
+
+<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
+<script type="importmap">
+{
+    "imports": {
+        "three": "https://unpkg.com/three@0.180.0/build/three.module.js"
+    }
+}
+</script>
+
+<style>
+#particle-reactor-container {
+    width: 100vw;
+    position: relative;
+    left: 50%;
+    right: 50%;
+    margin-left: -50vw;
+    margin-right: -50vw;
+    margin-top: 2em;
+    margin-bottom: 0;
+    padding: 2em;
+    background: #000;
+}
+
+#particle-reactor-container #sceneContainer {
+    width: 100%;
+    height: 540px;
+    background: #000;
+    overflow: hidden;
+    position: relative;
+    box-shadow: 
+        inset 0 4em 4em -4em rgba(0, 0, 0, 1),
+        inset 0 -4em 4em -4em rgba(0, 0, 0, 1);
+}
+
+#particle-reactor-container #sceneContainer::before,
+#particle-reactor-container #sceneContainer::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 4em;
+    z-index: 10;
+    pointer-events: none;
+}
+
+#particle-reactor-container #sceneContainer::before {
+    left: 0;
+    background: linear-gradient(to right, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+#particle-reactor-container #sceneContainer::after {
+    right: 0;
+    background: linear-gradient(to left, rgba(0, 0, 0, 1), rgba(0, 0, 0, 0));
+}
+
+#particle-reactor-container canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+</style>
+
+<script type="module">
+    import * as THREE from 'three';
+
+    // Configuration
+    const CONFIG = {
+        width: 1920,
+        height: 1080,
+        particleCount: 800,
+        particleCrossTime: 0.75,
+        rayLength: 8,
+        bubbleRadius: 100,
+        beamSpacingMultiplier: 0.9,
+        refractionStrengthMiddle: 4.5,
+        refractionStrengthOuter: 0.6,
+        refractionStrengthInner: 1.9,
+        particleSize: 12,
+        particleSpeedMultiplier: 1.4,
+        beamThickness: 1.5,
+        pathSpreadRange: 5,
+        innerRadius: 0.375,
+        outerRadius: 0.55,
+        frostingIntensity: 0.05,
+        // Internal constants
+        timePerFrame: 0.016,
+        refractionZoneMultiplier: 0.7,
+        refractionThreshold: 0.05,
+        depthRange: 1600,
+        depthOffset: 800,
+    };
+
+    // Vignette texture creation function
+    function createVignetteTexture(size = 512, innerRadius = 0.3, outerRadius = 0.8) {
+        const canvas = document.createElement('canvas');
+        canvas.width = canvas.height = size;
+        const ctx = canvas.getContext('2d');
+        
+        const gradient = ctx.createRadialGradient(
+            size/2, size/2, size * innerRadius,
+            size/2, size/2, size * outerRadius
+        );
+        gradient.addColorStop(0, 'white');
+        gradient.addColorStop(1, 'black');
+        
+        ctx.fillStyle = gradient;
+        ctx.fillRect(0, 0, size, size);
+        return new THREE.CanvasTexture(canvas);
+    }
+
+    // Scene Setup
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x000000);
+    
+    const sceneContainer = document.getElementById('sceneContainer');
+    if (!sceneContainer) throw new Error('sceneContainer element not found');
+    
+    const camera = new THREE.PerspectiveCamera(
+        40,
+        sceneContainer.clientWidth / sceneContainer.clientHeight,
+        0.1,
+        2000
+    );
+    camera.position.z = 400;
+
+    const renderer = new THREE.WebGLRenderer({ 
+        antialias: true,
+        alpha: false
+    });
+    renderer.setSize(sceneContainer.clientWidth, sceneContainer.clientHeight);
+    renderer.setPixelRatio(window.devicePixelRatio);
+    renderer.outputColorSpace = THREE.SRGBColorSpace;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.5;
+    sceneContainer.appendChild(renderer.domElement);
+
+    // Lighting
+    const light1 = new THREE.PointLight(0x90EE90, 230000, 5000);
+    const ambientLight = new THREE.AmbientLight(0x99ff99, 0.6);
+    light1.position.set(550, -450, 350);
+    scene.add(light1);
+    scene.add(ambientLight);
+
+    // Calculate spawn rate
+    let framesToCrossScreen = CONFIG.particleCrossTime * 60;
+    let particlesPerFrame = CONFIG.particleCount / framesToCrossScreen;
+    let particles = [];
+    let spawnAccumulator = 0;
+
+    class Particle {
+        constructor(spawnAtEdge = true) {
+            // Color animation: phase cycles through 0 to 360 for hue shifts
+            this.colorPhase = Math.random() * Math.PI * 2;
+            this.colorSpeed = Math.random() * 0.5 + 0.5;
+            
+            // Random ASCII character for visual variety
+            this.character = String.fromCharCode(33 + Math.floor(Math.random() * 94));
+            
+            // Trail stores previous positions for beam effect
+            this.trail = [];
+            this.refracted = false;
+
+            // Spawn position: edge spawning concentrates particles at screen entry
+            if (spawnAtEdge) {
+                this.x = CONFIG.width / 2 + (Math.random() * 150 + 25);
+            } else {
+                this.x = (Math.random() - 0.5) * CONFIG.width * 1.5;
+            }
+            
+            this.y = (Math.random() - 0.5) * CONFIG.height * 0.45;
+            this.z = (Math.random() - 0.5) * CONFIG.depthRange;
+            
+            // Constant velocity leftward (particles traverse screen at fixed speed)
+            this.velocityX = -CONFIG.width / (CONFIG.particleCrossTime * 60) * CONFIG.particleSpeedMultiplier;
+            this.initialY = this.y;
+
+            // Beam assignment: three horizontal beam lines (A, B, C) with zones
+            const beamA = CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier;
+            const beamB = 0;
+            const beamC = -CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier;
+            const midlineAB = beamA / 2;
+            const midlineBC = beamC / 2;
+
+            // Determine which beam this particle targets based on initial Y position
+            if (this.initialY > midlineAB) {
+                this.pathTarget = beamA;
+                this.isMiddleBeam = false;
+                this.beamSide = this.initialY > beamA ? 'outer' : 'inner';
+                this.zoneMin = -Infinity;
+                this.zoneMax = Infinity;
+            } else if (this.initialY < midlineBC) {
+                this.pathTarget = beamC;
+                this.isMiddleBeam = false;
+                this.beamSide = this.initialY < beamC ? 'outer' : 'inner';
+                this.zoneMin = -Infinity;
+                this.zoneMax = Infinity;
+            } else {
+                this.pathTarget = beamB;
+                this.isMiddleBeam = true;
+                this.beamSide = null;
+                this.zoneMin = this.initialY >= 0 ? 0 : -Infinity;
+                this.zoneMax = this.initialY >= 0 ? Infinity : 0;
+            }
+
+            // Random spread offset within beam
+            this.pathSpread = (Math.random() - 0.5) * CONFIG.pathSpreadRange;
+        }
+
+        update() {
+            // Move particle continuously leftward
+            this.x += this.velocityX;
+            
+            // Advance color animation phase
+            this.colorPhase += this.colorSpeed * CONFIG.timePerFrame;
+
+            const distToBeam = Math.abs(this.y - this.pathTarget);
+            const refractionStartX = CONFIG.bubbleRadius * CONFIG.refractionZoneMultiplier;
+            
+            // Refraction zone: particles near bubble center are attracted to beam lines
+            if (Math.abs(this.x) < refractionStartX) {
+                // Calculate 2D distance (normalized) from particle to beam attraction zone
+                const xDist = Math.abs(this.x);
+                const normalizedDist = Math.hypot(xDist / CONFIG.bubbleRadius, distToBeam / (CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier));
+                
+                // Falloff curve: full influence at center, drops to zero at radius edge
+                const bubbleInfluence = Math.pow(Math.max(0, 1 - normalizedDist), 2);
+                
+                // Target position: beam line + random spread offset
+                const spreadTarget = this.pathTarget + this.pathSpread;
+                const effectiveTarget = Math.max(this.zoneMin, Math.min(this.zoneMax, spreadTarget));
+                
+                // Outer beam particles pull stronger than inner (2.5x vs 1.0x)
+                const strengthMultiplier = (this.pathTarget * this.initialY > 0) ? 2.5 : 1.0;
+                
+                // Select refraction strength based on beam type (middle vs outer vs inner)
+                const refractionStrength = !this.isMiddleBeam 
+                    ? (this.beamSide === 'outer' ? CONFIG.refractionStrengthOuter : CONFIG.refractionStrengthInner)
+                    : CONFIG.refractionStrengthMiddle;
+                
+                // Apply deflection: distance to target × pull strength × influence falloff
+                const deflectionAmount = (effectiveTarget - this.y) * refractionStrength * bubbleInfluence * 0.5 * strengthMultiplier;
+                
+                // Depth influence: particles farther back (higher z) are less affected
+                const depthInfluence = 0.5 + (this.z + CONFIG.depthOffset) / CONFIG.depthRange;
+                this.y += deflectionAmount * depthInfluence;
+                
+                this.refracted = bubbleInfluence > CONFIG.refractionThreshold;
+            } else {
+                this.refracted = false;
+            }
+
+            // Record position for trail rendering
+            this.trail.push({ x: this.x, y: this.y });
+            if (this.trail.length > CONFIG.rayLength) {
+                this.trail.shift();
+            }
+        }
+
+        getColor() {
+            // Map color phase to hue: cycles green (120 degrees) ↔ cyan (160 degrees)
+            const phase = (this.colorPhase % (Math.PI * 2)) / (Math.PI * 2);
+            const hue = phase < 0.5 
+                ? 120 + phase * 80
+                : 160 - (phase - 0.5) * 80;
+            return `hsl(${hue}, 100%, 50%)`;
+        }
+
+        getSize() {
+            // Scale particle size based on depth: closer = larger
+            const depthScale = 0.2 + (this.z + CONFIG.depthOffset) / CONFIG.depthRange * 0.8;
+            return CONFIG.particleSize * depthScale;
+        }
+
+        getOpacity() {
+            // Fade with depth: farther particles are dimmer
+            const depthScale = 0.2 + (this.z + CONFIG.depthOffset) / CONFIG.depthRange;
+            return Math.min(1, 0.2 + (depthScale * 0.6));
+        }
+
+        isOffScreen() {
+            // Remove particles after they exit screen left
+            return this.x < -CONFIG.width / 2 - 100;
+        }
+    }
+
+    // Perform initial particle calculations so canvas starts populated
+    for (let _i = 0; _i < 100; _i++) {
+        spawnAccumulator += particlesPerFrame;
+        while (spawnAccumulator >= 1) {
+            particles.push(new Particle(true));
+            spawnAccumulator -= 1;
+        }
+        
+        particles.forEach(p => p.update());
+        // Remove offscreen particles (iterate backwards to avoid index issues)
+        for (let i = particles.length - 1; i >= 0; i--) {
+            if (particles[i].isOffScreen()) {
+                particles.splice(i, 1);
+            }
+        }
+    }
+
+    // Canvas for particles
+    const canvas = document.createElement('canvas');
+    canvas.width = CONFIG.width;
+    canvas.height = CONFIG.height;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) throw new Error('Failed to get 2D context from canvas');
+
+    const texture = new THREE.CanvasTexture(canvas);
+    const canvasMaterial = new THREE.MeshBasicMaterial({ map: texture });
+    const canvasGeometry = new THREE.PlaneGeometry(CONFIG.width, CONFIG.height);
+    const canvasMesh = new THREE.Mesh(canvasGeometry, canvasMaterial);
+    canvasMesh.position.z = -200;
+    scene.add(canvasMesh);
+
+    // Glass Bubble
+    const bubbleGeometry = new THREE.IcosahedronGeometry(CONFIG.bubbleRadius, 8);
+    
+    // Create initial vignette texture
+    const vignetteTexture = createVignetteTexture(512, CONFIG.innerRadius, CONFIG.outerRadius);
+    
+    const bubbleMaterial = new THREE.MeshPhysicalMaterial({
+        color: 0xffffff,
+        metalness: 0.25,
+        roughness: 0.45,
+        transmission: 1.0,
+        ior: 1.2,
+        thickness: 25,
+        transparent: true,
+        opacity: 0.55,
+        roughnessMap: vignetteTexture,
+        transmissionMap: vignetteTexture
+    });
+
+    const bubble = new THREE.Mesh(bubbleGeometry, bubbleMaterial);
+    bubble.position.z = 0;
+    scene.add(bubble);
+
+    // Animation Loop
+    function animate() {
+        requestAnimationFrame(animate);
+
+        // Spawn particles
+        spawnAccumulator += particlesPerFrame;
+        while (spawnAccumulator >= 1) {
+            particles.push(new Particle(true));
+            spawnAccumulator -= 1;
+        }
+
+        // Update all particles
+        particles.forEach(p => p.update());
+        // Remove offscreen particles (iterate backwards to avoid index issues)
+        for (let i = particles.length - 1; i >= 0; i--) {
+            if (particles[i].isOffScreen()) {
+                particles.splice(i, 1);
+            }
+        }
+
+        // Render particles to canvas
+        ctx.fillStyle = '#000000';
+        ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
+
+        // Sort particles by depth for proper layering (painters algorithm)
+        const sortedParticles = [...particles].sort((a, b) => a.z - b.z);
+
+        sortedParticles.forEach(particle => {
+            const size = particle.getSize();
+            const opacity = particle.getOpacity();
+            const color = particle.getColor();
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = color;
+            ctx.font = `bold ${size}px monospace`;
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+
+            // Draw trail lines (faded for depth effect)
+            if (particle.trail.length > 1) {
+                ctx.strokeStyle = color;
+                const sizeRatio = CONFIG.particleSize > 0 ? size / CONFIG.particleSize : 1;
+                ctx.lineWidth = Math.max(0.5, CONFIG.beamThickness * sizeRatio);
+                ctx.beginPath();
+                ctx.moveTo(particle.trail[0].x + CONFIG.width / 2, particle.trail[0].y + CONFIG.height / 2);
+                for (let i = 1; i < particle.trail.length; i++) {
+                    const fade = i / particle.trail.length;
+                    ctx.globalAlpha = (opacity * 0.3 * fade);
+                    ctx.lineTo(particle.trail[i].x + CONFIG.width / 2, particle.trail[i].y + CONFIG.height / 2);
+                }
+                ctx.stroke();
+            }
+
+            // Draw particle character
+            ctx.globalAlpha = opacity;
+            ctx.fillStyle = color;
+            ctx.fillText(particle.character, particle.x + CONFIG.width / 2, particle.y + CONFIG.height / 2);
+        });
+
+        ctx.globalAlpha = 1.0;
+        texture.needsUpdate = true;
+        renderer.render(scene, camera);
+    }
+
+    window.addEventListener('resize', () => {
+        const sceneWidth = sceneContainer.clientWidth;
+        const sceneHeight = sceneContainer.clientHeight;
+        renderer.setSize(sceneWidth, sceneHeight);
+        camera.aspect = sceneWidth / sceneHeight;
+        camera.updateProjectionMatrix();
+    });
+
+    // Set to proper screen size
+    window.dispatchEvent(new Event('resize'));
+
+    animate();
+</script>
+
