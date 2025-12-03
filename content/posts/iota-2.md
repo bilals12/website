@@ -9,7 +9,7 @@ notitle: false
 ---
 
 <figure>
-  <img loading="lazy" style="max-height: 70vh;" src="/iotaBlack.png" />
+  <img loading="lazy" style="max-height: 70vh;" src="/iotaCharcoal.png" />
   <figcaption>art by <a href="https://faisalkubba.com">fdkubba</a></figcaption>
 </figure>
 
