@@ -8,6 +8,10 @@ function debugLog(message, data) {
     }
 }
 
+function formatNumber(num) {
+    return num.toLocaleString('en-US');
+}
+
 // define colors for each event
 const eventColors = {
     leftclicks: '#90EE90',    // light green
@@ -36,10 +40,10 @@ function loadData() {
             if (lines.length > 1) {
                 const [keypresses, mousemoves, leftclicks, rightclicks] = lines[1].split(',');
                 
-                document.getElementById('keypresses').textContent = keypresses;
-                document.getElementById('mousemoves').textContent = mousemoves + 'm';
-                document.getElementById('leftclicks').textContent = leftclicks;
-                document.getElementById('rightclicks').textContent = rightclicks;
+                document.getElementById('keypresses').textContent = formatNumber(parseInt(keypresses) || 0);
+                document.getElementById('mousemoves').textContent = formatNumber((parseFloat(mousemoves) || 0) / 1000) + 'km';
+                document.getElementById('leftclicks').textContent = formatNumber(parseInt(leftclicks) || 0);
+                document.getElementById('rightclicks').textContent = formatNumber(parseInt(rightclicks) || 0);
             }
         })
         .catch(error => console.error('error loading cumulative data:', error));
@@ -103,10 +107,10 @@ function updateCurrentActivityTooltip(data) {
             <div style="font-weight: bold; border-bottom: 1px solid #0f0; margin-bottom: 5px;">
                 ${latestData.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
             </div>
-            <div>keypresses: ${latestData.keypresses}</div>
-            <div>mouse moves: ${latestData.mousemoves.toFixed(2)}m</div>
-            <div>left clicks: ${latestData.leftclicks}</div>
-            <div>right clicks: ${latestData.rightclicks}</div>
+            <div>keypresses: ${formatNumber(latestData.keypresses)}</div>
+            <div>mouse moves: ${formatNumber(latestData.mousemoves / 1000)}km</div>
+            <div>left clicks: ${formatNumber(latestData.leftclicks)}</div>
+            <div>right clicks: ${formatNumber(latestData.rightclicks)}</div>
         </div>
     `;
 
@@ -425,10 +429,10 @@ function renderChart(data) {
                         <div style="font-weight:bold;margin-bottom:5px;border-bottom:1px solid #0f0;">
                         ${timeStr}
                         </div>
-                        <div>keypresses: ${d.keypresses}</div>
-                        <div>mouse moves: ${d.mousemoves.toFixed(2)}m</div>
-                        <div>left clicks: ${d.leftclicks}</div>
-                        <div>right clicks: ${d.rightclicks}</div>
+                        <div>keypresses: ${formatNumber(d.keypresses)}</div>
+                        <div>mouse moves: ${formatNumber(d.mousemoves / 1000)}km</div>
+                        <div>left clicks: ${formatNumber(d.leftclicks)}</div>
+                        <div>right clicks: ${formatNumber(d.rightclicks)}</div>
                     `)
                     .style('left', `${event.pageX + 15}px`)
                     .style('top', `${event.pageY - 10}px`);
