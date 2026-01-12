@@ -1,5 +1,5 @@
 ---
-title: "Gatekeeper Symlink"
+title: "bypassing Gatekeeper via symlinks"
 date: 2026-01-12T20:14:11Z
 draft: false
 toc: true
