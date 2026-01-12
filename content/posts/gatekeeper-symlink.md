@@ -159,7 +159,7 @@ OSStatus _LSOpenURLsWithRole(CFArrayRef urls, LSRolesMask roles, ...) {
 
 `getxattr()` is called wth `XATTR_NOFOLLOW`, meaning it checks the `xattr` on the literal path (symlink) rather than the target. since symlinks can't have extended attributes, this check will always return `ENOATTR` for symlinks, regardless of whether their target is quarantined or not. 
 
-### execution
+## execution
 
 say you have a .zip that has this directory structure post-extraction:
 
@@ -175,7 +175,7 @@ but `LaunchServices` **will** resolve the symlink for execution: `realpath("/Use
 
 this is possibly because `LaunchServices` uses the `-s` flag to check the symlink itself, instead of just the `-p` flag. so: `xattr -s -p` instead of `xattr -p`.
 
-### exploitation
+## exploitation
 
 in this demo, i'm serving a malicious ZIP from a linux server on my local network. the ZIP contains:
 - `payload.command`: unsigned bash script that displays a dialog
