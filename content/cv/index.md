@@ -21,7 +21,7 @@ bold: true
     title="engineering manager, platform security"
     company="Turo"
     url="https://turo.com/"
-    period="oct 2025 - "
+    period="oct 2025 - feb 2026"
     current="true" >}}
 {{< /timeline_item >}}
 
