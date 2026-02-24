@@ -18,19 +18,25 @@ bold: true
 {{< timeline >}}
 
 {{< timeline_item
+    title="staff software engineer, backend platform"
+    company="Robinhood"
+    url="https://robinhood.com/us/en/"
+    period="march 2026 - " 
+    current="true" >}}
+{{< /timeline_item >}}
+
+{{< timeline_item
     title="engineering manager, platform security"
     company="Turo"
     url="https://turo.com/"
-    period="oct 2025 - feb 2026"
-    current="true" >}}
+    period="oct 2025 - feb 2026" >}}
 {{< /timeline_item >}}
 
 {{< timeline_item
     title="staff security engineer"
     company="Turo"
     url="https://turo.com/"
-    period="nov 2024 - oct 2025 "
-    current="true" >}}
+    period="nov 2024 - oct 2025" >}}
 platform security:
 core platform, backend, frontend, devX.
 
