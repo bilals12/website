@@ -9,13 +9,18 @@ bold: true
 
 [github](https://github.com/bilals12)
 
-[linkedin](https://linkedin.com/in/bilal-s-b857601a)
-
 {{< activity-viz >}}
 
 ## **jobs**
 
 {{< timeline >}}
+
+{{< timeline_item
+    title="platform engineer"
+    company="<redacted>"
+    period="april 2026 - " 
+    current="true" >}}
+{{< /timeline_item >}}
 
 {{< timeline_item
     title="engineering manager, platform security"
@@ -36,7 +41,7 @@ plus: runtime security research, container/cluster hardening, red-teaming automa
 {{< /timeline_item >}}
 
 {{< timeline_item
-    title="security engineer"
+    title="senior security engineer"
     company="Numerator"
     url="https://www.numerator.com/"
     period="jul 2024 - nov 2024" >}}
@@ -139,33 +144,4 @@ helped the founder of evergreen review, barney rosset, archive and preserve his 
 
 {{< /timeline_item >}}
 {{< /timeline >}}
-
-## **interests**
-
-<pre style="font-size: max(0.5vw, 1.3em); background: linear-gradient(to right, #00cccc, #0088ff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; border: none; color: #00dd00; font-family: monospace; line-height: 1; white-space: pre; margin: 0 auto; overflow: hidden; text-align: left;">
-homelab
-
-cryptography
-             
-philosophy      
-
-reverse engineering
-
-reading         
-
-software archaeology
-
-photography     
-
-malware analysis + discovery
-
-dancing         
-
-containers + clusters
-
-basketball      
-
-networks
-</pre>
-
 
