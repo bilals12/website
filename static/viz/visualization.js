@@ -1,147 +1,88 @@
-const DEBUG = false;  // set to false to disable debug logging
-const ROLLING_WINDOW_HOURS = 24; // 24 hr rolling window
-const SMOOTH_CURVES = true; // curve smoothing
+const DATA_URL = 'https://raw.githubusercontent.com/bilals12/see/main/';
+const WINDOW_MS = 24 * 60 * 60 * 1000;
+const MAX_GAP_MS = 15 * 60 * 1000;  // see writes every 5 min, so a longer gap means the mac was off
+const REFRESH_MS = 5 * 60 * 1000;   // raw.githubusercontent.com caches for 5 min
 
-function debugLog(message, data) {
-    if (DEBUG) {
-        console.log(`[DEBUG] ${message}`, data ? data : '');
-    }
-}
+// the greens are close, so the dash pattern tells the lines apart
+const metrics = {
+    keypresses:  { label: 'keypresses',   color: '#7FFF00', dash: null },
+    leftclicks:  { label: 'left clicks',  color: '#90EE90', dash: '6,4' },
+    rightclicks: { label: 'right clicks', color: '#98FB98', dash: '2,4' },
+    mousemoves:  { label: 'mouse (m)',    color: '#00FF7F', dash: '12,4,2,4' },
+};
+
+let currentData = [];
 
 function formatNumber(num) {
     return num.toLocaleString('en-US');
 }
 
-// define colors for each event
-const eventColors = {
-    leftclicks: '#90EE90',    // light green
-    rightclicks: '#98FB98',   // pale green
-    middleclicks: '#98FF98',  // mint green
-    keypresses: '#7FFF00',    // chartreuse
-    mousemoves: '#00FF7F'     // spring green
-};
-
-let currentData = [];
-let chartUpdateInterval;
-
-// init data load
-loadData();
-
-// auto-refresh
-setInterval(loadData, 60000); // refresh every min
+function fetchCSV(file) {
+    return fetch(DATA_URL + file).then(response => {
+        if (!response.ok) throw new Error(`${file}: HTTP ${response.status}`);
+        return response.text();
+    });
+}
 
 function loadData() {
-    // cumulative data display
-    fetch('/viz/cumulative_data.csv')
-        .then(response => response.text())
-        .then(data => {
-            debugLog('Cumulative data:', data);
-            const lines = data.split('\n');
-            if (lines.length > 1) {
-                const [keypresses, mousemoves, leftclicks, rightclicks] = lines[1].split(',');
-                
-                document.getElementById('keypresses').textContent = formatNumber(parseInt(keypresses) || 0);
-                document.getElementById('mousemoves').textContent = formatNumber((parseFloat(mousemoves) || 0) / 1000) + 'km';
-                document.getElementById('leftclicks').textContent = formatNumber(parseInt(leftclicks) || 0);
-                document.getElementById('rightclicks').textContent = formatNumber(parseInt(rightclicks) || 0);
-            }
+    fetchCSV('cumulative_data.csv')
+        .then(text => {
+            const [keypresses, mousemoves, leftclicks, rightclicks] = text.split('\n')[1].split(',');
+            document.getElementById('keypresses').textContent = formatNumber(parseInt(keypresses) || 0);
+            document.getElementById('mousemoves').textContent = formatNumber((parseFloat(mousemoves) || 0) / 1000) + 'km';
+            document.getElementById('leftclicks').textContent = formatNumber(parseInt(leftclicks) || 0);
+            document.getElementById('rightclicks').textContent = formatNumber(parseInt(rightclicks) || 0);
         })
         .catch(error => console.error('error loading cumulative data:', error));
 
-    // fetch past 24h data + generate chart
-    fetch('/viz/past_24_hours_data.csv')
-        .then(response => response.text())
-        .then(data => {
-            const parsedData = parseCSV(data);
-            currentData = parsedData;
-            renderChart(parsedData);
+    fetchCSV('past_24_hours_data.csv')
+        .then(text => {
+            currentData = parseCSV(text);
+            renderChart(currentData);
         })
         .catch(error => console.error('error loading past 24 hours data:', error));
 }
 
-function parseCSV(data) {
-    debugLog('Raw CSV data:', data);
-    const lines = data.split('\n')
-        .filter(line => line.trim() && !line.startsWith('cumulative') && !line.startsWith('timestamp'));
-    if (lines.length === 0) return [];
-    
-    // parse all data points
-    let parsedData = lines.map(line => {
-        const [timestamp, keypresses, mousemoves, leftclicks, rightclicks, middleclicks] = line.split(',');
-
-        // skip lines with invalid data
-        if (!timestamp || isNaN(parseInt(timestamp))) return null;
-
-        return {
+// skips the header and the trailing `cumulative,...` row; see writes rows in ring-buffer order
+function parseCSV(text) {
+    return text.split('\n')
+        .map(line => line.split(','))
+        .filter(cols => cols.length === 6 && /^\d+$/.test(cols[0]))
+        .map(([timestamp, keypresses, mousemoves, leftclicks, rightclicks]) => ({
             timestamp: new Date(parseInt(timestamp) * 1000),
             keypresses: parseInt(keypresses) || 0,
-            mousemoves: parseFloat(mousemoves.replace(' meters', '')) || 0,
+            mousemoves: parseFloat(mousemoves) || 0,
             leftclicks: parseInt(leftclicks) || 0,
             rightclicks: parseInt(rightclicks) || 0,
-            middleclicks: parseInt(middleclicks) || 0
-        };
-    }).filter(d => d !== null && !isNaN(d.timestamp.getTime()));
-
-    // sort by timestamp
-    parsedData = parsedData.sort((a, b) => a.timestamp - b.timestamp);
-
-    // rolling window: only keep data from last x hours
-    const now = new Date();
-    const cutoffTime = new Date(now.getTime() - (ROLLING_WINDOW_HOURS * 60 * 60 * 1000));
-    parsedData = parsedData.filter(d => d.timestamp >= cutoffTime);
-
-    debugLog('filtered data points:', parsedData);
-    return parsedData;
-}
-
-function updateCurrentActivityTooltip(data) {
-    if (!data || data.length === 0) return;
-    const latestData = data[data.length - 1];
-
-    // create/update current display
-    const currentActivity = document.getElementById('current-activity') || document.createElement('div');
-    currentActivity.id = 'current-activity';
-    currentActivity.innerHTML = `
-        <div style="position: absolute; bottom: 10px; left: 10px; background: rgba(0, 100, 0, 0.7); 
-             border: 1px solid #0f0; padding: 10px; font-family: monospace; color: #0f0; z-index: 100;">
-            <div style="font-weight: bold; border-bottom: 1px solid #0f0; margin-bottom: 5px;">
-                ${latestData.timestamp.toLocaleTimeString([], {hour: '2-digit', minute: '2-digit'})}
-            </div>
-            <div>keypresses: ${formatNumber(latestData.keypresses)}</div>
-            <div>mouse moves: ${formatNumber(latestData.mousemoves / 1000)}km</div>
-            <div>left clicks: ${formatNumber(latestData.leftclicks)}</div>
-            <div>right clicks: ${formatNumber(latestData.rightclicks)}</div>
-        </div>
-    `;
-
-    // add to chart if it doesn't exist
-    const chartContainer = document.getElementById('chart');
-    if (!document.getElementById('current-activity')) {
-        chartContainer.style.position = 'relative';
-        chartContainer.appendChild(currentActivity);
-    }
+        }))
+        .sort((a, b) => a.timestamp - b.timestamp);
 }
 
 function renderChart(data) {
-    if (!data || data.length === 0) {
-        debugLog('o data to render');
-        return;
-    }
-    debugLog('rendering chart with data points:', data.length);
-    
-    // clear existing chart and tooltips
     d3.select('#chart').html('');
     d3.selectAll('.tooltip').remove();
+    if (data.length === 0) return;
 
-    // setup dimensions
+    // the window ends at the newest point, not at the visitor's clock, so the chart is not empty while the mac is off
+    const end = data[data.length - 1].timestamp;
+    const start = new Date(end - WINDOW_MS);
+    document.getElementById('updated').textContent =
+        'last update: ' + end.toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' });
+
+    // drop the lines to 0 across gaps
+    const zero = time => ({ timestamp: new Date(time), keypresses: 0, mousemoves: 0, leftclicks: 0, rightclicks: 0 });
+    const series = [zero(start)];
+    for (const d of data) {
+        const prev = series[series.length - 1].timestamp;
+        if (d.timestamp - prev > MAX_GAP_MS) series.push(zero(+prev + 60000), zero(d.timestamp - 60000));
+        series.push(d);
+    }
+
     const chartContainer = d3.select('#chart');
-    const containerWidth = parseInt(chartContainer.style('width'));
-    const containerHeight = parseInt(chartContainer.style('height'));
-    const margin = {top: 20, right: 20, bottom: 30, left: 50};
-    const width = (containerWidth || 800) - margin.left - margin.right;
-    const height = (containerHeight || 400) - margin.top - margin.bottom;
+    const margin = { top: 20, right: 20, bottom: 30, left: 50 };
+    const width = (parseInt(chartContainer.style('width')) || 800) - margin.left - margin.right;
+    const height = (parseInt(chartContainer.style('height')) || 400) - margin.top - margin.bottom;
 
-    // create SVG
     const svg = chartContainer
         .append('svg')
         .style('width', '100%')
@@ -150,327 +91,110 @@ function renderChart(data) {
         .append('g')
         .attr('transform', `translate(${margin.left},${margin.top})`);
 
-    // find gaps
-    const MAX_GAP_MINUTES = 15;
-    let dataWithGaps = [];
-
-    // find gaps + insert 0 (not null) to make lines go to 0
-    for (let i = 0; i < data.length; i++) {
-        dataWithGaps.push(data[i]);
-
-        if (i < data.length - 1) {
-            const currentTime = data[i].timestamp.getTime();
-            const nextTime = data[i+1].timestamp.getTime();
-            const diffMinutes = (nextTime - currentTime) / (1000 * 60);
-
-            if (diffMinutes > MAX_GAP_MINUTES) {
-                // insert 0 point right after current time 
-                dataWithGaps.push({
-                    timestamp: new Date(currentTime + 60000),
-                    keypresses: 0, 
-                    mousemoves: 0,
-                    leftclicks: 0,
-                    rightclicks: 0,
-                    middleclicks: 0
-                });
-                // insert null at next time - 1
-                dataWithGaps.push({
-                    timestamp: new Date(nextTime - 60000),
-                    keypresses: 0,
-                    mousemoves: 0,
-                    leftclicks: 0,
-                    rightclicks: 0,
-                    middleclicks: 0
-                });
-            }
-        }
-    }
-    
-    // setup scales (with gaps)
-    //const x = d3.scaleTime()
-    //    .domain(d3.extent(dataWithGaps, d => d.timestamp))
-    //    .range([0, width]);
-    
-    // this part handles missing data
-    // use a fixed time range for the last ROLLING_WINDOW_HOURS
-    const now = new Date();
-    const startTime = new Date(now.getTime() - (ROLLING_WINDOW_HOURS * 60 * 60 * 1000));
-
-    // if no data or limited date
-    // we should have 0 points at boundaries
-    if (dataWithGaps < 2) {
-        // 0 point at window start
-        dataWithGaps.push({
-            timestamp: startTime,
-            keypresses: 0,
-            mousemoves: 0,
-            leftclicks: 0,
-            rightclicks: 0,
-            middleclicks: 0
-        });
-
-        // 0 point at current time
-        dataWithGaps.push({
-            timestamp: now,
-            keypresses: 0,
-            mousemoves: 0,
-            leftclicks: 0,
-            rightclicks: 0,
-            middleclicks: 0
-        });
-    } else {
-        // time boundaries by adding 0s if needed
-        const earliestTime = dataWithGaps[0].timestamp;
-        const latestTime = dataWithGaps[dataWithGaps.length - 1].timestamp;
-
-        // if earliest data point is after window start
-        // add 0 point
-        if (earliestTime > startTime) {
-            dataWithGaps.unshift({
-                timestamp: startTime,
-                keypresses: 0,
-                mousemoves: 0,
-                leftclicks: 0,
-                rightclicks: 0,
-                middleclicks: 0
-            });
-        }
-
-        // if latest data point is before current time
-        // add 0 point
-        //if (latestTime < now) {
-        //    dataWithGaps.push({
-        //        timestamp: now,
-        //        keypresses: 0,
-        //        mousemoves: 0,
-        //        leftclicks: 0,
-        //        rightclicks: 0,
-        //        middleclicks: 0
-        //    });
-        //}
-    }
-
-    // set x scale with fixed boundaries
-    const x = d3.scaleTime()
-        .domain([startTime, now])
-        .range([0, width]);
-
+    const keys = Object.keys(metrics);
+    const x = d3.scaleTime().domain([start, end]).range([0, width]);
     const y = d3.scaleLinear()
-        .domain([0, d3.max(dataWithGaps, d => 
-            Math.max(d.keypresses || 0, d.mousemoves || 0, d.leftclicks || 0, d.rightclicks || 0)
-        ) * 1.1 || 10])
+        .domain([0, d3.max(data, d => d3.max(keys, k => d[k])) * 1.1 || 10])
         .range([height, 0]);
 
-    // create tooltip once
-    const tooltip = d3.select('body')
-        .append('div')
-        .attr('class', 'tooltip')
-        .style('opacity', 0)
-        .style('position', 'absolute')
-        .style('pointer-events', 'none');
+    svg.append('g')
+        .attr('class', 'grid')
+        .call(d3.axisLeft(y).ticks(5).tickSize(-width).tickFormat(''))
+        .style('stroke', '#0f0')
+        .style('stroke-opacity', 0.1);
+    svg.append('g')
+        .attr('class', 'grid')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(d3.timeHour.every(1)).tickSize(-height).tickFormat(''))
+        .style('stroke', '#0f0')
+        .style('stroke-opacity', 0.1);
 
+    svg.append('g')
+        .attr('transform', `translate(0,${height})`)
+        .call(d3.axisBottom(x).ticks(d3.timeHour.every(3)).tickFormat(d3.timeFormat('%-I%p')).tickSizeOuter(0))
+        .style('color', '#0f0')
+        .style('font-family', 'monospace')
+        .style('font-size', '12px');
+    svg.append('g')
+        .call(d3.axisLeft(y).ticks(5))
+        .style('color', '#0f0')
+        .style('font-family', 'monospace')
+        .style('font-size', '12px');
 
-    // draw grid
-    function createGrid() {
-        svg.append('g')
-            .attr('class', 'grid')
-            .call(d3.axisLeft(y)
-                .ticks(5)
-                .tickSize(-width)
-                .tickFormat(''))
-            .style('stroke', '#0f0')
-            .style('stroke-opacity', 0.1);
-
-        svg.append('g')
-            .attr('class', 'grid')
-            .attr('transform', `translate(0,${height})`)
-            .call(d3.axisBottom(x)
-                .ticks(d3.timeHour.every(1))
-                .tickSize(-height)
-                .tickFormat(''))
-            .style('stroke', '#0f0')
-            .style('stroke-opacity', 0.1);
-    }
-
-    // draw axes
-    function createAxes() {
-        const xAxis = d3.axisBottom(x)
-            .ticks(d3.timeHour.every(1))
-            .tickFormat(d => {
-                const hours = d.getHours();
-                const minutes = d.getMinutes();
-                const ampm = hours >= 12 ? 'PM' : 'AM';
-                const hour12 = hours % 12 || 12;
-                
-                // only show h:m for even hours (h only otherwise)
-                if (minutes === 0) {
-                    return `${hour12}${ampm}`;
-                } else if (minutes === 30) {
-                    return `${hour12}:30`;
-                }
-                return '';
-            })
-            .tickSizeOuter(0);
-
-        svg.append('g')
-            .attr('transform', `translate(0,${height})`)
-            .call(xAxis)
-            .style('color', '#0f0')
-            .style('font-family', 'monospace')
-            .style('font-size', '12px');
-
-        svg.append('g')
-            .attr('class', 'y-axis')
-            .call(d3.axisLeft(y).ticks(5))
-            .style('color', '#0f0');
-    }
-
-    // draw data lines and points
-    function drawDataLines() {
-        const filteredEventColors = Object.fromEntries(
-            Object.entries(eventColors).filter(([key]) => key !== 'middleclicks')
-        );
-
-        Object.entries(filteredEventColors).forEach(([metric, color]) => {
-            // draw line
-            const line = d3.line()
-                .x(d => x(d.timestamp))
-                .y(d => y(d[metric] || 0))
-                .defined(d => d[metric] !== null) // skip null values
-                .curve(SMOOTH_CURVES ? d3.curveMonotoneX : d3.curveLinear);
-                //.curve(d3.curveLinear);
-
-            svg.append('path')
-                .datum(dataWithGaps)
-                .attr('fill', 'none')
-                .attr('stroke', color)
-                .attr('stroke-width', 2)
-                .attr('d', line);
-        });
-    }
-
-    // create mouse tracking overlay
-    function createMouseTracking() {
-        // voronoi overlay
-        //const delaunay = d3.Delaunay.from(data, d => x(d.timestamp), d => y(d.keypresses));
-        //const voronoi = delaunay.voronoi([0, 0, width, height]);
-
-        const overlay = svg.append('rect')
-            .attr('class', 'overlay')
-            .attr('width', width)
-            .attr('height', height)
+    for (const [key, m] of Object.entries(metrics)) {
+        svg.append('path')
+            .datum(series)
             .attr('fill', 'none')
-            .style('pointer-events', 'all');
-
-        const verticalLine = svg.append('line')
-            .attr('class', 'tracking-line')
-            .attr('y1', 0)
-            .attr('y2', height)
-            .style('stroke', '#0f0')
-            .style('stroke-width', '1px')
-            .style('opacity', 0);
-        
-        // to stop the tooltip jittering
-        // create highlight cirles
-        const highlightPoints = {};
-        Object.keys(eventColors).forEach(metric => {
-            if (metric !== 'middleclicks') {
-                highlightPoints[metric] = svg.append('circle')
-                    .attr('r', 5)
-                    .attr('fill', eventColors[metric])
-                    .attr('stroke', '#000')
-                    .attr('stroke-width', 1.5)
-                    .style('opacity', 0);
-            }
-        });
-
-        let lastI = -1; // track last highlighted point index
-        let debounceTimeout;
-        
-        overlay.on('mousemove', function(event) {
-            const [mouseX] = d3.pointer(event);
-
-            // find closest data point using bisector
-            const xDate = x.invert(mouseX);
-            const bisect = d3.bisector(d => d.timestamp).left;
-            const i = bisect(data, xDate, 1);
-            // edge case
-            if (i <= 0 || i >= data.length) return;
-            // find which point is closer
-            const d0 = data[i - 1];
-            const d1 = data[i];
-            const d = xDate - d0.timestamp > d1.timestamp - xDate ? d1 : d0;
-            const idx = data.indexOf(d);
-
-            // only update content if data point changed
-            if (idx !== lastI) {
-                lastI = idx;
-            
-                verticalLine
-                    .attr('x1', x(d.timestamp))
-                    .attr('x2', x(d.timestamp))
-                    .style('opacity', 0.7);
-
-                // update highlight circles
-                Object.keys(highlightPoints).forEach(metric => {
-                    highlightPoints[metric]
-                        .attr('cx', x(d.timestamp))
-                        .attr('cy', y(d[metric] || 0))
-                        .style('opacity', 1);
-                });
-
-                // format
-                const timeStr = d.timestamp.toLocaleTimeString([], {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                });
-                tooltip.style('opacity', 0.9)
-                    .html(`
-                        <div style="font-weight:bold;margin-bottom:5px;border-bottom:1px solid #0f0;">
-                        ${timeStr}
-                        </div>
-                        <div>keypresses: ${formatNumber(d.keypresses)}</div>
-                        <div>mouse moves: ${formatNumber(d.mousemoves / 1000)}km</div>
-                        <div>left clicks: ${formatNumber(d.leftclicks)}</div>
-                        <div>right clicks: ${formatNumber(d.rightclicks)}</div>
-                    `)
-                    .style('left', `${event.pageX + 15}px`)
-                    .style('top', `${event.pageY - 10}px`);
-                } else {
-                    tooltip
-                        .style('left', `${event.pageX + 15}px`)
-                        .style('top', `${event.pageY - 10}px`);
-                }
-            });
-
-        overlay.on('mouseout', () => {
-            // small delay to prevent jitter
-            if (debounceTimeout) clearTimeout(debounceTimeout);
-            debounceTimeout = setTimeout(() => {
-                tooltip.style('opacity', 0);
-                verticalLine.style('opacity', 0);
-
-                // hide all highlight points
-                Object.values(highlightPoints).forEach(point => {
-                    point.style('opacity', 0);
-                });
-                lastI = -1;
-            }, 100);
-        });
+            .attr('stroke', m.color)
+            .attr('stroke-width', 2)
+            .attr('stroke-dasharray', m.dash)
+            .attr('d', d3.line().x(d => x(d.timestamp)).y(d => y(d[key])).curve(d3.curveMonotoneX));
     }
 
-    // initialize chart components
-    createGrid();
-    createAxes();
-    drawDataLines();
-    createMouseTracking();
+    const tooltip = d3.select('body').append('div').attr('class', 'tooltip').style('opacity', 0);
+    const overlay = svg.append('rect')
+        .attr('width', width)
+        .attr('height', height)
+        .attr('fill', 'none')
+        .style('pointer-events', 'all');
+    // the line and the dots sit on top of the overlay; without pointer-events: none they steal the mouse and the tooltip flickers
+    const verticalLine = svg.append('line')
+        .attr('y1', 0)
+        .attr('y2', height)
+        .style('stroke', '#0f0')
+        .style('pointer-events', 'none')
+        .style('opacity', 0);
+    const dots = Object.fromEntries(Object.entries(metrics).map(([key, m]) => [key, svg.append('circle')
+        .attr('r', 5)
+        .attr('fill', m.color)
+        .attr('stroke', '#000')
+        .attr('stroke-width', 1.5)
+        .style('pointer-events', 'none')
+        .style('opacity', 0)]));
+    const bisect = d3.bisector(d => d.timestamp).left;
+
+    overlay.on('mousemove', event => {
+        const time = x.invert(d3.pointer(event)[0]);
+        const i = bisect(data, time, 1);
+        const d0 = data[i - 1];
+        const d1 = data[i] || d0;
+        const d = time - d0.timestamp > d1.timestamp - time ? d1 : d0;
+
+        const flip = x(d.timestamp) > width / 2;
+        verticalLine.attr('x1', x(d.timestamp)).attr('x2', x(d.timestamp)).style('opacity', 0.7);
+        for (const key of keys) dots[key].attr('cx', x(d.timestamp)).attr('cy', y(d[key])).style('opacity', 1);
+        tooltip
+            .style('opacity', 0.9)
+            .style('left', `${event.pageX + (flip ? -15 : 15)}px`)
+            .style('top', `${event.pageY - 10}px`)
+            .style('transform', flip ? 'translateX(-100%)' : null)
+            .html(`
+                <div style="font-weight:bold;margin-bottom:5px;border-bottom:1px solid #0f0;">
+                    ${d.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                </div>
+                <div>keypresses: ${formatNumber(d.keypresses)}</div>
+                <div>mouse: ${d.mousemoves.toFixed(1)}m</div>
+                <div>left clicks: ${formatNumber(d.leftclicks)}</div>
+                <div>right clicks: ${formatNumber(d.rightclicks)}</div>
+            `);
+    });
+
+    overlay.on('mouseout', () => {
+        tooltip.style('opacity', 0);
+        verticalLine.style('opacity', 0);
+        for (const key of keys) dots[key].style('opacity', 0);
+    });
 }
 
-// call loadData when window is resized
+d3.select('#legend').html(Object.values(metrics).map(m => `
+    <span><svg width="24" height="8"><line x1="0" y1="4" x2="24" y2="4"
+        stroke="${m.color}" stroke-width="2" stroke-dasharray="${m.dash || ''}"/></svg> ${m.label}</span>
+`).join(''));
+
+loadData();
+setInterval(loadData, REFRESH_MS);
+
 window.addEventListener('resize', () => {
     clearTimeout(window.resizeTimer);
-    window.resizeTimer = setTimeout(() => {
-        renderChart(currentData);
-    }, 250);
+    window.resizeTimer = setTimeout(() => renderChart(currentData), 250);
 });
-

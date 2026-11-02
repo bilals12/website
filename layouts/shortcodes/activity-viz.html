@@ -19,10 +19,13 @@
     </div>
 
     <div id="chart"></div>
+    <div id="chart-footer">
+        <div id="legend"></div>
+        <div id="updated"></div>
+    </div>
 </div>
 
 <script src="https://d3js.org/d3.v6.min.js"></script>
-<script src="https://d3js.org/d3-delaunay.v6.min.js"></script>
 <script src="{{ "/viz/visualization.js" | relURL }}"></script>
 
 
@@ -47,27 +50,15 @@
     margin-top: 20px;
 }
 
-.tooltip {
-    position: absolute;
-    pointer-events: none;
-    background: rgba(0, 255, 0, 0.1);
-    border: 1px solid #0f0;
-    color: #0f0;
-    padding: 8px;
-    border-radius: 4px;
-    font-family: monospace;
-    z-index: 1000;
+#activity-visualization #chart-footer {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 8px;
+}
+
+#activity-visualization #legend span {
+    margin-right: 1.5em;
     white-space: nowrap;
-}
-
-.tracking-line {
-    pointer-events: all;
-}
-
-@media screen and (max-width: 768px) {
-    .desktop-only, .chart-tooltip {
-        display: none !important;
-    }
 }
 
 #activity-visualization #stats {
@@ -93,7 +84,7 @@
     font-size: 2em;
 }
 
-/* Keep tooltip and grid styles global since they're appended to body */
+/* global: the tooltip is appended to body */
 .tooltip {
     position: absolute;
     pointer-events: none;
@@ -104,49 +95,6 @@
     border-radius: 4px;
     font-family: monospace;
     z-index: 1000;
-}
-
-.grid line {
-    stroke: #0f0;
-    stroke-opacity: 0.1;
+    white-space: nowrap;
 }
 </style>
-
-<script>
-function setupScrubber(svg, x, y, data) {
-    const chart = d3.select('#chart');
-    const tooltip = d3.select('#tooltip');
-    const bisect = d3.bisector(d => d.timestamp).left;
-
-    function updateTooltip(mouseX) {
-        const x0 = x.invert(mouseX);
-        const i = bisect(data, x0, 1);
-        const d0 = data[i - 1];
-        const d1 = data[i];
-        const d = x0 - d0.timestamp > d1.timestamp - x0 ? d1 : d0;
-
-        tooltip
-            .style('display', 'block')
-            .style('left', `${x(d.timestamp) + 15}px`)
-            .style('top', '10px')
-            .html(`
-                <div>time: ${d.timestamp.toLocaleTimeString()}</div>
-                <div>keypresses: ${d.keypresses}</div>
-                <div>mouse moves: ${d.mousemoves}</div>
-                <div>left clicks: ${d.leftclicks}</div>
-                <div>right clicks: ${d.rightclicks}</div>
-            `);
-    }
-
-    // mouse events
-    chart.on('mousemove', (event) => {
-        const [mouseX] = d3.pointer(event);
-        updateTooltip(mouseX);
-    });
-
-    chart.on('mouseleave', () => {
-        crosshair.style('display', 'none');
-        tooltip.style('display', 'none');
-    });
-}
-</script>
