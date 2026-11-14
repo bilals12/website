@@ -1,12 +1,12 @@
-<div id="particle-reactor-container" class="desktop-only">
+<div id="particle-reactor-container" class="desktop-only"
+     data-url="{{ site.Params.seeDataURL }}" data-live-minutes="{{ site.Params.seeLiveMinutes }}">
     <div id="sceneContainer"></div>
 </div>
 
-<script async src="https://unpkg.com/es-module-shims@1.8.0/dist/es-module-shims.js"></script>
 <script type="importmap">
 {
     "imports": {
-        "three": "https://unpkg.com/three@0.180.0/build/three.module.js"
+        "three": "https://unpkg.com/three@0.180.0/build/three.module.min.js"
     }
 }
 </script>
@@ -71,6 +71,14 @@
         display: none !important;
     }
 }
+
+/* the page fits the window, and the scroll gesture moves the sphere; not on body, which would clip the full-width art */
+@media screen and (min-width: 769px) {
+    html {
+        overflow: hidden;
+        overscroll-behavior: none;
+    }
+}
 </style>
 
 <script type="module">
@@ -79,7 +87,7 @@
     // Configuration
     const CONFIG = {
         width: 1920,
-        height: 1080,
+        height: 540,            // the view shows only the middle ±218 rows; a taller canvas costs upload time every frame
         particleCount: 800,
         particleCrossTime: 0.75,
         rayLength: 8,
@@ -95,6 +103,29 @@
         innerRadius: 0.375,
         outerRadius: 0.55,
         frostingIntensity: 0.05,
+        bandHeight: 0.9,        // fraction of the canvas height that particles spawn in
+        edgeFade: 0.35,         // outer fraction of the band that fades out
+        idleDensity: 0.6,       // spawn rate while the see data shows no typing; lower and the beams stop reading
+        busyKeys: 300,          // keypresses per 5-minute row for full density (1 per second)
+        throughShare: 0.35,     // share of the particles headed at the sphere that go through it; the rest flow around
+        flowSubsteps: 4,        // integration substeps (and trail points) per step for streams that flow around
+        maxSweep: 10,           // canvas units the sphere may move in one integration step; more and fast moves jolt the air
+        // Wake: real air separates from the sphere past its widest point (~120°), and a steady, egg-shaped bubble
+        // forms behind it, about as wide as the sphere. The air outside flows around the sphere and that bubble as
+        // one body: a source just behind the center and an equal sink at the end of the bubble shape it
+        wakeSourceBack: 0.3,    // radii behind the center, where the source sits
+        wakeSinkBack: 2.0,      // radii behind the center, where the sink (the end of the bubble) sits
+        wakeWidth: 1.0,         // source strength, as the radius (in radii) of the wake it alone would leave behind
+        wakeCore: 0.45,         // soft core (radii) of the source and the sink: a point sink flings air that comes close,
+                                // and under ~0.35 the sink pulls harder than the stream and traps air for good
+        // A real bubble is never still: slowly, it breathes (its length changes) and its end sways. Much slower and
+        // smaller than vortex shedding, which made the wake jitter. Frequencies are Strouhal numbers (per diameter of
+        // air that flows past); the two do not divide into each other, so the motion never repeats exactly
+        wakeBreath: 0.2,        // radii the end of the bubble moves along the axis
+        wakeBreathStrouhal: 0.03,
+        wakeSway: 0.15,         // radii the end of the bubble moves to the side
+        wakeSwayStrouhal: 0.045,
+        minSceneHeight: 240,
         // Internal constants
         timePerFrame: 0.016,
         refractionZoneMultiplier: 0.7,
@@ -102,6 +133,25 @@
         depthRange: 1600,
         depthOffset: 800,
     };
+    // The camera is orthographic: a perspective camera at this wide aspect stretches the sphere into an oval near the edges.
+    // The framing is that of the original 40° perspective camera at z 400, with the particle plane at z -200 behind the sphere.
+    const CAMERA_Z = 400;
+    const PLANE_Z = -200;
+    const VIEW_HALF_HEIGHT = CAMERA_Z * Math.tan(THREE.MathUtils.degToRad(20));
+    const PLANE_SCALE = (CAMERA_Z - PLANE_Z) / CAMERA_Z;   // canvas units per world unit
+    const OUTLINE_RADIUS = CONFIG.bubbleRadius * PLANE_SCALE;
+
+    // Sphere center in particle-plane coordinates (y points down, as on the canvas), now and one step ago
+    const flow = { cx: 0, cy: 0, px: 0, py: 0, clock: 0 };
+
+    // The wake's clock counts the diameters of air that have flowed past the sphere, so the wake moves faster
+    // when the air moves faster relative to it
+    function advanceWakeClock(vx, vy) {
+        flow.clock += Math.hypot(STREAM_SPEED - vx, vy) / (2 * OUTLINE_RADIUS);
+    }
+
+    // The stream's speed, canvas units per step (leftward)
+    const STREAM_SPEED = -CONFIG.width / (CONFIG.particleCrossTime * 60) * CONFIG.particleSpeedMultiplier;
 
     // Vignette texture creation function
     function createVignetteTexture(size = 512, innerRadius = 0.3, outerRadius = 0.8) {
@@ -128,13 +178,9 @@
     const sceneContainer = document.getElementById('sceneContainer');
     if (!sceneContainer) throw new Error('sceneContainer element not found');
     
-    const camera = new THREE.PerspectiveCamera(
-        40,
-        sceneContainer.clientWidth / sceneContainer.clientHeight,
-        0.1,
-        2000
-    );
-    camera.position.z = 400;
+    const camera = new THREE.OrthographicCamera(-1, 1, VIEW_HALF_HEIGHT, -VIEW_HALF_HEIGHT, 0.1, 2000);
+    camera.position.z = CAMERA_Z;
+    const viewAspect = () => sceneContainer.clientWidth / sceneContainer.clientHeight;
 
     const renderer = new THREE.WebGLRenderer({ 
         antialias: true,
@@ -183,70 +229,104 @@
                 this.x = (Math.random() - 0.5) * CONFIG.width * 1.5;
             }
             
-            this.y = (Math.random() - 0.5) * CONFIG.height * 0.45;
+            // The band stays put when the sphere moves; it is taller than the view, so the stream meets the sphere anywhere
+            this.bandOffset = (Math.random() - 0.5) * CONFIG.height * CONFIG.bandHeight;
+            this.y = this.bandOffset;
             this.z = (Math.random() - 0.5) * CONFIG.depthRange;
             
             // Constant velocity leftward (particles traverse screen at fixed speed)
-            this.velocityX = -CONFIG.width / (CONFIG.particleCrossTime * 60) * CONFIG.particleSpeedMultiplier;
-            this.initialY = this.y;
-
-            // Beam assignment: three horizontal beam lines (A, B, C) with zones
-            const beamA = CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier;
-            const beamB = 0;
-            const beamC = -CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier;
-            const midlineAB = beamA / 2;
-            const midlineBC = beamC / 2;
-
-            // Determine which beam this particle targets based on initial Y position
-            if (this.initialY > midlineAB) {
-                this.pathTarget = beamA;
-                this.isMiddleBeam = false;
-                this.beamSide = this.initialY > beamA ? 'outer' : 'inner';
-                this.zoneMin = -Infinity;
-                this.zoneMax = Infinity;
-            } else if (this.initialY < midlineBC) {
-                this.pathTarget = beamC;
-                this.isMiddleBeam = false;
-                this.beamSide = this.initialY < beamC ? 'outer' : 'inner';
-                this.zoneMin = -Infinity;
-                this.zoneMax = Infinity;
-            } else {
-                this.pathTarget = beamB;
-                this.isMiddleBeam = true;
-                this.beamSide = null;
-                this.zoneMin = this.initialY >= 0 ? 0 : -Infinity;
-                this.zoneMax = this.initialY >= 0 ? Infinity : 0;
-            }
+            this.velocityX = STREAM_SPEED;
 
             // Random spread offset within beam
             this.pathSpread = (Math.random() - 0.5) * CONFIG.pathSpreadRange;
+
+            // Whether the particle goes through the sphere; decided when it gets close
+            this.through = undefined;
+        }
+
+        // Beam assignment: three horizontal beam lines (A, B, C) with zones, relative to the sphere center
+        assignBeam(rel) {
+            const beamA = CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier;
+            const beamC = -beamA;
+            this.entryOffset = rel;
+            if (rel > beamA / 2) {
+                this.pathOffset = beamA;
+                this.isMiddleBeam = false;
+                this.beamSide = rel > beamA ? 'outer' : 'inner';
+                this.zoneMin = -Infinity;
+                this.zoneMax = Infinity;
+            } else if (rel < beamC / 2) {
+                this.pathOffset = beamC;
+                this.isMiddleBeam = false;
+                this.beamSide = rel < beamC ? 'outer' : 'inner';
+                this.zoneMin = -Infinity;
+                this.zoneMax = Infinity;
+            } else {
+                this.pathOffset = 0;
+                this.isMiddleBeam = true;
+                this.beamSide = null;
+                this.zoneMin = rel >= 0 ? 0 : -Infinity;
+                this.zoneMax = rel >= 0 ? Infinity : 0;
+            }
         }
 
         update() {
-            // Move particle continuously leftward
-            this.x += this.velocityX;
-            
             // Advance color animation phase
             this.colorPhase += this.colorSpeed * CONFIG.timePerFrame;
 
-            const distToBeam = Math.abs(this.y - this.pathTarget);
+            const dx = this.x + this.velocityX - flow.cx;
+            if (this.through === undefined && dx < 2 * OUTLINE_RADIUS) {
+                const rel = this.y - flow.cy;
+                // a random share goes through, so the streams that flow around still hug the sphere
+                this.through = Math.abs(rel) < OUTLINE_RADIUS && Math.random() < CONFIG.throughShare;
+                if (this.through) this.assignBeam(rel);
+            }
+
+            if (this.through) {
+                // Move particle continuously leftward
+                this.x += this.velocityX;
+                this.refract(this.x - flow.cx);
+                this.record(CONFIG.rayLength);
+            } else {
+                // the sphere also moves in substeps: one jump per step bends the trails sharply
+                const vx = flow.cx - flow.px;
+                const vy = flow.cy - flow.py;
+                for (let i = 1; i <= CONFIG.flowSubsteps; i++) {
+                    const t = i / CONFIG.flowSubsteps;
+                    this.flow(flow.px + vx * t, flow.py + vy * t, vx, vy, 1 / CONFIG.flowSubsteps);
+                    this.record(CONFIG.rayLength * CONFIG.flowSubsteps);
+                }
+            }
+        }
+
+        // Record position for trail rendering
+        record(length) {
+            this.trail.push({ x: this.x, y: this.y });
+            while (this.trail.length > length) {
+                this.trail.shift();
+            }
+        }
+
+        refract(dx) {
+            const pathTarget = flow.cy + this.pathOffset;
+            const distToBeam = Math.abs(this.y - pathTarget);
             const refractionStartX = CONFIG.bubbleRadius * CONFIG.refractionZoneMultiplier;
             
             // Refraction zone: particles near bubble center are attracted to beam lines
-            if (Math.abs(this.x) < refractionStartX) {
+            if (Math.abs(dx) < refractionStartX) {
                 // Calculate 2D distance (normalized) from particle to beam attraction zone
-                const xDist = Math.abs(this.x);
+                const xDist = Math.abs(dx);
                 const normalizedDist = Math.hypot(xDist / CONFIG.bubbleRadius, distToBeam / (CONFIG.bubbleRadius * CONFIG.beamSpacingMultiplier));
                 
                 // Falloff curve: full influence at center, drops to zero at radius edge
                 const bubbleInfluence = Math.pow(Math.max(0, 1 - normalizedDist), 2);
                 
                 // Target position: beam line + random spread offset
-                const spreadTarget = this.pathTarget + this.pathSpread;
-                const effectiveTarget = Math.max(this.zoneMin, Math.min(this.zoneMax, spreadTarget));
+                const spreadTarget = this.pathOffset + this.pathSpread;
+                const effectiveTarget = flow.cy + Math.max(this.zoneMin, Math.min(this.zoneMax, spreadTarget));
                 
                 // Outer beam particles pull stronger than inner (2.5x vs 1.0x)
-                const strengthMultiplier = (this.pathTarget * this.initialY > 0) ? 2.5 : 1.0;
+                const strengthMultiplier = (this.pathOffset * this.entryOffset > 0) ? 2.5 : 1.0;
                 
                 // Select refraction strength based on beam type (middle vs outer vs inner)
                 const refractionStrength = !this.isMiddleBeam 
@@ -264,11 +344,76 @@
             } else {
                 this.refracted = false;
             }
+        }
 
-            // Record position for trail rendering
-            this.trail.push({ x: this.x, y: this.y });
-            if (this.trail.length > CONFIG.rayLength) {
-                this.trail.shift();
+        // Air around a moving sphere, in the plane through its center. Speeds are per step; Q = U - V is the stream
+        // relative to the sphere. Three parts:
+        //   1. ideal flow: the stream U plus a dipole, U + (a³ / 2) (Q / r³ - 3 (Q · r) r / r⁵). In front, the air
+        //      moves with the surface, so no stream crosses it; a moving sphere pushes the air aside and it fills in behind
+        //   2. the wake: a source m (r - s) / |r - s|³ just behind the center and an equal sink at the end of the
+        //      bubble, on the axis of Q, so the air leaves the sphere past its widest point and closes behind the bubble
+        // Midpoint (RK2) step of dt steps.
+        flow(cx, cy, vx, vy, dt) {
+            // a fast sphere sweeps the air in more, smaller steps: the sphere moves at most maxSweep per step
+            const n = Math.max(1, Math.ceil(Math.hypot(vx, vy) * dt / CONFIG.maxSweep));
+            for (let j = 1; j <= n; j++) {
+                const back = dt * (1 - j / n);
+                this.flowStep(cx - vx * back, cy - vy * back, vx, vy, dt / n);
+            }
+        }
+
+        flowStep(cx, cy, vx, vy, dt) {
+            const ux = this.velocityX;
+            const qx = ux - vx;
+            const qy = -vy;
+            const q = Math.hypot(qx, qy);
+            const halfA3 = OUTLINE_RADIUS ** 3 / 2;
+            // the source and the sink, on the axis downstream of the sphere, relative to the air: (dX, dY)
+            const dX = qx / q;
+            const dY = qy / q;
+            const m = q * (CONFIG.wakeWidth * OUTLINE_RADIUS) ** 2 / 4;
+            const core2 = (CONFIG.wakeCore * OUTLINE_RADIUS) ** 2;
+            const sinkBack = CONFIG.wakeSinkBack + CONFIG.wakeBreath * Math.sin(2 * Math.PI * CONFIG.wakeBreathStrouhal * flow.clock);
+            const sinkSide = CONFIG.wakeSway * Math.sin(2 * Math.PI * CONFIG.wakeSwayStrouhal * flow.clock);
+            const wakes = [
+                { x: cx + dX * CONFIG.wakeSourceBack * OUTLINE_RADIUS, y: cy + dY * CONFIG.wakeSourceBack * OUTLINE_RADIUS, m },
+                { x: cx + (dX * sinkBack - dY * sinkSide) * OUTLINE_RADIUS, y: cy + (dY * sinkBack + dX * sinkSide) * OUTLINE_RADIUS, m: -m },
+            ];
+            // a particle exactly in front of the center, or on the dividing stream, would stop for good: at the front
+            // stagnation point, or where the stream leaves the sphere behind its widest point
+            if (Math.abs(this.y - cy) < 1) this.y = cy + (this.y < cy ? -1 : 1);
+            const velocity = (x, y) => {
+                const dx = x - cx;
+                const dy = y - cy;
+                const r2 = dx * dx + dy * dy;
+                const k = halfA3 / (r2 * Math.sqrt(r2));
+                const qr = 3 * (qx * dx + qy * dy) / r2;
+                let u = ux + k * (qx - qr * dx);
+                let v = k * (qy - qr * dy);
+                for (const w of wakes) {
+                    const ex = x - w.x;
+                    const ey = y - w.y;
+                    const e2 = ex * ex + ey * ey + core2;
+                    const f = w.m / (e2 * Math.sqrt(e2));
+                    u += f * ex;
+                    v += f * ey;
+                }
+                return [u, v];
+            };
+            const [u1, v1] = velocity(this.x, this.y);
+            const [u2, v2] = velocity(this.x + u1 * dt / 2, this.y + v1 * dt / 2);
+            this.x += u2 * dt;
+            this.y += v2 * dt;
+            // a step can end a little inside the sphere, and a fast sphere can step over the air: back out, a little
+            // off the surface, because air right on it would ride it into the separation point and stop there
+            const dx = this.x - cx;
+            const dy = this.y - cy;
+            const r = Math.hypot(dx, dy);
+            const out = OUTLINE_RADIUS * 1.02;
+            if (r < out && r < OUTLINE_RADIUS) {
+                const s = out / Math.max(r, 1e-6);
+                this.x = cx + dx * s;
+                this.y = r > 0 ? cy + dy * s : cy + out;
             }
         }
 
@@ -290,29 +435,15 @@
         getOpacity() {
             // Fade with depth: farther particles are dimmer
             const depthScale = 0.2 + (this.z + CONFIG.depthOffset) / CONFIG.depthRange;
-            return Math.min(1, 0.2 + (depthScale * 0.6));
+            // Fade near the top and bottom of the band, so it has no hard edges
+            const halfBand = CONFIG.height * CONFIG.bandHeight / 2;
+            const edge = Math.min(1, (1 - Math.abs(this.bandOffset) / halfBand) / CONFIG.edgeFade);
+            return Math.min(1, 0.2 + (depthScale * 0.6)) * edge;
         }
 
         isOffScreen() {
             // Remove particles after they exit screen left
             return this.x < -CONFIG.width / 2 - 100;
-        }
-    }
-
-    // Perform initial particle calculations so canvas starts populated
-    for (let _i = 0; _i < 100; _i++) {
-        spawnAccumulator += particlesPerFrame;
-        while (spawnAccumulator >= 1) {
-            particles.push(new Particle(true));
-            spawnAccumulator -= 1;
-        }
-        
-        particles.forEach(p => p.update());
-        // Remove offscreen particles (iterate backwards to avoid index issues)
-        for (let i = particles.length - 1; i >= 0; i--) {
-            if (particles[i].isOffScreen()) {
-                particles.splice(i, 1);
-            }
         }
     }
 
@@ -325,9 +456,9 @@
 
     const texture = new THREE.CanvasTexture(canvas);
     const canvasMaterial = new THREE.MeshBasicMaterial({ map: texture });
-    const canvasGeometry = new THREE.PlaneGeometry(CONFIG.width, CONFIG.height);
+    const canvasGeometry = new THREE.PlaneGeometry(CONFIG.width / PLANE_SCALE, CONFIG.height / PLANE_SCALE);
     const canvasMesh = new THREE.Mesh(canvasGeometry, canvasMaterial);
-    canvasMesh.position.z = -200;
+    canvasMesh.position.z = PLANE_Z;
     scene.add(canvasMesh);
 
     // Glass Bubble
@@ -336,15 +467,16 @@
     // Create initial vignette texture
     const vignetteTexture = createVignetteTexture(512, CONFIG.innerRadius, CONFIG.outerRadius);
     
+    // Smoked glass: dark enough to hold its shape, clear enough to show the beams inside
     const bubbleMaterial = new THREE.MeshPhysicalMaterial({
-        color: 0xffffff,
-        metalness: 0.25,
-        roughness: 0.45,
+        color: 0x9fb89f,
+        metalness: 0.3,
+        roughness: 0.5,
         transmission: 1.0,
-        ior: 1.2,
-        thickness: 25,
+        ior: 1.3,
+        thickness: 60,
         transparent: true,
-        opacity: 0.55,
+        opacity: 0.8,
         roughnessMap: vignetteTexture,
         transmissionMap: vignetteTexture
     });
@@ -353,18 +485,26 @@
     bubble.position.z = 0;
     scene.add(bubble);
 
-    // Animation Loop
-    function animate() {
-        requestAnimationFrame(animate);
+    // The scroll gesture moves the sphere; it eases toward this target
+    const sphereTarget = { x: 0, y: 0 };
 
-        // Spawn particles
-        spawnAccumulator += particlesPerFrame;
+    // One simulation step per 120 Hz frame: the CONFIG speeds were tuned on a 120 Hz screen
+    const STEP_MS = 1000 / 120;
+    function step() {
+        // no easing: the sphere is where the fingers put it; a trackpad's own movement is already smooth
+        bubble.position.x = sphereTarget.x;
+        bubble.position.y = sphereTarget.y;
+        flow.px = flow.cx;
+        flow.py = flow.cy;
+        flow.cx = bubble.position.x * PLANE_SCALE;
+        flow.cy = -bubble.position.y * PLANE_SCALE;
+        advanceWakeClock(flow.cx - flow.px, flow.cy - flow.py);
+
+        spawnAccumulator += particlesPerFrame * density;
         while (spawnAccumulator >= 1) {
             particles.push(new Particle(true));
             spawnAccumulator -= 1;
         }
-
-        // Update all particles
         particles.forEach(p => p.update());
         // Remove offscreen particles (iterate backwards to avoid index issues)
         for (let i = particles.length - 1; i >= 0; i--) {
@@ -372,7 +512,9 @@
                 particles.splice(i, 1);
             }
         }
+    }
 
+    function draw() {
         // Render particles to canvas
         ctx.fillStyle = '#000000';
         ctx.fillRect(0, 0, CONFIG.width, CONFIG.height);
@@ -380,15 +522,20 @@
         // Sort particles by depth for proper layering (painters algorithm)
         const sortedParticles = [...particles].sort((a, b) => a.z - b.z);
 
+        // setting the font is slow; whole-pixel sizes, sorted by depth, change it only a dozen times per frame
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        let fontSize = 0;
         sortedParticles.forEach(particle => {
-            const size = particle.getSize();
+            const size = Math.round(particle.getSize());
             const opacity = particle.getOpacity();
             const color = particle.getColor();
             ctx.globalAlpha = opacity;
             ctx.fillStyle = color;
-            ctx.font = `bold ${size}px monospace`;
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
+            if (size !== fontSize) {
+                ctx.font = `bold ${size}px monospace`;
+                fontSize = size;
+            }
 
             // Draw trail lines (faded for depth effect)
             if (particle.trail.length > 1) {
@@ -416,17 +563,89 @@
         renderer.render(scene, camera);
     }
 
+    // Fixed time step: the same speed on 60 Hz, 120 Hz, and 144 Hz screens
+    let visible = false;
+    let running = false;
+    let lastTime = 0;
+    let lag = 0;
+    function animate(now) {
+        if (!visible) {
+            running = false;
+            return;
+        }
+        lag = Math.min(lag + now - lastTime, 250);  // after a long pause, do not replay the missed steps
+        lastTime = now;
+        if (lag >= STEP_MS) {
+            while (lag >= STEP_MS) {
+                step();
+                lag -= STEP_MS;
+            }
+            draw();
+        }
+        requestAnimationFrame(animate);
+    }
+
     window.addEventListener('resize', () => {
-        const sceneWidth = sceneContainer.clientWidth;
-        const sceneHeight = sceneContainer.clientHeight;
-        renderer.setSize(sceneWidth, sceneHeight);
-        camera.aspect = sceneWidth / sceneHeight;
+        // The page does not scroll: the scene takes the height that the rest of the page leaves
+        if (sceneContainer.offsetParent) {
+            sceneContainer.style.height = '0px';
+            const free = window.innerHeight - document.body.offsetHeight;
+            sceneContainer.style.height = `${Math.max(CONFIG.minSceneHeight, free)}px`;
+        }
+        renderer.setSize(sceneContainer.clientWidth, sceneContainer.clientHeight);
+        camera.left = -VIEW_HALF_HEIGHT * viewAspect();
+        camera.right = VIEW_HALF_HEIGHT * viewAspect();
         camera.updateProjectionMatrix();
+        // a resize clears the WebGL canvas; redraw the still frame when the loop does not run
+        if (!running) draw();
     });
 
-    // Set to proper screen size
+    // Stream density follows the live typing rate from the see repo
+    const container = document.getElementById('particle-reactor-container');
+    let density = CONFIG.idleDensity;
+    function loadDensity() {
+        fetch(container.dataset.url + 'past_24_hours_data.csv')
+            .then(response => {
+                if (!response.ok) throw new Error(`HTTP ${response.status}`);
+                return response.text();
+            })
+            .then(text => {
+                const rows = text.split('\n').filter(line => /^\d+,\d+,/.test(line)).map(line => line.split(',').map(Number));
+                const [timestamp, keypresses] = rows.reduce((a, b) => (b[0] > a[0] ? b : a));
+                const live = Date.now() / 1000 - timestamp < container.dataset.liveMinutes * 60;
+                density = live
+                    ? CONFIG.idleDensity + (1 - CONFIG.idleDensity) * Math.min(1, keypresses / CONFIG.busyKeys)
+                    : CONFIG.idleDensity;
+            })
+            .catch(error => console.error('particle reactor: error loading activity:', error));
+    }
+    loadDensity();
+    setInterval(loadDensity, 5 * 60 * 1000);
+
+    // Start with a full stream
+    for (let i = 0; i < 100; i++) step();
     window.dispatchEvent(new Event('resize'));
 
-    animate();
-</script>
+    if (!matchMedia('(prefers-reduced-motion: reduce)').matches) {
+        // Runs only while the scene is on screen; this also keeps it off on phones, where CSS hides it
+        new IntersectionObserver(([entry]) => {
+            visible = entry.isIntersecting;
+            if (visible && !running) {
+                running = true;
+                lastTime = performance.now();
+                requestAnimationFrame(animate);
+            }
+        }).observe(sceneContainer);
 
+        // Scroll moves the sphere like page content: it follows the fingers on a trackpad
+        window.addEventListener('wheel', event => {
+            if (event.ctrlKey || !sceneContainer.offsetParent) return;  // pinch zoom, or the scene is hidden
+            event.preventDefault();
+            const scale = (event.deltaMode === 1 ? 16 : 1) * 2 * VIEW_HALF_HEIGHT / sceneContainer.clientHeight;
+            const clamp = (v, max) => Math.max(-max, Math.min(max, v));
+            // the whole sphere stays clear of the faded left and right edges
+            sphereTarget.x = clamp(sphereTarget.x - event.deltaX * scale, VIEW_HALF_HEIGHT * viewAspect() - CONFIG.bubbleRadius * 1.3);
+            sphereTarget.y = clamp(sphereTarget.y + event.deltaY * scale, VIEW_HALF_HEIGHT);
+        }, { passive: false });
+    }
+</script>

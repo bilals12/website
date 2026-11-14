@@ -10,6 +10,5 @@ i've been interested in computers for much longer than i've been working with th
 {{< particle-reactor >}}
 
 <figure>
-  <img loading="" style="" src="" />
   <figcaption>art by <a href="https://x.com/Multitek_3D">multitek</a></figcaption>
 </figure>
