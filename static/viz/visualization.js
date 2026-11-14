@@ -1,7 +1,7 @@
-const DATA_URL = 'https://raw.githubusercontent.com/bilals12/see/main/';
+const { url: DATA_URL, liveMinutes } = document.getElementById('activity-visualization').dataset;
 const INTERVAL_MS = 5 * 60 * 1000;  // see writes one row every 5 min
 const REFRESH_MS = 5 * 60 * 1000;   // raw.githubusercontent.com caches for 5 min
-const LIVE_MS = 30 * 60 * 1000;     // a row needs up to 5 + 15 + 5 min (see, sync job, raw cache) to get here
+const LIVE_MS = liveMinutes * 60 * 1000;
 const SPARK_LINES = 5;              // text lines per sparkline
 const MIN_FONT_PX = 9;
 const MAX_HEATMAP_FONT_PX = 18;

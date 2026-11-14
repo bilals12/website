@@ -50,3 +50,9 @@ outputs:
 module:
   imports:
     - path: github.com/barklan/hugo-dead-simple
+
+params:
+  # CSVs that the see repo pushes every 15 minutes; read by the activity viz and the landing page art
+  seeDataURL: "https://raw.githubusercontent.com/bilals12/see/main/"
+  # a row needs up to 5 + 15 + 5 minutes (see, the sync job, the raw cache) to get here; older data means idle
+  seeLiveMinutes: 30
