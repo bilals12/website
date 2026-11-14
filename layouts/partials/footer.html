@@ -123,19 +123,15 @@
 
       // Add a click event listener to the copy button
       copyButton.addEventListener("click", () => {
-        // Copy the code inside the code block to the clipboard
-        const elements = codeBlock.querySelectorAll(".cl");
-        let codeToCopy = "";
-        elements.forEach((element) => {
-          codeToCopy += element.innerText;
-        });
-        navigator.clipboard.writeText(codeToCopy);
-
-        // Update the copy button text to indicate that the code has been copied
-        copyButton.innerHTML = "copied!";
-        setTimeout(() => {
-          copyButton.innerHTML = "copy";
-        }, 1500);
+        // the code as written: with noClasses, Chroma's lines have no .cl class to collect
+        const codeToCopy = codeBlock.textContent.replace(/\n$/, "");
+        const show = (label) => {
+          copyButton.innerHTML = label;
+          setTimeout(() => {
+            copyButton.innerHTML = "copy";
+          }, 1500);
+        };
+        navigator.clipboard.writeText(codeToCopy).then(() => show("copied!"), () => show("copy failed"));
       });
 
       // Add the copy button to the code block
