@@ -31,7 +31,7 @@ clusterfuck employs techniques we've observed in real-world container attacks, n
 
 ### overview
 
-```mermaid
+```text
 ┌─────────────────────────┐           ┌─────────────────────────┐
 │                         │           │                         │
 │    Attack Sim Pod       │◄─────────►│    Payload Server       │

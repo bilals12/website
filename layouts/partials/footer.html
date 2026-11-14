@@ -11,6 +11,14 @@
 </footer>
 {{ end }}
 
+<!-- Mermaid diagrams: loaded only on pages with a ```mermaid code block (render-codeblock-mermaid.html sets the flag). -->
+{{ if .Store.Get "hasMermaid" }}
+<script type="module">
+  import mermaid from 'https://cdn.jsdelivr.net/npm/mermaid@12/dist/mermaid.esm.min.mjs';
+  mermaid.initialize({ startOnLoad: true, theme: 'dark', fontFamily: '"IBM Plex Mono", monospace' });
+</script>
+{{ end }}
+
 <!-- Shortcuts. -->
 <script defer>
   document.addEventListener("keydown", function (e) {

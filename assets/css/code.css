@@ -22,6 +22,14 @@ pre {
   margin: 0.8em 0;
 }
 
+/* Mermaid diagrams: a diagram, not a code box; wide ones scroll */
+pre.mermaid {
+  background: none;
+  border: 0;
+  margin: 1em 0;
+  text-align: center;
+}
+
 .highlight div pre {
   border: 0px;
   padding: 0px 5px;
