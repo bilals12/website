@@ -261,12 +261,14 @@ then confirm on the server that the lookups actually arrived, and from which dev
 
 ```bash
 sudo sqlite3 "/etc/dns/apps/Query Logs (Sqlite)/querylogs.db" \
-  "select client_ip, count(*), sum(rcode = 3) from dns_logs
-   where timestamp >= datetime('now', '-15 minutes')
+  "select client_ip, count(*), sum(response_type = 4) from dns_logs
+   where timestamp >= datetime('now', '-60 minutes')
    group by client_ip order by 2 desc;"
 ```
 
-each tailnet device shows up by its `100.x` address. with **Blocking Type** set to **NX Domain**, blocked lookups come back with `rcode = 3`, so the last column counts blocks (plus names that genuinely don't exist). once i'd removed Cloudflare, my phone showed 124 lookups and 12 blocks in its first 15 minutes.
+each tailnet device shows up by its `100.x` address. `response_type = 4` marks lookups that a blocklist stopped, so the last column counts real blocks. don't count `rcode = 3` instead: with **Blocking Type** set to **NX Domain**, blocks and names that genuinely don't exist both come back as NXDOMAIN.
+
+in the first 25 minutes after i removed Cloudflare, Technitium blocked 23 of 292 lookups from my phone (7.9%) and 36 of 439 from my laptop (8.2%). that's about 1 in 12: the ads, trackers, and junk that my devices quietly ask for all day. it's also only what the lists catch. ads and trackers that load from the same domains as the content never show up here.
 
 you can also pretend to be a tailnet client from the server itself, by binding `dig` to the server's tailnet address:
 
